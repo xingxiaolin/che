@@ -40,6 +40,7 @@ import org.eclipse.che.ide.api.workspace.model.EnvironmentImpl;
 import org.eclipse.che.ide.api.workspace.model.MachineConfigImpl;
 import org.eclipse.che.ide.command.toolbar.processes.ProcessesListView;
 import org.eclipse.che.ide.machine.MachineResources;
+import org.eclipse.che.ide.processes.DisplayMachineOutputEvent;
 import org.eclipse.che.ide.processes.panel.ProcessesPanelPresenter;
 import org.eclipse.che.ide.processes.panel.ProcessesPanelView;
 import org.eclipse.che.ide.rest.AsyncRequestFactory;
@@ -55,15 +56,16 @@ public class WorkspaceLoadingTrackerImpl
         WorkspaceStartingEvent.Handler,
         WorkspaceRunningEvent.Handler,
         WorkspaceStoppedEvent.Handler,
-        MachineStatusChangedEvent.Handler {
+        MachineStatusChangedEvent.Handler,
+        WorkspaceLoadingTrackerView.ActionDelegate {
 
   private final AppContext appContext;
   private final ProcessesPanelPresenter processesPanelPresenter;
   private final MachineResources resources;
-
   private final WorkspaceLoadingTrackerView view;
   private final ProcessesListView processesListView;
   private final CoreLocalizationConstant localizationConstant;
+  private final EventBus eventBus;
 
   private AsyncRequestFactory asyncRequestFactory;
 
@@ -91,8 +93,10 @@ public class WorkspaceLoadingTrackerImpl
     this.view = view;
     this.processesListView = processesListView;
     this.localizationConstant = localizationConstant;
-
     this.asyncRequestFactory = asyncRequestFactory;
+    this.eventBus = eventBus;
+
+    view.setDelegate(this);
 
     eventBus.addHandler(WorkspaceStartingEvent.TYPE, this);
     eventBus.addHandler(WorkspaceRunningEvent.TYPE, this);
@@ -103,8 +107,8 @@ public class WorkspaceLoadingTrackerImpl
         event -> {
           processesListView.setLoadingMessage(
               localizationConstant.menuLoaderMachineRunning(event.getMachine().getName()));
-//          percentage += delta;
-//          processesListView.setLoadingProgress(percentage);
+          //          percentage += delta;
+          //          processesListView.setLoadingProgress(percentage);
         });
 
     eventBus.addHandler(InstallerStartingEvent.TYPE, this);
@@ -281,5 +285,10 @@ public class WorkspaceLoadingTrackerImpl
       case FAILED:
         break;
     }
+  }
+
+  @Override
+  public void onShowMachineOutputs(String machineName) {
+    eventBus.fireEvent(new DisplayMachineOutputEvent(machineName));
   }
 }

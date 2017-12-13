@@ -64,6 +64,10 @@
             top: 4px;
         }
 
+        .machineIconPanel > svg {
+            cursor: pointer;
+        }
+
         .machineLogs {
             width: 54px;
             height: 15px;

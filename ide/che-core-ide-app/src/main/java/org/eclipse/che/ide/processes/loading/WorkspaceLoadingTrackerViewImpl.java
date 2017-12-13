@@ -36,6 +36,8 @@ public class WorkspaceLoadingTrackerViewImpl extends Composite
   interface WorkspaceLoadingTrackerViewImplUiBinder
       extends UiBinder<Widget, WorkspaceLoadingTrackerViewImpl> {}
 
+  private ActionDelegate delegate;
+
   @UiField TableSectionElement tableBody;
 
   /* Anchor for inserting table elements */
@@ -238,7 +240,7 @@ public class WorkspaceLoadingTrackerViewImpl extends Composite
      *
      * @param machineName machine name
      */
-    public Machine(String machineName) {
+    public Machine(final String machineName) {
       installers = new HashMap<>();
 
       // Clone machineTemplate node
@@ -285,10 +287,13 @@ public class WorkspaceLoadingTrackerViewImpl extends Composite
 
         if ("div".equalsIgnoreCase(n.getNodeName())) {
           Element e = n.cast();
-          DOM.setEventListener(e, event -> {
-          });
+          DOM.setEventListener(
+              e,
+              event -> {
+                delegate.onShowMachineOutputs(machineName);
+              });
 
-          DOM.sinkEvents(e, Event.MOUSEEVENTS);
+          DOM.sinkEvents(e, Event.ONCLICK);
         }
       }
     }
@@ -384,6 +389,11 @@ public class WorkspaceLoadingTrackerViewImpl extends Composite
     machinesDelimiterTemplate.removeFromParent();
 
     animationTimer.scheduleRepeating(200);
+  }
+
+  @Override
+  public void setDelegate(ActionDelegate delegate) {
+    this.delegate = delegate;
   }
 
   @Override

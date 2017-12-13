@@ -54,4 +54,13 @@ public interface WorkspaceLoadingTrackerView extends IsWidget {
 
   /** Shows workspace failed section. */
   void showWorkspaceFailed(String error);
+
+  /** Sets action delegate. */
+  void setDelegate(ActionDelegate delegate);
+
+  interface ActionDelegate {
+
+    /** On show output for the machine. */
+    void onShowMachineOutputs(String machineName);
+  }
 }
