@@ -37,11 +37,21 @@ public interface WorkspaceLoadingTrackerView extends IsWidget {
   /** Sets running state for installer. */
   void setInstallerRunning(String machineName, String installerId);
 
+  /** Shows workspace starting section. */
   void showWorkspaceStarting();
 
+  /** Shows workspace started section. */
   void showWorkspaceStarted();
 
+  /** Shows workspace stopped section. */
   void showWorkspaceStopped();
 
+  /** Marks machine failed. */
+  void setMachineFailed(String machineName);
+
+  /** Marks installer failed and displays corresponding error message. */
+  void setInstallerFailed(String machineName, String installerId, String errorMessage);
+
+  /** Shows workspace failed section. */
   void showWorkspaceFailed(String error);
 }

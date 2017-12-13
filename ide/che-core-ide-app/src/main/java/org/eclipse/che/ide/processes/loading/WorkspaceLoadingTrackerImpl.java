@@ -73,6 +73,8 @@ public class WorkspaceLoadingTrackerImpl
   private Map<String, String> installernames = new HashMap<>();
   private Map<String, String> installerDescriptions = new HashMap<>();
 
+  private boolean isWorkspaceStarting = false;
+
   @Inject
   public WorkspaceLoadingTrackerImpl(
       AppContext appContext,
@@ -101,8 +103,8 @@ public class WorkspaceLoadingTrackerImpl
         event -> {
           processesListView.setLoadingMessage(
               localizationConstant.menuLoaderMachineRunning(event.getMachine().getName()));
-          percentage += delta;
-          processesListView.setLoadingProgress(percentage);
+//          percentage += delta;
+//          processesListView.setLoadingProgress(percentage);
         });
 
     eventBus.addHandler(InstallerStartingEvent.TYPE, this);
@@ -146,17 +148,10 @@ public class WorkspaceLoadingTrackerImpl
 
     for (final String machineName : machines.keySet()) {
       MachineConfigImpl machineConfig = machines.get(machineName);
-
       view.addMachine(machineName);
-
-      if ("db".equals(machineName)) {
-        view.setMachineImageName(machineName, "eclipse/mysql");
-      } else if ("dev-machine".equals(machineName)) {
-        view.setMachineImageName(machineName, "eclipse/ubuntu_jdk8");
-      }
     }
 
-    delta = 100 / machines.size() / 2;
+    //    delta = 100 / machines.size() / 2;
   }
 
   private void loadInstallers() {
@@ -223,15 +218,25 @@ public class WorkspaceLoadingTrackerImpl
   }
 
   @Override
-  public void onInstallerFailed(InstallerFailedEvent event) {}
+  public void onInstallerFailed(InstallerFailedEvent event) {
+    view.setMachineFailed(event.getMachineName());
+    view.setInstallerFailed(event.getMachineName(), event.getInstaller(), event.getError());
+  }
 
   @Override
   public void onWorkspaceStarting(WorkspaceStartingEvent event) {
+    isWorkspaceStarting = true;
+
     view.showWorkspaceStarting();
+
+    addMachines();
+    showInstallers();
   }
 
   @Override
   public void onWorkspaceRunning(WorkspaceRunningEvent event) {
+    isWorkspaceStarting = false;
+
     view.showWorkspaceStarted();
 
     processesListView.setLoadingMessage(localizationConstant.menuLoaderWorkspaceStarted());
@@ -254,11 +259,12 @@ public class WorkspaceLoadingTrackerImpl
 
   @Override
   public void onWorkspaceStopped(WorkspaceStoppedEvent event) {
-    if (event.isError()) {
-      view.showWorkspaceFailed(event.getErrorMessage());
-    } else {
-      view.showWorkspaceStopped();
+    if (isWorkspaceStarting) {
+      view.showWorkspaceFailed(null);
+      return;
     }
+
+    view.showWorkspaceStopped();
   }
 
   @Override

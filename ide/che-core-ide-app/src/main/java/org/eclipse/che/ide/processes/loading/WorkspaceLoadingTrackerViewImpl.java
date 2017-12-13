@@ -12,11 +12,14 @@ package org.eclipse.che.ide.processes.loading;
 
 import com.google.gwt.dom.client.Element;
 import com.google.gwt.dom.client.Node;
+import com.google.gwt.dom.client.SpanElement;
 import com.google.gwt.dom.client.Style;
 import com.google.gwt.dom.client.TableRowElement;
 import com.google.gwt.dom.client.TableSectionElement;
 import com.google.gwt.uibinder.client.UiBinder;
 import com.google.gwt.uibinder.client.UiField;
+import com.google.gwt.user.client.DOM;
+import com.google.gwt.user.client.Event;
 import com.google.gwt.user.client.Timer;
 import com.google.gwt.user.client.ui.Composite;
 import com.google.gwt.user.client.ui.Widget;
@@ -42,6 +45,7 @@ public class WorkspaceLoadingTrackerViewImpl extends Composite
   @UiField TableRowElement machineTemplate;
   @UiField TableRowElement machineInlineDelimiterTemplate;
   @UiField TableRowElement installerTemplate;
+  @UiField TableRowElement installerFailedTemplate;
   @UiField TableRowElement machinesDelimiterTemplate;
 
   @UiField TableRowElement waitingWorkspaceSection;
@@ -54,9 +58,9 @@ public class WorkspaceLoadingTrackerViewImpl extends Composite
   @UiField TableRowElement workspaceFailedSection;
   @UiField TableRowElement workspaceFailedSectionFooter;
 
-  private Set<Element> animatedElements = new HashSet<>();
+  @UiField SpanElement workspaceFailedSectionTitle;
 
-  private native void log(String msg) /*-{ console.log(msg); }-*/;
+  private Set<Element> animatedElements = new HashSet<>();
 
   private class Installer {
     // Installer section element
@@ -73,6 +77,12 @@ public class WorkspaceLoadingTrackerViewImpl extends Composite
 
     // Installer status element
     Element status;
+
+    // Installer error element
+    Element error;
+
+    // Row containing error message
+    Element errorSection;
 
     public Installer(String installerName, String installerDescription) {
       // Clone installerTemplate node
@@ -98,6 +108,9 @@ public class WorkspaceLoadingTrackerViewImpl extends Composite
             break;
           case "installer-status":
             status = e;
+            break;
+          case "installer-error":
+            error = e;
             break;
         }
       }
@@ -128,10 +141,67 @@ public class WorkspaceLoadingTrackerViewImpl extends Composite
 
     void setStopped() {
       state.setAttribute("rel", "stopped");
-      state.setInnerText("");
+      state.setInnerText("Stopped");
 
       status.setAttribute("rel", "stopped");
       status.setInnerText("");
+
+      animatedElements.remove(status);
+    }
+
+    /** Hides state and status element and displays error one. */
+    void setFailed(String errorMessage) {
+      state.getStyle().setDisplay(Style.Display.NONE);
+      status.getStyle().setDisplay(Style.Display.NONE);
+
+      error.getStyle().clearDisplay();
+
+      error.setInnerText("Failed");
+
+      animatedElements.remove(status);
+
+      if (errorSection != null) {
+        errorSection.removeFromParent();
+      }
+
+      errorSection = installerFailedTemplate.cloneNode(true).cast();
+      // Find machine cells
+      for (int i = 0; i < errorSection.getChildNodes().getLength(); i++) {
+        Node n = errorSection.getChildNodes().getItem(i);
+        if (Node.ELEMENT_NODE != n.getNodeType()) {
+          continue;
+        }
+
+        Element e = n.cast();
+        switch (e.getId()) {
+          case "installer-error":
+            e.setInnerText(errorMessage);
+            break;
+        }
+      }
+
+      // Insert error row
+      tableBody.insertAfter(errorSection, section);
+    }
+
+    void reset() {
+      state.setAttribute("rel", "");
+      state.setInnerText("");
+
+      status.setAttribute("rel", "");
+      status.setInnerText("");
+
+      state.getStyle().clearDisplay();
+      status.getStyle().clearDisplay();
+
+      error.getStyle().setDisplay(Style.Display.NONE);
+
+      animatedElements.remove(status);
+
+      if (errorSection != null) {
+        errorSection.removeFromParent();
+        errorSection = null;
+      }
     }
   }
 
@@ -206,6 +276,21 @@ public class WorkspaceLoadingTrackerViewImpl extends Composite
 
       // Clone machines delimiter
       machinesDelimiter = machinesDelimiterTemplate.cloneNode(true).cast();
+
+      for (int i = 0; i < icon.getChildNodes().getLength(); i++) {
+        Node n = icon.getChildNodes().getItem(i);
+        if (Node.ELEMENT_NODE != n.getNodeType()) {
+          continue;
+        }
+
+        if ("div".equalsIgnoreCase(n.getNodeName())) {
+          Element e = n.cast();
+          DOM.setEventListener(e, event -> {
+          });
+
+          DOM.sinkEvents(e, Event.MOUSEEVENTS);
+        }
+      }
     }
 
     /**
@@ -248,6 +333,41 @@ public class WorkspaceLoadingTrackerViewImpl extends Composite
       // Update `rowspan` attribute of machine icon cell
       icon.setAttribute("rowspan", "" + (2 + installers.size()));
     }
+
+    void setInstallerFailed(String installerId, String errorMessage) {
+      for (String id : installers.keySet()) {
+        Installer installer = installers.get(id);
+
+        if (id.equals(installerId)) {
+          installer.setFailed(errorMessage);
+          // Update `rowspan` attribute of machine icon cell
+          icon.setAttribute("rowspan", "" + (3 + installers.size()));
+        } else {
+          installer.setStopped();
+        }
+      }
+    }
+
+    void setStopped() {
+      state.setAttribute("rel", "stopped");
+      state.setInnerText("STOPPED");
+
+      for (Installer installer : installers.values()) {
+        installer.setStopped();
+      }
+    }
+
+    void reset() {
+      state.setAttribute("rel", "");
+      state.setInnerText("");
+
+      for (Installer installer : installers.values()) {
+        installer.reset();
+      }
+
+      // Update `rowspan` attribute of machine icon cell
+      icon.setAttribute("rowspan", "" + (2 + installers.size()));
+    }
   }
 
   private Map<String, Machine> machines = new HashMap<>();
@@ -260,6 +380,7 @@ public class WorkspaceLoadingTrackerViewImpl extends Composite
     machineTemplate.removeFromParent();
     machineInlineDelimiterTemplate.removeFromParent();
     installerTemplate.removeFromParent();
+    installerFailedTemplate.removeFromParent();
     machinesDelimiterTemplate.removeFromParent();
 
     animationTimer.scheduleRepeating(200);
@@ -267,6 +388,10 @@ public class WorkspaceLoadingTrackerViewImpl extends Composite
 
   @Override
   public void addMachine(String machineName) {
+    if (machines.containsKey(machineName)) {
+      return;
+    }
+
     // create machine
     Machine machine = new Machine(machineName);
 
@@ -346,6 +471,10 @@ public class WorkspaceLoadingTrackerViewImpl extends Composite
 
     workspaceFailedSection.getStyle().setDisplay(Style.Display.NONE);
     workspaceFailedSectionFooter.getStyle().setDisplay(Style.Display.NONE);
+
+    for (Machine machine : machines.values()) {
+      machine.reset();
+    }
   }
 
   @Override
@@ -392,7 +521,30 @@ public class WorkspaceLoadingTrackerViewImpl extends Composite
     workspaceStoppedSection.getStyle().setDisplay(Style.Display.NONE);
 
     workspaceFailedSection.getStyle().clearDisplay();
+
     workspaceFailedSectionFooter.getStyle().clearDisplay();
+  }
+
+  @Override
+  public void setMachineFailed(String machineName) {
+    Machine machine = machines.get(machineName);
+    if (machine != null) {
+      machine.setState("failed");
+    }
+
+    workspaceFailedSectionTitle.setInnerText(machineName);
+  }
+
+  @Override
+  public void setInstallerFailed(String machineName, String installerId, String errorMessage) {
+    for (String name : machines.keySet()) {
+      Machine machine = machines.get(name);
+      if (name.equals(machineName)) {
+        machine.setInstallerFailed(installerId, errorMessage);
+      } else {
+        machine.setStopped();
+      }
+    }
   }
 
   private Timer animationTimer =
