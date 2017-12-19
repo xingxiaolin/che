@@ -38,6 +38,7 @@ import org.eclipse.che.ide.api.workspace.event.WorkspaceStartingEvent;
 import org.eclipse.che.ide.api.workspace.event.WorkspaceStoppedEvent;
 import org.eclipse.che.ide.api.workspace.model.EnvironmentImpl;
 import org.eclipse.che.ide.api.workspace.model.MachineConfigImpl;
+import org.eclipse.che.ide.api.workspace.model.MachineImpl;
 import org.eclipse.che.ide.command.toolbar.processes.ProcessesListView;
 import org.eclipse.che.ide.machine.MachineResources;
 import org.eclipse.che.ide.processes.DisplayMachineOutputEvent;
@@ -126,7 +127,7 @@ public class WorkspaceLoadingTrackerImpl
       return;
     }
 
-    showWorkspaceStartPanel();
+    showWorkspaceStatusPanel();
     addMachines();
 
     processesListView.setLoadMode();
@@ -134,13 +135,42 @@ public class WorkspaceLoadingTrackerImpl
     processesListView.setLoadingProgress(0);
   }
 
-  private void showWorkspaceStartPanel() {
+  private void showWorkspaceStatusPanel() {
     ((ProcessesPanelView) processesPanelPresenter.getView()).hideProcessOutput("*");
 
     ((ProcessesPanelView) processesPanelPresenter.getView())
         .addWidget("*", "Workspace Status", resources.output(), view, true);
 
     ((ProcessesPanelView) processesPanelPresenter.getView()).showProcessOutput("*");
+  }
+
+  @Override
+  public void showPanel() {
+    showWorkspaceStatusPanel();
+    addMachines();
+    showInstallers();
+
+    if (WorkspaceStatus.RUNNING == appContext.getWorkspace().getStatus()) {
+      view.showWorkspaceStarted();
+
+      Map<String, MachineImpl> runtimeMachines = appContext.getWorkspace().getRuntime().getMachines();
+      for (String machineName : runtimeMachines.keySet()) {
+        view.setMachineRunning(machineName);
+      }
+
+      String defaultEnvironmentName = appContext.getWorkspace().getConfig().getDefaultEnv();
+      EnvironmentImpl defaultEnvironment =
+          appContext.getWorkspace().getConfig().getEnvironments().get(defaultEnvironmentName);
+
+      Map<String, MachineConfigImpl> environmentMachines = defaultEnvironment.getMachines();
+      for (final String machineName : environmentMachines.keySet()) {
+        MachineConfigImpl machineConfig = environmentMachines.get(machineName);
+
+        for (String installerId : machineConfig.getInstallers()) {
+          view.setInstallerRunning(machineName, installerId);
+        }
+      }
+    }
   }
 
   private void addMachines() {

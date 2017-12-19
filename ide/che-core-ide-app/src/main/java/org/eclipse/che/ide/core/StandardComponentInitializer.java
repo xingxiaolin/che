@@ -141,6 +141,7 @@ import org.eclipse.che.ide.processes.NewTerminalAction;
 import org.eclipse.che.ide.processes.actions.CloseConsoleAction;
 import org.eclipse.che.ide.processes.actions.ReRunProcessAction;
 import org.eclipse.che.ide.processes.actions.StopProcessAction;
+import org.eclipse.che.ide.processes.loading.ShowWorkspaceStatusAction;
 import org.eclipse.che.ide.resources.action.CopyResourceAction;
 import org.eclipse.che.ide.resources.action.CutResourceAction;
 import org.eclipse.che.ide.resources.action.PasteResourceAction;
@@ -343,6 +344,8 @@ public class StandardComponentInitializer {
 
   @Inject private StopWorkspaceAction stopWorkspaceAction;
 
+  @Inject private ShowWorkspaceStatusAction showWorkspaceStatusAction;
+
   @Inject private RunCommandAction runCommandAction;
 
   @Inject private NewTerminalAction newTerminalAction;
@@ -502,6 +505,7 @@ public class StandardComponentInitializer {
 
     workspaceGroup.addSeparator();
     workspaceGroup.add(stopWorkspaceAction);
+    workspaceGroup.add(showWorkspaceStatusAction);
 
     // Project (New Menu)
     DefaultActionGroup projectGroup = (DefaultActionGroup) actionManager.getAction(GROUP_PROJECT);
@@ -666,6 +670,7 @@ public class StandardComponentInitializer {
 
     // Processes panel actions
     actionManager.registerAction("stopWorkspace", stopWorkspaceAction);
+    actionManager.registerAction("showWorkspaceStatus", showWorkspaceStatusAction);
     actionManager.registerAction("runCommand", runCommandAction);
     actionManager.registerAction("newTerminal", newTerminalAction);
 

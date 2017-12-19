@@ -690,6 +690,9 @@ public interface CoreLocalizationConstant extends Messages {
   @Key("workspace.not.running")
   String workspaceNotRunning();
 
+  @Key("workspace.status.title")
+  String workspaceStatusTitle();
+
   @Key("start.ws.error.title")
   String startWsErrorTitle();
 
