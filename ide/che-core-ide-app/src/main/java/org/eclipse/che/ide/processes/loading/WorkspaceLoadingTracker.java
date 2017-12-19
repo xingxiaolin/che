@@ -18,5 +18,4 @@ public interface WorkspaceLoadingTracker {
 
   /** Shows workspace status panel. */
   void showPanel();
-
 }

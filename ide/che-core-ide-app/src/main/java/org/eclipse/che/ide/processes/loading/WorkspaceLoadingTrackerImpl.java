@@ -153,7 +153,8 @@ public class WorkspaceLoadingTrackerImpl
     if (WorkspaceStatus.RUNNING == appContext.getWorkspace().getStatus()) {
       view.showWorkspaceStarted();
 
-      Map<String, MachineImpl> runtimeMachines = appContext.getWorkspace().getRuntime().getMachines();
+      Map<String, MachineImpl> runtimeMachines =
+          appContext.getWorkspace().getRuntime().getMachines();
       for (String machineName : runtimeMachines.keySet()) {
         view.setMachineRunning(machineName);
       }

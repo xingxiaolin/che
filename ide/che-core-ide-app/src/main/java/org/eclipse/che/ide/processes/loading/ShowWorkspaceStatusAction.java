@@ -12,25 +12,23 @@ package org.eclipse.che.ide.processes.loading;
 
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
+import java.util.Collections;
+import javax.validation.constraints.NotNull;
 import org.eclipse.che.ide.CoreLocalizationConstant;
 import org.eclipse.che.ide.api.action.AbstractPerspectiveAction;
 import org.eclipse.che.ide.api.action.ActionEvent;
 import org.eclipse.che.ide.part.perspectives.project.ProjectPerspective;
 
-import javax.validation.constraints.NotNull;
-import java.util.Collections;
-
-/**
- * Action to show workspace status.
- */
+/** Action to show workspace status. */
 @Singleton
 public class ShowWorkspaceStatusAction extends AbstractPerspectiveAction {
 
   private WorkspaceLoadingTrackerImpl workspaceLoadingTracker;
 
   @Inject
-  public ShowWorkspaceStatusAction(CoreLocalizationConstant localizationConstant,
-                                   WorkspaceLoadingTrackerImpl workspaceLoadingTracker) {
+  public ShowWorkspaceStatusAction(
+      CoreLocalizationConstant localizationConstant,
+      WorkspaceLoadingTrackerImpl workspaceLoadingTracker) {
     super(
         Collections.singletonList(ProjectPerspective.PROJECT_PERSPECTIVE_ID),
         localizationConstant.workspaceStatusTitle());
