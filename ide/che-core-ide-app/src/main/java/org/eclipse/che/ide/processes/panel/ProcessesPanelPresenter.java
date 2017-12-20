@@ -44,6 +44,7 @@ import java.util.Optional;
 import java.util.function.BiConsumer;
 import org.eclipse.che.api.core.model.workspace.Runtime;
 import org.eclipse.che.api.core.model.workspace.Workspace;
+import org.eclipse.che.api.core.model.workspace.WorkspaceStatus;
 import org.eclipse.che.api.core.model.workspace.config.Command;
 import org.eclipse.che.api.core.model.workspace.runtime.Machine;
 import org.eclipse.che.api.core.model.workspace.runtime.Server;
@@ -285,10 +286,11 @@ public class ProcessesPanelPresenter extends BasePresenter
       provideMachineNode(machine.getName(), true, false);
     }
 
-    ProcessTreeNode machineToSelect = machineNodes.entrySet().iterator().next().getValue();
-
-    view.selectNode(machineToSelect);
-    notifyTreeNodeSelected(machineToSelect);
+    if (WorkspaceStatus.RUNNING == appContext.getWorkspace().getStatus()) {
+      ProcessTreeNode machineToSelect = machineNodes.entrySet().iterator().next().getValue();
+      view.selectNode(machineToSelect);
+      notifyTreeNodeSelected(machineToSelect);
+    }
   }
 
   /** determines whether process tree is visible. */
