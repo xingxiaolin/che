@@ -54,16 +54,16 @@
 .processesListLoaderRect2,
 .processesListLoaderRect3 {
     background-color: #4a90e2;
-    width: 4px;
+    width: 2px;
     height: literal("calc(100% - 4px)");
     display: inline-block;
-    margin-left: 4px;
+    margin-left: 2px;
     margin-top: 2px;
     animation: stretchAnimation 1.2s infinite ease-in-out;
 }
 
 .processesListLoaderRect1 {
-    margin-left: 12px;
+    margin-left: 16px;
 }
 
 .processesListLoaderRect2 {

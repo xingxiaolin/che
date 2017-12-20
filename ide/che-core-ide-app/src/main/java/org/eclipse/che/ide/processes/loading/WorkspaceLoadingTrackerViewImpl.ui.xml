@@ -183,6 +183,37 @@
             padding-right: 30px;
         }
 
+        .workspaceFailedIcon {
+            width: 60px;
+            height: 22px;
+            font-size: 20px;
+            line-height: 20px;
+            text-align: center;
+            color: red;
+            position: relative;
+            vertical-align: middle;
+        }
+
+        .workspaceFailedIcon > div {
+            position: absolute;
+            left: 15px;
+            top: 0px;
+        }
+
+        .workspaceFailedTitle {
+            font-family: monospace;
+            font-size: 11px;
+            user-select: text;
+            white-space: pre;
+            vertical-align: middle;
+            line-height: 20px;
+        }
+
+        .workspaceFailedTitle > span {
+            color: white;
+            text-transform: uppercase;
+        }
+
     </ui:style>
 
     <!-- Be careful when changing the following. It may broke the result widget. -->
@@ -211,9 +242,7 @@
                     <!-- Used as anchor when inserting elements. Insert machine elements before this element. -->
                     <tr ui:field="machinesSectionAnchor" style="display: none;" />
 
-                    <!--
-                        Machine section
-                    -->
+                    <!-- Machine section -->
                     <tr ui:field="machineTemplate">
                         <td rowspan="2" class="{style.machineIcon}" id="machine-icon">
                             <div class="{style.machineIconPanel}"><svg:SVGImage resource="{resources.machineCube}" /></div>
@@ -245,37 +274,22 @@
 
                     <tr ui:field="machinesDelimiterTemplate"><td colspan="8" style="height: 15px;"></td></tr>
 
+                    <!-- Workspace started section -->
                     <tr ui:field="workspaceStartedSectionFooter" style="display: none;">
                         <td colspan="8"><hr/>Workspace machines successfully started and configured<br/>&nbsp;</td>
                     </tr>
 
+                    <!-- Workspace failed section -->
                     <tr ui:field="workspaceFailedSectionFooter" style="display: none;">
                         <td colspan="8"><hr style="margin-top: 0px;" /><table cellpadding="0" cellspacing="0" border="0">
                                 <tbody>
                                     <tr>
-                                        <td style="
-                                            width: 60px;
-                                            height: 22px;
-                                            font-size: 20px;
-                                            line-height: 20px;
-                                            text-align: center;
-                                            color: red;
-                                            position: relative;
-                                            vertical-align: middle;">
-                                            <div style="
-                                                position: absolute;
-                                                left: 15px;
-                                                top: 0px;">
+                                        <td class="{style.workspaceFailedIcon}">
+                                            <div>
                                                 <i class="fa fa-exclamation-triangle" />
                                             </div>
                                         </td>
-                                        <td colspan="2" style="
-                                            font-family: monospace;
-                                            font-size: 11px;
-                                            user-select: text;
-                                            white-space: pre;
-                                            vertical-align: middle;
-                                            line-height: 20px;">An error occured while starting <span ui:field="workspaceFailedSectionTitle" style="color: white; text-transform: uppercase;" /> machine</td>
+                                        <td colspan="2" class="{style.workspaceFailedTitle}">An error occured while starting <span ui:field="workspaceFailedSectionTitle" /> machine</td>
                                     </tr>
                                 </tbody>
                             </table>

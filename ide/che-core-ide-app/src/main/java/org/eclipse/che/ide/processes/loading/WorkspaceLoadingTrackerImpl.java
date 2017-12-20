@@ -70,9 +70,6 @@ public class WorkspaceLoadingTrackerImpl
 
   private AsyncRequestFactory asyncRequestFactory;
 
-  private int percentage = 0;
-  private int delta = 0;
-
   private Map<String, String> installernames = new HashMap<>();
   private Map<String, String> installerDescriptions = new HashMap<>();
 
@@ -108,8 +105,6 @@ public class WorkspaceLoadingTrackerImpl
         event -> {
           processesListView.setLoadingMessage(
               localizationConstant.menuLoaderMachineRunning(event.getMachine().getName()));
-          //          percentage += delta;
-          //          processesListView.setLoadingProgress(percentage);
         });
 
     eventBus.addHandler(InstallerStartingEvent.TYPE, this);
@@ -185,8 +180,6 @@ public class WorkspaceLoadingTrackerImpl
       MachineConfigImpl machineConfig = machines.get(machineName);
       view.addMachine(machineName);
     }
-
-    //    delta = 100 / machines.size() / 2;
   }
 
   private void loadInstallers() {
