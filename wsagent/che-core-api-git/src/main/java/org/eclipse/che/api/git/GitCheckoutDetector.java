@@ -34,6 +34,7 @@ import org.eclipse.che.api.core.ServerException;
 import org.eclipse.che.api.core.jsonrpc.commons.RequestHandlerConfigurator;
 import org.eclipse.che.api.core.jsonrpc.commons.RequestTransmitter;
 import org.eclipse.che.api.fs.server.FsManager;
+import org.eclipse.che.api.fs.server.PathTransformer;
 import org.eclipse.che.api.project.server.ProjectManager;
 import org.eclipse.che.api.project.shared.dto.event.GitCheckoutEventDto;
 import org.eclipse.che.api.project.shared.dto.event.GitCheckoutEventDto.Type;
@@ -53,6 +54,7 @@ public class GitCheckoutDetector {
   private final RequestTransmitter transmitter;
   private final FileWatcherManager manager;
   private final FsManager fsManager;
+  private final PathTransformer pathTransformer;
   private final ProjectManager projectManager;
 
   private final Set<String> endpointIds = newConcurrentHashSet();
@@ -64,10 +66,12 @@ public class GitCheckoutDetector {
       RequestTransmitter transmitter,
       FileWatcherManager manager,
       FsManager fsManager,
+      PathTransformer pathTransformer,
       ProjectManager projectManager) {
     this.transmitter = transmitter;
     this.manager = manager;
     this.fsManager = fsManager;
+    this.pathTransformer = pathTransformer;
     this.projectManager = projectManager;
   }
 
@@ -113,6 +117,14 @@ public class GitCheckoutDetector {
   private Consumer<String> fsEventConsumer() {
     return it -> {
       try {
+        String[] branches =
+            pathTransformer
+                .transform(it.substring(0, it.lastIndexOf("/")) + "/refs/heads")
+                .toFile()
+                .list();
+        if (branches != null && branches.length == 0) {
+          return;
+        }
         String content = fsManager.readAsString(it);
         Type type = content.contains("ref:") ? BRANCH : REVISION;
         String name = type == REVISION ? content : PATTERN.split(content)[1];
