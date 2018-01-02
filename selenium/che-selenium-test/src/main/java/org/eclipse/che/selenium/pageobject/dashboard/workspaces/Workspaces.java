@@ -58,8 +58,7 @@ public class Workspaces {
         "//div[@id='ws-name-%s']//span[@name='workspaceProjectsValue']";
     String WORKSPACE_ITEM_STACK = "//div[@id='ws-name-%s']//span[@name='workspaceStackName']";
 
-    String WORKSPACE_ITEM_ACTIONS =
-        "//div[@id='ws-name-%s']//div[@name='workspaceStopStartButton']";
+    String WORKSPACE_ITEM_ACTIONS = "//div[@id='ws-name-%s']//*[@name='workspaceStopStartButton']";
     String WORKSPACE_ITEM_CONFIGURE_BUTTON =
         "//div[@id='ws-name-%s']//a[@name='configureWorkspaceButton']";
     String WORKSPACE_ITEM_ADD_PROJECT_BUTTON =
@@ -71,6 +70,9 @@ public class Workspaces {
 
   @FindBy(xpath = Locators.ADD_WORKSPACE_BTN)
   WebElement addWorkspaceBtn;
+
+  @FindBy(xpath = Locators.DELETE_WORKSPACE_BTN)
+  WebElement deleleWorkspaceButton;
 
   public void selectWorkspaceByCheckbox(String workspaceName) {
     redrawUiElementsTimeout
@@ -173,5 +175,10 @@ public class Workspaces {
     new WebDriverWait(seleniumWebDriver, REDRAW_UI_ELEMENTS_TIMEOUT_SEC)
         .until(visibilityOf(addWorkspaceBtn))
         .click();
+  }
+
+  public void clickOnDeleteWorkspacesBtn() {
+    dashboard.waitNotificationIsClosed();
+    redrawUiElementsTimeout.until(visibilityOf(deleleWorkspaceButton)).click();
   }
 }
