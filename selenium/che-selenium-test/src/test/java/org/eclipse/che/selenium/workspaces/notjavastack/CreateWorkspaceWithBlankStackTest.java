@@ -58,7 +58,7 @@ public class CreateWorkspaceWithBlankStackTest {
     dashboard.waitDashboardToolbarTitle();
     dashboard.selectWorkspacesItemOnDashboard();
     dashboard.waitToolbarTitleName("Workspaces");
-    workspaces.clickOnNewWorkspaceBtn();
+    workspaces.clickOnAddWorkspaceBtn();
 
     createWorkspace.waitToolbar();
     createWorkspace.typeWorkspaceName(WORKSPACE);

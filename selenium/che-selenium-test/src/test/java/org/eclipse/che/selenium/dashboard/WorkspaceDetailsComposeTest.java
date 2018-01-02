@@ -171,7 +171,7 @@ public class WorkspaceDetailsComposeTest {
     dashboard.waitDashboardToolbarTitle();
     dashboard.selectWorkspacesItemOnDashboard();
     dashboard.waitToolbarTitleName("Workspaces");
-    workspaces.clickOnNewWorkspaceBtn();
+    workspaces.clickOnAddWorkspaceBtn();
     createWorkspace.waitToolbar();
     loader.waitOnClosed();
     createWorkspace.selectStack(JAVA_MYSQL.getId());

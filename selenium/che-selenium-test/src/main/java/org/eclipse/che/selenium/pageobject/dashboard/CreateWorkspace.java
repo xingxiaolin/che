@@ -11,6 +11,7 @@
 package org.eclipse.che.selenium.pageobject.dashboard;
 
 import static java.lang.String.format;
+import static org.eclipse.che.selenium.core.constant.TestTimeoutsConstants.ELEMENT_TIMEOUT_SEC;
 import static org.eclipse.che.selenium.core.constant.TestTimeoutsConstants.REDRAW_UI_ELEMENTS_TIMEOUT_SEC;
 import static org.openqa.selenium.support.ui.ExpectedConditions.visibilityOf;
 import static org.openqa.selenium.support.ui.ExpectedConditions.visibilityOfElementLocated;
@@ -32,6 +33,7 @@ public class CreateWorkspace {
 
   private final SeleniumWebDriver seleniumWebDriver;
   private final WebDriverWait redrawUiElementsTimeout;
+  private final WebDriverWait elementTimeoutSec;
   private final ActionsFactory actionsFactory;
 
   @Inject
@@ -40,6 +42,7 @@ public class CreateWorkspace {
     this.actionsFactory = actionsFactory;
     this.redrawUiElementsTimeout =
         new WebDriverWait(seleniumWebDriver, REDRAW_UI_ELEMENTS_TIMEOUT_SEC);
+    this.elementTimeoutSec = new WebDriverWait(seleniumWebDriver, ELEMENT_TIMEOUT_SEC);
     PageFactory.initElements(seleniumWebDriver, this);
   }
 
@@ -196,7 +199,7 @@ public class CreateWorkspace {
   }
 
   public void waitToolbar() {
-    redrawUiElementsTimeout.until(visibilityOfElementLocated(By.id(Locators.TOOLBAR_TITLE_ID)));
+    elementTimeoutSec.until(visibilityOfElementLocated(By.id(Locators.TOOLBAR_TITLE_ID)));
   }
 
   public String getTextFromSearchInput() {

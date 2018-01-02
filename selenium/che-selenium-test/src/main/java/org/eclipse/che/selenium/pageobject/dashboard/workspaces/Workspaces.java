@@ -31,23 +31,39 @@ import org.openqa.selenium.support.ui.WebDriverWait;
 
 public class Workspaces {
   private final SeleniumWebDriver seleniumWebDriver;
+  private final WebDriverWait redrawUiElementsTimeout;
   private final Dashboard dashboard;
 
   @Inject
   public Workspaces(SeleniumWebDriver seleniumWebDriver, Dashboard dashboard) {
     this.seleniumWebDriver = seleniumWebDriver;
+    this.redrawUiElementsTimeout =
+        new WebDriverWait(seleniumWebDriver, REDRAW_UI_ELEMENTS_TIMEOUT_SEC);
     this.dashboard = dashboard;
     PageFactory.initElements(seleniumWebDriver, this);
   }
 
   private interface Locators {
     String WORKSPACES_LIST = "//ng-transclude[@class='che-list-content']";
-    String WORKSPACE_ITEM_NAME =
-        "//div[contains(@class, 'workspace-name-clip')]//div[contains(@data-str, '%s')]";
     String TOOLBAR_TITLE_NAME =
         "//div[contains(@class,'che-toolbar')]//span[contains(text(),'%s')]";
-    String ADD_WORKSPACE_BTN =
-        "//a[contains(@ng-href, 'create-workspace')]/span[text()='Add Workspace']";
+
+    String ADD_WORKSPACE_BTN = "//che-button-primary[@che-button-title='Add Workspace']";
+    String DELETE_WORKSPACE_BTN = "//che-button-primary[@che-button-title='Delete']";
+
+    String WORKSPACE_ITEM_NAME = "//div[@id='ws-name-%s']";
+    String WORKSPACE_ITEM_CHECKBOX = "//div[@id='ws-name-%s']//md-checkbox";
+    String WORKSPACE_ITEM_RAM = "//div[@id='ws-name-%s']//span[@name='workspaceRamValue']";
+    String WORKSPACE_ITEM_PROJECTS =
+        "//div[@id='ws-name-%s']//span[@name='workspaceProjectsValue']";
+    String WORKSPACE_ITEM_STACK = "//div[@id='ws-name-%s']//span[@name='workspaceStackName']";
+
+    String WORKSPACE_ITEM_ACTIONS =
+        "//div[@id='ws-name-%s']//div[@name='workspaceStopStartButton']";
+    String WORKSPACE_ITEM_CONFIGURE_BUTTON =
+        "//div[@id='ws-name-%s']//a[@name='configureWorkspaceButton']";
+    String WORKSPACE_ITEM_ADD_PROJECT_BUTTON =
+        "//div[@id='ws-name-%s']//span[@name='addProjectButton']";
   }
 
   @FindBy(xpath = Locators.WORKSPACES_LIST)
@@ -55,6 +71,62 @@ public class Workspaces {
 
   @FindBy(xpath = Locators.ADD_WORKSPACE_BTN)
   WebElement addWorkspaceBtn;
+
+  public void selectWorkspaceByCheckbox(String workspaceName) {
+    redrawUiElementsTimeout
+        .until(
+            visibilityOfElementLocated(
+                By.xpath(format(Locators.WORKSPACE_ITEM_CHECKBOX, workspaceName))))
+        .click();
+  }
+
+  public String getWorkspaceRamValue(String workspaceName) {
+    return redrawUiElementsTimeout
+        .until(
+            visibilityOfElementLocated(
+                By.xpath(format(Locators.WORKSPACE_ITEM_RAM, workspaceName))))
+        .getText();
+  }
+
+  public String getWorkspaceProjectsValue(String workspaceName) {
+    return redrawUiElementsTimeout
+        .until(
+            visibilityOfElementLocated(
+                By.xpath(format(Locators.WORKSPACE_ITEM_PROJECTS, workspaceName))))
+        .getText();
+  }
+
+  public String getWorkspaceStackName(String workspaceName) {
+    return redrawUiElementsTimeout
+        .until(
+            visibilityOfElementLocated(
+                By.xpath(format(Locators.WORKSPACE_ITEM_STACK, workspaceName))))
+        .getText();
+  }
+
+  public void clickOnWorkspaceActionsButton(String workspaceName) {
+    redrawUiElementsTimeout
+        .until(
+            visibilityOfElementLocated(
+                By.xpath(format(Locators.WORKSPACE_ITEM_ACTIONS, workspaceName))))
+        .click();
+  }
+
+  public void clickOnWorkspaceConfigureButton(String workspaceName) {
+    redrawUiElementsTimeout
+        .until(
+            visibilityOfElementLocated(
+                By.xpath(format(Locators.WORKSPACE_ITEM_CONFIGURE_BUTTON, workspaceName))))
+        .click();
+  }
+
+  public void clickOnWorkspaceAddProjectButton(String workspaceName) {
+    redrawUiElementsTimeout
+        .until(
+            visibilityOfElementLocated(
+                By.xpath(format(Locators.WORKSPACE_ITEM_ADD_PROJECT_BUTTON, workspaceName))))
+        .click();
+  }
 
   public void waitListWorkspacesOnDashboard() {
     new WebDriverWait(seleniumWebDriver, LOAD_PAGE_TIMEOUT_SEC)
@@ -96,7 +168,7 @@ public class Workspaces {
   }
 
   // Click on the Add Workspace button
-  public void clickOnNewWorkspaceBtn() {
+  public void clickOnAddWorkspaceBtn() {
     dashboard.waitNotificationIsClosed();
     new WebDriverWait(seleniumWebDriver, REDRAW_UI_ELEMENTS_TIMEOUT_SEC)
         .until(visibilityOf(addWorkspaceBtn))
