@@ -13,9 +13,7 @@ package org.eclipse.che.ide.ui.smartTree;
 import com.google.common.base.Predicate;
 import com.google.common.base.Strings;
 import com.google.common.collect.Iterables;
-import com.google.gwt.dom.client.Document;
-import com.google.gwt.dom.client.NativeEvent;
-import com.google.gwt.dom.client.Style;
+import com.google.gwt.dom.client.*;
 import com.google.gwt.user.client.ui.Label;
 import com.google.gwt.user.client.ui.SimplePanel;
 import java.util.List;
@@ -23,6 +21,8 @@ import org.eclipse.che.ide.DelayedTask;
 import org.eclipse.che.ide.ui.smartTree.converter.NodeConverter;
 import org.eclipse.che.ide.ui.smartTree.converter.impl.NodeNameConverter;
 import org.eclipse.che.ide.ui.smartTree.data.Node;
+import org.eclipse.che.ide.ui.smartTree.presentation.DefaultPresentationRenderer;
+import org.eclipse.che.ide.util.dom.Elements;
 
 /** @author Vlad Zhukovskiy */
 public class SpeedSearch {
@@ -118,6 +118,7 @@ public class SpeedSearch {
 
   public SpeedSearch(Tree tree, NodeConverter<Node, String> nodeConverter) {
     this.tree = tree;
+    this.tree.setPresentationRenderer(new SearchRender(tree.getTreeStyles()));
     this.nodeConverter = nodeConverter != null ? nodeConverter : new NodeNameConverter();
 
     keyNav.bind(tree);
@@ -137,14 +138,14 @@ public class SpeedSearch {
     style.setBorderWidth(1, Style.Unit.PX);
     style.setPadding(2, Style.Unit.PX);
     style.setPosition(Style.Position.FIXED);
-    style.setTop(100, Style.Unit.PX);
+    style.setTop(1, Style.Unit.PX);
     style.setLeft(20, Style.Unit.PX);
   }
 
   private void addSearchPopUpToTree() {
     if (Document.get().getElementById(ID) == null) {
       searchPopUp.setVisible(true);
-      tree.getElement().appendChild(searchPopUp.getElement());
+      tree.getParent().getElement().appendChild(searchPopUp.getElement());
     }
   }
 
@@ -185,6 +186,7 @@ public class SpeedSearch {
         first = true;
       }
       tree.getSelectionModel().select(node, true);
+      tree.refresh(node);
     }
   }
 
@@ -208,5 +210,36 @@ public class SpeedSearch {
         return nodeString.toLowerCase().contains(searchRequest.toString().toLowerCase());
       }
     };
+  }
+
+  class SearchRender extends DefaultPresentationRenderer<Node> {
+    public SearchRender(TreeStyles treeStyles) {
+      super(treeStyles);
+    }
+
+    @Override
+    public Element render(
+        final Node node, final String domID, final Tree.Joint joint, final int depth) {
+      // Initialize HTML elements.
+      final Element rootContainer = super.render(node, domID, joint, depth);
+      final Element nodeContainer = rootContainer.getFirstChildElement();
+      Element item = nodeContainer.getElementsByTagName("div").getItem(0).getFirstChildElement();
+      String innerText = item.getInnerText();
+
+      item.removeAllChildren();
+
+      SpanElement spanElement1 = (SpanElement) Elements.createSpanElement();
+      SpanElement spanElement2 = (SpanElement) Elements.createSpanElement();
+      SpanElement spanElement3 = (SpanElement) Elements.createSpanElement();
+      spanElement1.setInnerText(
+          innerText.substring(0, innerText.indexOf(searchRequest.toString())));
+      spanElement2.setInnerText(searchRequest.toString());
+      spanElement3.setInnerText(innerText.substring(innerText.indexOf(searchRequest.toString())));
+      item.appendChild(spanElement1);
+      item.appendChild(spanElement2);
+      item.appendChild(spanElement3);
+
+      return rootContainer;
+    }
   }
 }
