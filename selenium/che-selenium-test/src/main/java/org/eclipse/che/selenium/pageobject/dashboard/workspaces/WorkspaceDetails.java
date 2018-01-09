@@ -67,6 +67,8 @@ public class WorkspaceDetails {
     String DELETE_DIALOG_BUTTON = "//md-dialog[@role='dialog']//button/span[text()='Delete']";
     String UPDATE_DIALOG_BUTTON = "//md-dialog[@role='dialog']//button/span[text()='Update']";
     String ADD_DIALOG_BUTTON = "//md-dialog[@role='dialog']//button/span[text()='Add']";
+    String TOOLBAR_TITLE_NAME =
+        "//div[contains(@class,'che-toolbar')]//span[contains(text(),'%s')]";
   }
 
   public enum StateWorkspace {
@@ -217,5 +219,16 @@ public class WorkspaceDetails {
     new WebDriverWait(seleniumWebDriver, REDRAW_UI_ELEMENTS_TIMEOUT_SEC)
         .until(visibilityOfElementLocated(By.xpath(Locators.ADD_DIALOG_BUTTON)))
         .click();
+  }
+
+  /**
+   * Wait toolbar name is present on dashboard
+   *
+   * @param titleName name of user
+   */
+  public void waitToolbarTitleName(String titleName) {
+    new WebDriverWait(seleniumWebDriver, LOADER_TIMEOUT_SEC)
+        .until(
+            visibilityOfElementLocated(By.xpath(format(Locators.TOOLBAR_TITLE_NAME, titleName))));
   }
 }

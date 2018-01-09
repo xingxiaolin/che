@@ -187,7 +187,7 @@ public class WorkspaceDetailsComposeTest {
     dashboard.selectWorkspacesItemOnDashboard();
     dashboard.waitToolbarTitleName("Workspaces");
     workspaces.selectWorkspaceItemName(WORKSPACE);
-    workspaces.waitToolbarTitleName(WORKSPACE);
+    workspaceDetails.waitToolbarTitleName(WORKSPACE);
     workspaceDetails.selectTabInWorkspaceMenu(OVERVIEW);
     workspaceDetails.checkStateOfWorkspace(RUNNING);
     workspaceDetails.clickOnStopWorkspace();
