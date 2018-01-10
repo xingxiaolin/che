@@ -17,6 +17,7 @@ import org.eclipse.che.api.core.model.workspace.runtime.RuntimeIdentity;
 import org.eclipse.che.api.workspace.server.spi.InfrastructureException;
 import org.eclipse.che.workspace.infrastructure.openshift.environment.OpenShiftEnvironment;
 import org.eclipse.che.workspace.infrastructure.openshift.project.pvc.WorkspaceVolumesStrategy;
+import org.eclipse.che.workspace.infrastructure.openshift.provision.InstallerPortProvisioner;
 import org.eclipse.che.workspace.infrastructure.openshift.provision.UniqueNamesProvisioner;
 import org.eclipse.che.workspace.infrastructure.openshift.provision.env.EnvVarsConverter;
 import org.eclipse.che.workspace.infrastructure.openshift.provision.restartpolicy.RestartPolicyRewriter;
@@ -40,6 +41,7 @@ public class OpenShiftEnvironmentProvisioner {
   private final ServersConverter serversConverter;
   private final EnvVarsConverter envVarsConverter;
   private final RestartPolicyRewriter restartPolicyRewriter;
+  private final InstallerPortProvisioner installerPortProvisioner;
 
   @Inject
   public OpenShiftEnvironmentProvisioner(
@@ -49,7 +51,8 @@ public class OpenShiftEnvironmentProvisioner {
       ServersConverter serversConverter,
       EnvVarsConverter envVarsConverter,
       RestartPolicyRewriter restartPolicyRewriter,
-      WorkspaceVolumesStrategy volumesStrategy) {
+      WorkspaceVolumesStrategy volumesStrategy,
+      InstallerPortProvisioner installerPortProvisioner) {
     this.pvcEnabled = pvcEnabled;
     this.volumesStrategy = volumesStrategy;
     this.uniqueNamesProvisioner = uniqueNamesProvisioner;
@@ -57,11 +60,13 @@ public class OpenShiftEnvironmentProvisioner {
     this.serversConverter = serversConverter;
     this.envVarsConverter = envVarsConverter;
     this.restartPolicyRewriter = restartPolicyRewriter;
+    this.installerPortProvisioner = installerPortProvisioner;
   }
 
   public void provision(OpenShiftEnvironment osEnv, RuntimeIdentity identity)
       throws InfrastructureException {
     // 1 stage - converting Che model env to OpenShift env
+    installerPortProvisioner.provision(osEnv, identity);
     serversConverter.provision(osEnv, identity);
     envVarsConverter.provision(osEnv, identity);
     if (pvcEnabled) {

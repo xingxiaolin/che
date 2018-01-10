@@ -17,6 +17,7 @@ import static org.slf4j.LoggerFactory.getLogger;
 
 import com.google.inject.assistedinject.Assisted;
 import com.google.inject.assistedinject.AssistedInject;
+import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
@@ -338,7 +339,7 @@ public class DockerInternalRuntime extends InternalRuntime<DockerRuntimeContext>
 
     if (machineCfg != null && !machineCfg.getInstallers().isEmpty()) {
       checkInterruption();
-      bootstrapperFactory.create(name, identity, machineCfg.getInstallers(), machine).bootstrap();
+      bootstrapperFactory.create(name, identity, new ArrayList<>(machineCfg.getInstallers()), machine).bootstrap();
     }
   }
 

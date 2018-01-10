@@ -211,7 +211,7 @@ public class MachineConfigsValidatorTest {
     return machineConfig;
   }
 
-  private static List<Installer> createInstallers(String... installers) {
+  private static List<InstallerImpl> createInstallers(String... installers) {
     return Arrays.stream(installers)
         .map(s -> new InstallerImpl().withId(s))
         .collect(Collectors.toList());

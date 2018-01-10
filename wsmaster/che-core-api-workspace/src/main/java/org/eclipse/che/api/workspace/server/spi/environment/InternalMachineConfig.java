@@ -15,8 +15,10 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.stream.Collectors;
 import org.eclipse.che.api.core.model.workspace.config.ServerConfig;
 import org.eclipse.che.api.core.model.workspace.config.Volume;
+import org.eclipse.che.api.installer.server.model.impl.InstallerImpl;
 import org.eclipse.che.api.installer.shared.model.Installer;
 import org.eclipse.che.api.workspace.server.spi.InfrastructureException;
 
@@ -33,13 +35,13 @@ import org.eclipse.che.api.workspace.server.spi.InfrastructureException;
  * @author gazarenkov
  */
 public class InternalMachineConfig {
-  private final List<Installer> installers;
+  private final List<InstallerImpl> installers;
   private final Map<String, ServerConfig> servers;
   private final Map<String, String> env;
   private final Map<String, String> attributes;
   private final Map<String, Volume> volumes;
 
-  InternalMachineConfig(
+  public InternalMachineConfig(
       List<Installer> installers,
       Map<String, ? extends ServerConfig> servers,
       Map<String, String> env,
@@ -53,7 +55,9 @@ public class InternalMachineConfig {
 
     this.installers = new ArrayList<>();
     if (installers != null) {
-      this.installers.addAll(installers);
+      installers.stream()
+          .map(InstallerImpl::new)
+          .collect(Collectors.toCollection(() -> this.installers));
     }
 
     this.env = new HashMap<>();
@@ -73,7 +77,7 @@ public class InternalMachineConfig {
   }
 
   /** Returns unmodifiable ordered list of installers configs of the machine. */
-  public List<Installer> getInstallers() {
+  public List<InstallerImpl> getInstallers() {
     return Collections.unmodifiableList(installers);
   }
 

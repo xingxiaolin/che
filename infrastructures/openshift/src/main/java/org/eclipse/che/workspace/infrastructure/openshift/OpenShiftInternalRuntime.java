@@ -201,7 +201,7 @@ public class OpenShiftInternalRuntime extends InternalRuntime<OpenShiftRuntimeCo
         getContext().getEnvironment().getMachines().get(machine.getName());
     if (machineConfig != null && !machineConfig.getInstallers().isEmpty())
       bootstrapperFactory
-          .create(getContext().getIdentity(), machineConfig.getInstallers(), machine)
+          .create(getContext().getIdentity(), new ArrayList<>(machineConfig.getInstallers()), machine)
           .bootstrap();
   }
 
