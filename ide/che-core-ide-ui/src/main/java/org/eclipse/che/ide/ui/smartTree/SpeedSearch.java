@@ -12,17 +12,23 @@ package org.eclipse.che.ide.ui.smartTree;
 
 import com.google.common.base.Predicate;
 import com.google.common.base.Strings;
-import com.google.common.collect.Iterables;
 import com.google.gwt.dom.client.*;
 import com.google.gwt.user.client.ui.Label;
 import com.google.gwt.user.client.ui.SimplePanel;
 import java.util.List;
+import java.util.Optional;
+import java.util.stream.Collectors;
+
 import org.eclipse.che.ide.DelayedTask;
 import org.eclipse.che.ide.ui.smartTree.converter.NodeConverter;
 import org.eclipse.che.ide.ui.smartTree.converter.impl.NodeNameConverter;
 import org.eclipse.che.ide.ui.smartTree.data.Node;
 import org.eclipse.che.ide.ui.smartTree.presentation.DefaultPresentationRenderer;
 import org.eclipse.che.ide.util.dom.Elements;
+
+import static com.google.gwt.dom.client.Style.BorderStyle.SOLID;
+import static com.google.gwt.dom.client.Style.Position.FIXED;
+import static com.google.gwt.dom.client.Style.Unit.PX;
 
 /** @author Vlad Zhukovskiy */
 public class SpeedSearch {
@@ -36,6 +42,8 @@ public class SpeedSearch {
   private static final String ID = "speedSearch";
 
   private int searchDelay;
+  private List<Node> allNodes;
+  private List<Node> rootItems;
 
   private class SearchPopUp extends SimplePanel {
     private Label searchLabel;
@@ -118,7 +126,7 @@ public class SpeedSearch {
 
   public SpeedSearch(Tree tree, NodeConverter<Node, String> nodeConverter) {
     this.tree = tree;
-    this.tree.setPresentationRenderer(new SearchRender(tree.getTreeStyles()));
+    //    this.tree.setPresentationRenderer(new SearchRender(tree.getTreeStyles()));
     this.nodeConverter = nodeConverter != null ? nodeConverter : new NodeNameConverter();
 
     keyNav.bind(tree);
@@ -133,13 +141,13 @@ public class SpeedSearch {
     Style style = this.searchPopUp.getElement().getStyle();
 
     style.setBackgroundColor("grey");
-    style.setBorderStyle(Style.BorderStyle.SOLID);
+    style.setBorderStyle(SOLID);
     style.setBorderColor("#dbdbdb");
-    style.setBorderWidth(1, Style.Unit.PX);
-    style.setPadding(2, Style.Unit.PX);
-    style.setPosition(Style.Position.FIXED);
-    style.setTop(1, Style.Unit.PX);
-    style.setLeft(20, Style.Unit.PX);
+    style.setBorderWidth(1, PX);
+    style.setPadding(2, PX);
+    style.setPosition(FIXED);
+    style.setTop(1, PX);
+    style.setLeft(20, PX);
   }
 
   private void addSearchPopUpToTree() {
@@ -177,9 +185,43 @@ public class SpeedSearch {
     searchPopUp.setSearchRequest(searchRequest.toString());
     tree.getSelectionModel().deselectAll();
 
-    Iterable<Node> filter = Iterables.filter(getVisibleNodes(), matchesToSearchRequest());
+    allNodes = allNodes == null ? getVisibleNodes() : allNodes;
+    rootItems = rootItems == null ? tree.getRootNodes() : rootItems;
+
+    List<Node> filter =
+        allNodes.stream().filter(matchesToSearchRequest()::apply).collect(Collectors.toList());
 
     boolean first = false;
+    NodeStorage nodeStorage = tree.getNodeStorage();
+
+    for (Node commonNode : allNodes) {
+      if (filter.stream().noneMatch(node -> node.getName().equals(commonNode.getName()))) {
+        if (filter
+            .stream()
+            .anyMatch(
+                node ->
+                    node.getParent() != null
+                        && node.getParent().getName().equals(commonNode.getName()))) {
+        } else if (getVisibleNodes()
+            .stream()
+            .anyMatch(node -> node.getName().equals(commonNode.getName()))) {
+          getVisibleNodes()
+              .stream()
+              .filter(node -> node.getName().equals(commonNode.getName()))
+              .findFirst()
+              .ifPresent(nodeStorage::remove);
+        }
+      } else if (getVisibleNodes()
+          .stream()
+          .noneMatch(node -> node.getName().equals(commonNode.getName()))) {
+        allNodes
+            .stream()
+            .filter(node -> node.getName().equals(commonNode.getName()))
+            .findFirst()
+            .ifPresent(nodeStorage::add);
+      }
+    }
+
     for (Node node : filter) {
       if (!first) {
         tree.scrollIntoView(node);
@@ -192,6 +234,9 @@ public class SpeedSearch {
 
   private void cancelSearch() {
     removeSearchPopUpFromTree();
+    tree.getNodeStorage().clear();
+    tree.getNodeStorage().add(rootItems);
+    tree.expandAll();
     Node node = tree.getRootNodes().get(0);
     tree.getSelectionModel().select(node, false);
     tree.scrollIntoView(node);
