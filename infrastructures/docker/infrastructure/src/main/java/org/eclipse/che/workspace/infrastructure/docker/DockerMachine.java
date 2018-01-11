@@ -15,6 +15,7 @@ import static org.slf4j.LoggerFactory.getLogger;
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.Map;
 import org.eclipse.che.api.core.model.workspace.runtime.Machine;
 import org.eclipse.che.api.core.model.workspace.runtime.MachineStatus;
@@ -54,6 +55,7 @@ public class DockerMachine implements Machine {
   private final DockerMachineStopDetector dockerMachineStopDetector;
   private final String registry;
   private final Map<String, ServerImpl> servers;
+  private final Map<String, String> attributes;
 
   private MachineStatus status;
 
@@ -64,19 +66,24 @@ public class DockerMachine implements Machine {
       Map<String, ServerImpl> servers,
       String registry,
       DockerMachineStopDetector dockerMachineStopDetector,
-      MachineStatus status) {
+      MachineStatus status,
+      Map<String, String> attributes) {
     this.container = containerId;
     this.docker = docker;
     this.image = image;
     this.registry = registry;
     this.dockerMachineStopDetector = dockerMachineStopDetector;
     this.servers = servers;
+    this.attributes = new HashMap<>();
+    if (attributes != null) {
+      this.attributes.putAll(attributes);
+    }
     this.status = status;
   }
 
   @Override
   public Map<String, String> getAttributes() {
-    return Collections.emptyMap();
+    return attributes;
   }
 
   @Override
@@ -167,7 +174,7 @@ public class DockerMachine implements Machine {
   static class StartingDockerMachine extends DockerMachine {
 
     public StartingDockerMachine() {
-      super(null, null, null, null, null, null, MachineStatus.STARTING);
+      super(null, null, null, null, null, null, MachineStatus.STARTING, null);
     }
 
     @Override

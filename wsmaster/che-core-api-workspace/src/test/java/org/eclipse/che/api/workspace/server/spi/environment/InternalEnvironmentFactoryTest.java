@@ -169,7 +169,7 @@ public class InternalEnvironmentFactoryTest {
         InstallerRegistry installerRegistry,
         RecipeRetriever recipeRetriever,
         MachineConfigsValidator machinesValidator) {
-      super(installerRegistry, recipeRetriever, machinesValidator);
+      super(installerRegistry, recipeRetriever, machinesValidator, 1024);
     }
 
     @Override

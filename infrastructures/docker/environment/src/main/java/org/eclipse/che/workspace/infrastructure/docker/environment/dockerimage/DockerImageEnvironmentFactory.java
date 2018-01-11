@@ -11,11 +11,14 @@
 package org.eclipse.che.workspace.infrastructure.docker.environment.dockerimage;
 
 import static com.google.common.base.Preconditions.checkArgument;
+import static com.google.common.base.Strings.isNullOrEmpty;
 import static java.lang.String.format;
+import static org.eclipse.che.api.core.model.workspace.config.MachineConfig.MEMORY_LIMIT_ATTRIBUTE;
 
 import java.util.List;
 import java.util.Map;
 import javax.inject.Inject;
+import javax.inject.Named;
 import javax.inject.Singleton;
 import org.eclipse.che.api.core.ValidationException;
 import org.eclipse.che.api.core.model.workspace.Warning;
@@ -38,8 +41,9 @@ public class DockerImageEnvironmentFactory
   public DockerImageEnvironmentFactory(
       InstallerRegistry installerRegistry,
       RecipeRetriever recipeRetriever,
-      MachineConfigsValidator machinesValidator) {
-    super(installerRegistry, recipeRetriever, machinesValidator);
+      MachineConfigsValidator machinesValidator,
+      @Named("che.workspace.default_memory_mb") long defaultMachineMemorySizeMB) {
+    super(installerRegistry, recipeRetriever, machinesValidator, defaultMachineMemorySizeMB);
   }
 
   @Override
@@ -70,6 +74,18 @@ public class DockerImageEnvironmentFactory
 
     checkArgument(dockerImage != null, "Docker image should not be null.");
 
+    setRamLimitAttribute(machines);
+
     return new DockerImageEnvironment(dockerImage, recipe, machines, warnings);
+  }
+
+  private void setRamLimitAttribute(Map<String, InternalMachineConfig> machines) {
+    for (InternalMachineConfig machineConfig : machines.values()) {
+      if (isNullOrEmpty(machineConfig.getAttributes().get(MEMORY_LIMIT_ATTRIBUTE))) {
+        machineConfig
+            .getAttributes()
+            .put(MEMORY_LIMIT_ATTRIBUTE, Long.toString(defaultMachineMemorySizeBytes));
+      }
+    }
   }
 }

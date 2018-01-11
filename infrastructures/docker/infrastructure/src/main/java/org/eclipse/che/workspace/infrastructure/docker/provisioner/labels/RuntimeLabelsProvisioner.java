@@ -10,7 +10,9 @@
  */
 package org.eclipse.che.workspace.infrastructure.docker.provisioner.labels;
 
+import java.util.HashMap;
 import java.util.Map;
+import org.eclipse.che.api.core.model.workspace.runtime.Machine;
 import org.eclipse.che.api.core.model.workspace.runtime.RuntimeIdentity;
 import org.eclipse.che.api.workspace.server.spi.InfrastructureException;
 import org.eclipse.che.api.workspace.server.spi.environment.InternalMachineConfig;
@@ -32,9 +34,16 @@ public class RuntimeLabelsProvisioner implements ConfigurationProvisioner {
     for (Map.Entry<String, InternalMachineConfig> entry : internalEnv.getMachines().entrySet()) {
       String name = entry.getKey();
       DockerContainerConfig container = internalEnv.getContainers().get(name);
+      HashMap<String, String> attributes = new HashMap<>();
+      attributes.put(Machine.MEMORY_LIMIT_ATTRIBUTE, String.valueOf(container.getMemLimit()));
       container
           .getLabels()
-          .putAll(Labels.newSerializer().machineName(name).runtimeId(identity).labels());
+          .putAll(
+              Labels.newSerializer()
+                  .machineName(name)
+                  .machineAttributes(attributes)
+                  .runtimeId(identity)
+                  .labels());
     }
   }
 }

@@ -48,13 +48,18 @@ public abstract class InternalEnvironmentFactory<T extends InternalEnvironment> 
   private final RecipeRetriever recipeRetriever;
   private final MachineConfigsValidator machinesValidator;
 
+  /** Default limitation of machine RAM in bytes */
+  protected final long defaultMachineMemorySizeBytes;
+
   public InternalEnvironmentFactory(
       InstallerRegistry installerRegistry,
       RecipeRetriever recipeRetriever,
-      MachineConfigsValidator machinesValidator) {
+      MachineConfigsValidator machinesValidator,
+      long defaultMachineMemorySizeMB) {
     this.installerRegistry = installerRegistry;
     this.recipeRetriever = recipeRetriever;
     this.machinesValidator = machinesValidator;
+    this.defaultMachineMemorySizeBytes = defaultMachineMemorySizeMB * 1024 * 1024;
   }
 
   /**
