@@ -706,7 +706,7 @@ public class LightTheme implements Theme {
 
   @Override
   public String getMainMenuBkgColor() {
-    return "#cacacc";
+    return "#ffffff";
   }
 
   @Override

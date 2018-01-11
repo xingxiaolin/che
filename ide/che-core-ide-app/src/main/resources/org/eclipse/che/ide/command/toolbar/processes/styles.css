@@ -29,11 +29,11 @@
     font-style: normal;
     font-stretch: normal;
     text-align: center;
-    color: #4eabff;
+/*    color: #4eabff;*/
     width: 44px;
     height: 22px;
     line-height: 22px;
-    background: commandsToolbarProcessesLabelBackground;
+/*    background: commandsToolbarProcessesLabelBackground;*/
     cursor: default;
 }
 
