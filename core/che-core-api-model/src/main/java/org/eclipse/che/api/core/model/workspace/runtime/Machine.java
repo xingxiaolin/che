@@ -19,6 +19,12 @@ import java.util.Map;
  */
 public interface Machine {
 
+  /**
+   * Name of the attribute from {@link #getAttributes()} which is define the memory limit in bytes
+   * for the machine runtime, value for this attribute is fetched from machine config.
+   */
+  String MEMORY_LIMIT_ATTRIBUTE = "memoryLimitBytes";
+
   /** Returns machine specific attributes. */
   Map<String, String> getAttributes();
 
