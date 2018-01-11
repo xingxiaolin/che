@@ -57,7 +57,8 @@ public class InstallerPortProvisionerTest {
         emptyMap());
 
     Map<String, ServerConfigImpl> servers2 = new HashMap<>();
-    servers2.put("server2", new ServerConfigImpl("8080/tcp", "http", "/api", emptyMap()));
+    servers2.put("server2-http", new ServerConfigImpl("8080/tcp", "http", "/api", emptyMap()));
+    servers2.put("server2-ws", new ServerConfigImpl("8080/tcp", "ws", "/api", emptyMap()));
 
     InstallerImpl installer2 = new InstallerImpl("installer2", "name", "v1", "description",
         emptyList(), emptyMap(), "script", servers2);
@@ -74,15 +75,23 @@ public class InstallerPortProvisionerTest {
     assertEquals(machine1.getInstallers().get(0).getServers().get("server1").getPort(), "8080/tcp");
 
 
-    String newPortEnv = machine2.getEnv().get("installer2_server2");
+    String newPortEnv = machine2.getEnv().get("CHE_SERVER_SERVER2_HTTP_PORT");
     assertTrue(Pattern.compile("\\d{5}").matcher(newPortEnv).matches());
 
     Pattern portPattern = Pattern.compile("\\d{5}/tcp");
-    String newServerPort = machine2.getServers().get("server2").getPort();
-    assertTrue(portPattern.matcher(newServerPort).matches());
+    String newHttpServerPort = machine2.getServers().get("server2-http").getPort();
+    String newWsServerPort = machine2.getServers().get("server2-ws").getPort();
+    assertTrue(portPattern.matcher(newHttpServerPort).matches());
+    assertTrue(portPattern.matcher(newWsServerPort).matches());
+    assertEquals(newHttpServerPort, newWsServerPort);
 
-    String newInstallerServerPort = machine2.getInstallers().get(0).getServers().get("server2").getPort();
-    assertTrue(portPattern.matcher(newInstallerServerPort).matches());
+    String newInstallerHttpServerPort = machine2.getInstallers().get(0).getServers().get("server2-http").getPort();
+    assertTrue(portPattern.matcher(newInstallerHttpServerPort).matches());
+
+    String newInstallerWsServerPort = machine2.getInstallers().get(0).getServers().get("server2-ws").getPort();
+    assertTrue(portPattern.matcher(newInstallerWsServerPort).matches());
+
+    assertEquals(newHttpServerPort, newInstallerHttpServerPort);
+    assertEquals(newWsServerPort, newInstallerWsServerPort);
   }
-
 }

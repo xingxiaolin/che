@@ -135,13 +135,6 @@ else
     exit 1
 fi
 
-command -v pidof >/dev/null 2>&1 && {
-    pidof che-websocket-terminal >/dev/null 2>&1 && exit
-} || {
-    ps -fC che-websocket-terminal >/dev/null 2>&1 && exit
-}
-
-
 ########################
 ### Install Terminal ###
 ########################
@@ -218,7 +211,9 @@ if [ -f /bin/bash ]; then
     SHELL_INTERPRETER="/bin/bash"
 fi
 
+TERMINAL_PORT=${CHE_SERVER_TERMINAL_PORT:-4411}
+
 #####################################################
 ### terminal-agent run command will be added here ###
 #####################################################
-$HOME/che/terminal/che-websocket-terminal -addr :4411 -cmd ${SHELL_INTERPRETER}
+$HOME/che/terminal/che-websocket-terminal -addr :${TERMINAL_PORT} -cmd ${SHELL_INTERPRETER} >> /projects/terminal.log

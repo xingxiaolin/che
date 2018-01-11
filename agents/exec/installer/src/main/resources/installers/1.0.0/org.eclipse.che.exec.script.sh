@@ -139,12 +139,6 @@ else
     exit 1
 fi
 
-command -v pidof >/dev/null 2>&1 && {
-    pidof exec-agent >/dev/null 2>&1 && exit
-} || {
-    ps -fC exec-agent >/dev/null 2>&1 && exit
-}
-
 
 ########################
 ### Install Exec agent ###
@@ -222,7 +216,11 @@ if [ -f /bin/bash ]; then
     SHELL_INTERPRETER="/bin/bash"
 fi
 
+echo ${CHE_SERVER_TERMINAL_PORT}
+
+EXEC_AGENT_PORT=${CHE_SERVER_EXEC_AGENT_HTTP_PORT:-4412}
+
 #####################################################
 ### exec-agent run command will be added here ###
 #####################################################
-$HOME/che/exec-agent/che-exec-agent -addr :4412 -cmd ${SHELL_INTERPRETER} -logs-dir $HOME/che/exec-agent/logs
+$HOME/che/exec-agent/che-exec-agent -addr :${EXEC_AGENT_PORT} -cmd ${SHELL_INTERPRETER} -logs-dir $HOME/che/exec-agent/logs

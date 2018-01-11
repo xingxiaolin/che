@@ -11,8 +11,11 @@
 package org.eclipse.che.workspace.infrastructure.openshift.provision;
 
 import com.google.common.annotations.VisibleForTesting;
+import com.google.common.collect.ArrayListMultimap;
+import com.google.common.collect.Multimap;
 import io.fabric8.kubernetes.api.model.Container;
 import io.fabric8.kubernetes.api.model.Pod;
+import java.util.Collection;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
@@ -26,6 +29,7 @@ import org.eclipse.che.api.installer.server.model.impl.InstallerImpl;
 import org.eclipse.che.api.installer.server.model.impl.InstallerServerConfigImpl;
 import org.eclipse.che.api.workspace.server.spi.InfrastructureException;
 import org.eclipse.che.api.workspace.server.spi.environment.InternalMachineConfig;
+import org.eclipse.che.commons.lang.Pair;
 import org.eclipse.che.workspace.infrastructure.openshift.Names;
 import org.eclipse.che.workspace.infrastructure.openshift.environment.OpenShiftEnvironment;
 
@@ -56,47 +60,61 @@ public class InstallerPortProvisioner implements ConfigurationProvisioner {
 
   @VisibleForTesting
   void fixPortConflicts(Map<String, InternalMachineConfig> machines) {
-    Set<String> occupiedPorts = new HashSet<>();
+    Set<Integer> occupiedPorts = new HashSet<>();
 
     for (Entry<String, InternalMachineConfig> machineConfigEntry : machines.entrySet()) {
       InternalMachineConfig machineConfig = machineConfigEntry.getValue();
 
-
-
       for (InstallerImpl installer : machineConfig.getInstallers()) {
+        Multimap<Integer, String> portToServerNames = ArrayListMultimap.create();
         for (Entry<String, ? extends ServerConfig> serverEntry : installer.getServers()
             .entrySet()) {
           String serverName = serverEntry.getKey();
           ServerConfig serverConfig = serverEntry.getValue();
 
-          String[] splittedPort = serverConfig.getPort().split("/");
-          String portValue = splittedPort[0];
-          String protocol = splittedPort[1];
-          if (!occupiedPorts.add(portValue)) {
-            InstallerServerConfigImpl newServerConfig = new InstallerServerConfigImpl(
-                serverConfig);
+          Pair<Integer, String> portProtocol = getPortProtocol(serverConfig.getPort());
 
+          portToServerNames.put(portProtocol.first, serverName);
+        }
+
+        for (Entry<Integer, Collection<String>> portServersEntry : portToServerNames.asMap()
+            .entrySet()) {
+          Integer port = portServersEntry.getKey();
+
+          if (!occupiedPorts.add(port)) {
             Random random = new Random();
             int newPort = generatePort(random); // 10_000 -> 20_000
-            String newPortStr = Integer.toString(newPort);
-
-            while (occupiedPorts.contains(newPortStr)) {
+            while (!occupiedPorts.add(newPort)) {
               newPort = generatePort(random); // 10_000 -> 20_000
-              newPortStr = Integer.toString(newPort);
             }
 
-            newServerConfig.setPort(newPortStr + "/" + protocol);
+            for (String serverName : portServersEntry.getValue()) {
+              ServerConfig serverConfig = installer.getServers().get(serverName);
+              String protocol = getPortProtocol(serverConfig.getPort()).second;
 
-            occupiedPorts.add(newPortStr);
+              InstallerServerConfigImpl newServerConfig = new InstallerServerConfigImpl(
+                  serverConfig);
 
-            installer.getServers().put(serverName, newServerConfig);
-            machineConfig.getServers().put(serverName, newServerConfig);
+              newServerConfig.setPort(newPort + "/" + protocol);
 
-            machineConfig.getEnv().put(getEnvName(serverName), newPortStr);
+              occupiedPorts.add(newPort);
+
+              installer.getServers().put(serverName, newServerConfig);
+              machineConfig.getServers().put(serverName, newServerConfig);
+
+              machineConfig.getEnv().put(getEnvName(serverName), Integer.toString(newPort));
+            }
           }
         }
       }
     }
+  }
+
+  private Pair<Integer, String> getPortProtocol(String port) {
+    String[] splittedPort = port.split("/");
+    Integer portValue = Integer.parseInt(splittedPort[0]);
+    String protocol = splittedPort[1];
+    return Pair.of(portValue, protocol);
   }
 
   @VisibleForTesting
