@@ -126,7 +126,7 @@ public class SpeedSearch {
 
   public SpeedSearch(Tree tree, NodeConverter<Node, String> nodeConverter) {
     this.tree = tree;
-    //    this.tree.setPresentationRenderer(new SearchRender(tree.getTreeStyles()));
+    this.tree.setPresentationRenderer(new SearchRender(tree.getTreeStyles()));
     this.nodeConverter = nodeConverter != null ? nodeConverter : new NodeNameConverter();
 
     keyNav.bind(tree);
@@ -222,14 +222,14 @@ public class SpeedSearch {
       }
     }
 
-    for (Node node : filter) {
+    for (Node filteredNode : filter) {
       if (!first) {
-        tree.scrollIntoView(node);
+        tree.scrollIntoView(filteredNode);
         first = true;
       }
-      tree.getSelectionModel().select(node, true);
-      tree.refresh(node);
+      tree.getSelectionModel().select(filteredNode, true);
     }
+    getVisibleNodes().forEach(node -> tree.refresh(node));
   }
 
   private void cancelSearch() {
@@ -268,18 +268,37 @@ public class SpeedSearch {
       // Initialize HTML elements.
       final Element rootContainer = super.render(node, domID, joint, depth);
       final Element nodeContainer = rootContainer.getFirstChildElement();
-      Element item = nodeContainer.getElementsByTagName("div").getItem(0).getFirstChildElement();
+
+      if (searchRequest.toString().isEmpty()) {
+        return rootContainer;
+      }
+
+      Element item = nodeContainer.getElementsByTagName("span").getItem(0);
       String innerText = item.getInnerText();
 
-      item.removeAllChildren();
+      if (innerText.isEmpty()) {
+        item = nodeContainer.getElementsByTagName("div").getItem(0).getFirstChildElement();
+        innerText = item.getInnerText();
+      }
 
+      if (!innerText.toLowerCase().contains(searchRequest.toString().toLowerCase())) {
+        return rootContainer;
+      }
+
+      item.setInnerText("");
       SpanElement spanElement1 = (SpanElement) Elements.createSpanElement();
       SpanElement spanElement2 = (SpanElement) Elements.createSpanElement();
       SpanElement spanElement3 = (SpanElement) Elements.createSpanElement();
       spanElement1.setInnerText(
-          innerText.substring(0, innerText.indexOf(searchRequest.toString())));
-      spanElement2.setInnerText(searchRequest.toString());
-      spanElement3.setInnerText(innerText.substring(innerText.indexOf(searchRequest.toString())));
+          innerText.substring(
+              0, innerText.toLowerCase().indexOf(searchRequest.toString().toLowerCase())));
+      int i = innerText.toLowerCase().indexOf(searchRequest.toString().toLowerCase());
+      spanElement2.setInnerText(innerText.substring(i, i + searchRequest.toString().length()));
+      spanElement2.getStyle().setColor("red");
+      spanElement3.setInnerText(
+          innerText.substring(
+              innerText.toLowerCase().indexOf(searchRequest.toString().toLowerCase())
+                  + searchRequest.toString().length()));
       item.appendChild(spanElement1);
       item.appendChild(spanElement2);
       item.appendChild(spanElement3);
