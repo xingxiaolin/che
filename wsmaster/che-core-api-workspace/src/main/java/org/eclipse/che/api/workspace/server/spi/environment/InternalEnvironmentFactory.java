@@ -10,6 +10,9 @@
  */
 package org.eclipse.che.api.workspace.server.spi.environment;
 
+import static com.google.common.base.Strings.isNullOrEmpty;
+import static org.eclipse.che.api.core.model.workspace.config.MachineConfig.MEMORY_LIMIT_ATTRIBUTE;
+
 import com.google.common.annotations.VisibleForTesting;
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -47,9 +50,7 @@ public abstract class InternalEnvironmentFactory<T extends InternalEnvironment> 
   private final InstallerRegistry installerRegistry;
   private final RecipeRetriever recipeRetriever;
   private final MachineConfigsValidator machinesValidator;
-
-  /** Default limitation of machine RAM in bytes */
-  protected final long defaultMachineMemorySizeBytes;
+  private final String defaultMachineMemorySizeAttribute;
 
   public InternalEnvironmentFactory(
       InstallerRegistry installerRegistry,
@@ -59,7 +60,8 @@ public abstract class InternalEnvironmentFactory<T extends InternalEnvironment> 
     this.installerRegistry = installerRegistry;
     this.recipeRetriever = recipeRetriever;
     this.machinesValidator = machinesValidator;
-    this.defaultMachineMemorySizeBytes = defaultMachineMemorySizeMB * 1024 * 1024;
+    this.defaultMachineMemorySizeAttribute =
+        String.valueOf(defaultMachineMemorySizeMB * 1024 * 1024);
   }
 
   /**
@@ -111,7 +113,17 @@ public abstract class InternalEnvironmentFactory<T extends InternalEnvironment> 
 
     machinesValidator.validate(machines);
 
-    return doCreate(recipe, machines, warnings);
+    final T environment = doCreate(recipe, machines, warnings);
+
+    // sets default memory limit attribute if it is not present.
+    for (InternalMachineConfig machineConfig : environment.getMachines().values()) {
+      if (isNullOrEmpty(machineConfig.getAttributes().get(MEMORY_LIMIT_ATTRIBUTE))) {
+        machineConfig
+            .getAttributes()
+            .put(MEMORY_LIMIT_ATTRIBUTE, defaultMachineMemorySizeAttribute);
+      }
+    }
+    return environment;
   }
 
   /**

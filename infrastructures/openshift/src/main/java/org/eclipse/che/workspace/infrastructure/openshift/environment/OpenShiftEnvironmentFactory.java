@@ -175,8 +175,11 @@ public class OpenShiftEnvironmentFactory extends InternalEnvironmentFactory<Open
               && quantity.getAmount() != null) {
             recipeRamLimit = KubernetesSize.toBytes(quantity.getAmount());
           }
-          recipeRamLimit = recipeRamLimit > 0 ? recipeRamLimit : defaultMachineMemorySizeBytes;
-          machineConfig.getAttributes().put(MEMORY_LIMIT_ATTRIBUTE, Long.toString(recipeRamLimit));
+          if (recipeRamLimit > 0) {
+            machineConfig
+                .getAttributes()
+                .put(MEMORY_LIMIT_ATTRIBUTE, Long.toString(recipeRamLimit));
+          }
         }
       }
     }

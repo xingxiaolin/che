@@ -48,7 +48,6 @@ import org.testng.annotations.Test;
 public class ComposeEnvironmentVariableTest {
 
   private static final long DEFAULT_RAM_LIMIT_MB = 2048;
-  private static final long DEFAULT_RAM_LIMIT_BYTES = DEFAULT_RAM_LIMIT_MB * 1024 * 1024;
 
   private static final String MACHINE_NAME_1 = "machine1";
   private static final String MACHINE_NAME_2 = "machine2";
@@ -229,31 +228,6 @@ public class ComposeEnvironmentVariableTest {
         "Parsing of environment configuration failed. Unsupported value 'MYSQL_DATABASE'\\.(?s).*"
       },
     };
-  }
-
-  @Test
-  public void testSetsDefaultRamLimitAttributeWhenNoConfigured() throws Exception {
-    final Map<String, InternalMachineConfig> machines =
-        ImmutableMap.of(
-            MACHINE_NAME_1,
-            mockInternalMachineConfig(new HashMap<>()),
-            MACHINE_NAME_2,
-            mockInternalMachineConfig(new HashMap<>()));
-
-    factory.setRamLimitAttribute(
-        machines,
-        ImmutableMap.of(
-            MACHINE_NAME_1, mockComposeService(0), MACHINE_NAME_2, mockComposeService(0)));
-
-    final long[] actual =
-        machines
-            .values()
-            .stream()
-            .mapToLong(m -> Long.parseLong(m.getAttributes().get(MEMORY_LIMIT_ATTRIBUTE)))
-            .toArray();
-    final long[] expected = new long[actual.length];
-    fill(expected, DEFAULT_RAM_LIMIT_BYTES);
-    assertTrue(Arrays.equals(actual, expected));
   }
 
   @Test

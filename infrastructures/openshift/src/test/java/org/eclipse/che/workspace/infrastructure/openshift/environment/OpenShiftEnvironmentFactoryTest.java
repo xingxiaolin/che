@@ -39,6 +39,8 @@ import io.fabric8.kubernetes.api.model.ObjectMeta;
 import io.fabric8.kubernetes.api.model.PersistentVolumeClaim;
 import io.fabric8.kubernetes.api.model.Pod;
 import io.fabric8.kubernetes.api.model.PodSpec;
+import io.fabric8.kubernetes.api.model.Quantity;
+import io.fabric8.kubernetes.api.model.ResourceRequirements;
 import io.fabric8.kubernetes.client.dsl.KubernetesListMixedOperation;
 import io.fabric8.kubernetes.client.dsl.RecreateFromServerGettable;
 import io.fabric8.openshift.api.model.Route;
@@ -70,7 +72,6 @@ public class OpenShiftEnvironmentFactoryTest {
 
   private static final String YAML_RECIPE = "application/x-yaml";
   private static final long DEFAULT_RAM_LIMIT_MB = 2048;
-  private static final long DEFAULT_RAM_LIMIT_BYTES = DEFAULT_RAM_LIMIT_MB * 1024 * 1024;
   public static final String MACHINE_NAME_1 = "machine1";
   public static final String MACHINE_NAME_2 = "machine2";
 
@@ -133,14 +134,17 @@ public class OpenShiftEnvironmentFactoryTest {
   }
 
   @Test
-  public void testSetsRamLimitAttributeWhenNoConfigured() throws Exception {
+  public void testSetsRamLimitAttributeFromOpenShiftResource() throws Exception {
+    final long recipeRamLimit = 3072;
     final Map<String, InternalMachineConfig> machines =
         ImmutableMap.of(
             MACHINE_NAME_1,
             mockInternalMachineConfig(new HashMap<>()),
             MACHINE_NAME_2,
             mockInternalMachineConfig(new HashMap<>()));
-    final Set<Pod> pods = ImmutableSet.of(mockPod(MACHINE_NAME_1), mockPod(MACHINE_NAME_2));
+    final Set<Pod> pods =
+        ImmutableSet.of(
+            mockPod(MACHINE_NAME_1, recipeRamLimit), mockPod(MACHINE_NAME_2, recipeRamLimit));
 
     osEnvironmentFactory.setRamLimitAttribute(machines, pods);
 
@@ -151,7 +155,7 @@ public class OpenShiftEnvironmentFactoryTest {
             .mapToLong(m -> Long.parseLong(m.getAttributes().get(MEMORY_LIMIT_ATTRIBUTE)))
             .toArray();
     final long[] expected = new long[actual.length];
-    fill(expected, DEFAULT_RAM_LIMIT_BYTES);
+    fill(expected, recipeRamLimit);
     assertTrue(Arrays.equals(actual, expected));
   }
 
@@ -166,8 +170,8 @@ public class OpenShiftEnvironmentFactoryTest {
             mockInternalMachineConfig(attributes),
             MACHINE_NAME_2,
             mockInternalMachineConfig(attributes));
-    final Pod pod1 = mockPod(MACHINE_NAME_1);
-    final Pod pod2 = mockPod(MACHINE_NAME_2);
+    final Pod pod1 = mockPod(MACHINE_NAME_1, 0);
+    final Pod pod2 = mockPod(MACHINE_NAME_2, 0);
     final Set<Pod> pods = ImmutableSet.of(pod1, pod2);
 
     osEnvironmentFactory.setRamLimitAttribute(machines, pods);
@@ -189,15 +193,20 @@ public class OpenShiftEnvironmentFactoryTest {
     return machineConfigMock;
   }
 
-  private static Pod mockPod(String machineName) {
+  private static Pod mockPod(String machineName, long ramLimit) {
     final String containerName = "container_" + machineName;
     final Container containerMock = mock(Container.class);
+    final ResourceRequirements resourcesMock = mock(ResourceRequirements.class);
+    final Quantity quantityMock = mock(Quantity.class);
     final Pod podMock = mock(Pod.class);
     final PodSpec specMock = mock(PodSpec.class);
     final ObjectMeta metadataMock = mock(ObjectMeta.class);
     when(podMock.getSpec()).thenReturn(specMock);
     when(podMock.getMetadata()).thenReturn(metadataMock);
+    when(quantityMock.getAmount()).thenReturn(String.valueOf(ramLimit));
+    when(resourcesMock.getLimits()).thenReturn(ImmutableMap.of("memory", quantityMock));
     when(containerMock.getName()).thenReturn(containerName);
+    when(containerMock.getResources()).thenReturn(resourcesMock);
     when(metadataMock.getAnnotations())
         .thenReturn(
             ImmutableMap.of(format(MACHINE_NAME_ANNOTATION_FMT, containerName), machineName));

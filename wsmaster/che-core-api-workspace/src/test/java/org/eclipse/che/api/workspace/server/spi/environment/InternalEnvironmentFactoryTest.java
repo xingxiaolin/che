@@ -14,6 +14,7 @@ import static java.util.Collections.singletonList;
 import static java.util.Collections.singletonMap;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyList;
+import static org.mockito.ArgumentMatchers.anyMap;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.doReturn;
 import static org.mockito.Mockito.mock;
@@ -23,6 +24,7 @@ import static org.mockito.Mockito.when;
 import static org.testng.Assert.assertEquals;
 
 import com.google.common.collect.ImmutableMap;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -64,6 +66,9 @@ public class InternalEnvironmentFactoryTest {
   public void setUp() throws Exception {
     environmentFactory =
         spy(new TestEnvironmentFactory(installerRegistry, recipeRetriever, machinesValidator));
+    final InternalEnvironment internalEnv = mock(InternalEnvironment.class);
+    when(internalEnv.getMachines()).thenReturn(Collections.emptyMap());
+    when(environmentFactory.doCreate(any(), anyMap(), anyList())).thenReturn(internalEnv);
   }
 
   @Test

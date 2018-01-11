@@ -112,9 +112,6 @@ public class ComposeEnvironmentFactory extends InternalEnvironmentFactory<Compos
         final Long memLimit = composeService.getMemLimit();
         if (memLimit != null && memLimit > 0) {
           machineConfigAttributes.put(MEMORY_LIMIT_ATTRIBUTE, Long.toString(memLimit));
-        } else {
-          machineConfigAttributes.put(
-              MEMORY_LIMIT_ATTRIBUTE, Long.toString(defaultMachineMemorySizeBytes));
         }
       }
     }

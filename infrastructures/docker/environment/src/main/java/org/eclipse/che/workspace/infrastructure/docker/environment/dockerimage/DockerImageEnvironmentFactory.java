@@ -11,9 +11,7 @@
 package org.eclipse.che.workspace.infrastructure.docker.environment.dockerimage;
 
 import static com.google.common.base.Preconditions.checkArgument;
-import static com.google.common.base.Strings.isNullOrEmpty;
 import static java.lang.String.format;
-import static org.eclipse.che.api.core.model.workspace.config.MachineConfig.MEMORY_LIMIT_ATTRIBUTE;
 
 import java.util.List;
 import java.util.Map;
@@ -74,18 +72,6 @@ public class DockerImageEnvironmentFactory
 
     checkArgument(dockerImage != null, "Docker image should not be null.");
 
-    setRamLimitAttribute(machines);
-
     return new DockerImageEnvironment(dockerImage, recipe, machines, warnings);
-  }
-
-  private void setRamLimitAttribute(Map<String, InternalMachineConfig> machines) {
-    for (InternalMachineConfig machineConfig : machines.values()) {
-      if (isNullOrEmpty(machineConfig.getAttributes().get(MEMORY_LIMIT_ATTRIBUTE))) {
-        machineConfig
-            .getAttributes()
-            .put(MEMORY_LIMIT_ATTRIBUTE, Long.toString(defaultMachineMemorySizeBytes));
-      }
-    }
   }
 }
