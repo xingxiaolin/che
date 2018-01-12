@@ -159,7 +159,7 @@ public class RamResourceUsageTrackerTest {
   }
 
   /** Creates users workspace object based on the status and machines RAM. */
-  public static WorkspaceImpl createWorkspace(WorkspaceStatus status, Integer... machineRams) {
+  private static WorkspaceImpl createWorkspace(WorkspaceStatus status, Integer... machineRams) {
     final Map<String, MachineImpl> machines = new HashMap<>(machineRams.length - 1);
     final Map<String, MachineConfigImpl> machineConfigs = new HashMap<>(machineRams.length - 1);
     byte i = 1;

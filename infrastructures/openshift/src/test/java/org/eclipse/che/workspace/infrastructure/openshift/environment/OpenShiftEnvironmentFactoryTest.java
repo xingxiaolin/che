@@ -84,6 +84,10 @@ public class OpenShiftEnvironmentFactoryTest {
   @Mock private InternalRecipe internalRecipe;
   @Mock private KubernetesListMixedOperation listMixedOperation;
   @Mock private KubernetesList validatedObjects;
+  @Mock private InternalMachineConfig machineConfig1;
+  @Mock private InternalMachineConfig machineConfig2;
+
+  private Map<String, InternalMachineConfig> machines;
 
   @Mock
   private RecreateFromServerGettable<KubernetesList, KubernetesList, DoneableKubernetesList>
@@ -101,6 +105,7 @@ public class OpenShiftEnvironmentFactoryTest {
     when(internalEnvironment.getRecipe()).thenReturn(internalRecipe);
     when(internalRecipe.getContentType()).thenReturn(YAML_RECIPE);
     when(internalRecipe.getContent()).thenReturn("recipe content");
+    machines = ImmutableMap.of(MACHINE_NAME_1, machineConfig1, MACHINE_NAME_2, machineConfig2);
   }
 
   @Test
@@ -136,12 +141,8 @@ public class OpenShiftEnvironmentFactoryTest {
   @Test
   public void testSetsRamLimitAttributeFromOpenShiftResource() throws Exception {
     final long recipeRamLimit = 3072;
-    final Map<String, InternalMachineConfig> machines =
-        ImmutableMap.of(
-            MACHINE_NAME_1,
-            mockInternalMachineConfig(new HashMap<>()),
-            MACHINE_NAME_2,
-            mockInternalMachineConfig(new HashMap<>()));
+    when(machineConfig1.getAttributes()).thenReturn(new HashMap<>());
+    when(machineConfig2.getAttributes()).thenReturn(new HashMap<>());
     final Set<Pod> pods =
         ImmutableSet.of(
             mockPod(MACHINE_NAME_1, recipeRamLimit), mockPod(MACHINE_NAME_2, recipeRamLimit));
@@ -164,12 +165,8 @@ public class OpenShiftEnvironmentFactoryTest {
     final long customRamLimit = 3072;
     final Map<String, String> attributes =
         ImmutableMap.of(MEMORY_LIMIT_ATTRIBUTE, String.valueOf(customRamLimit));
-    final Map<String, InternalMachineConfig> machines =
-        ImmutableMap.of(
-            MACHINE_NAME_1,
-            mockInternalMachineConfig(attributes),
-            MACHINE_NAME_2,
-            mockInternalMachineConfig(attributes));
+    when(machineConfig1.getAttributes()).thenReturn(attributes);
+    when(machineConfig2.getAttributes()).thenReturn(attributes);
     final Pod pod1 = mockPod(MACHINE_NAME_1, 0);
     final Pod pod2 = mockPod(MACHINE_NAME_2, 0);
     final Set<Pod> pods = ImmutableSet.of(pod1, pod2);
@@ -185,12 +182,6 @@ public class OpenShiftEnvironmentFactoryTest {
     final long[] expected = new long[actual.length];
     fill(expected, customRamLimit);
     assertTrue(Arrays.equals(actual, expected));
-  }
-
-  private static InternalMachineConfig mockInternalMachineConfig(Map<String, String> attributes) {
-    final InternalMachineConfig machineConfigMock = mock(InternalMachineConfig.class);
-    when(machineConfigMock.getAttributes()).thenReturn(attributes);
-    return machineConfigMock;
   }
 
   private static Pod mockPod(String machineName, long ramLimit) {
