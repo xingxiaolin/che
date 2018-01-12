@@ -253,16 +253,18 @@ public class SpeedSearch {
   }
 
   private Predicate<Node> matchesToSearchRequest() {
+    return inputNode -> {
+      String nodeString = nodeConverter.convert(inputNode);
+      return nodeString.toLowerCase().matches(getPattern().toLowerCase());
+    };
+  }
 
+  private String getPattern() {
     StringBuilder pattern = new StringBuilder(".*");
     for (int i = 0; i < searchRequest.length(); i++) {
       pattern.append(searchRequest.charAt(i)).append(".*");
     }
-
-    return inputNode -> {
-      String nodeString = nodeConverter.convert(inputNode);
-      return nodeString.toLowerCase().matches(pattern.toString().toLowerCase());
-    };
+    return pattern.toString().toLowerCase();
   }
 
   class SearchRender extends DefaultPresentationRenderer<Node> {
@@ -289,50 +291,30 @@ public class SpeedSearch {
         innerText = item.getInnerText();
       }
 
-      String group = "";
-      List<String> groups = new ArrayList<>();
-      for (int i = 0; i < searchRequest.length(); i++) {
-
-        String value = String.valueOf(searchRequest.charAt(i)).toLowerCase();
-
-        if (innerText.toLowerCase().contains(group + value)) {
-          group += value;
-          if (i == searchRequest.length() - 1) {
-            groups.add(group);
-          }
-
-
-
-        } else if (!group.isEmpty()) {
-          groups.add(group);
-          if (i == searchRequest.length() - 1) {
-            groups.add(value);
-          } else if (innerText.toLowerCase().contains(value)) {
-            group = value;
-          } else {
-            group = "";
-          }
-        }
+      List<String> groups = getMatching(innerText);
+      if (groups.isEmpty()) {
+        return rootContainer;
       }
 
-      if (groups.isEmpty()) {
+      if (!innerText.toLowerCase().matches(getPattern())) {
         return rootContainer;
       }
 
       item.setInnerText("");
 
-      for (String groupValue : groups) {
+      for (int i = 0; i < groups.size(); i++) {
+        String groupValue = groups.get(i);
         SpanElement spanElement1 = (SpanElement) Elements.createSpanElement();
         SpanElement spanElement2 = (SpanElement) Elements.createSpanElement();
         spanElement1.setInnerText(
             innerText.substring(0, innerText.toLowerCase().indexOf(groupValue)));
-        int i = innerText.toLowerCase().indexOf(groupValue);
-        spanElement2.setInnerText(innerText.substring(i, i + groupValue.length()));
+        int index = innerText.toLowerCase().indexOf(groupValue);
+        spanElement2.setInnerText(innerText.substring(index, index + groupValue.length()));
         spanElement2.getStyle().setColor("red");
         item.appendChild(spanElement1);
         item.appendChild(spanElement2);
 
-        if (groups.indexOf(groupValue) == groups.size() - 1) {
+        if (i == groups.size() - 1) {
           SpanElement spanElement3 = (SpanElement) Elements.createSpanElement();
           spanElement3.setInnerText(
               innerText.substring(
@@ -346,6 +328,32 @@ public class SpeedSearch {
       }
 
       return rootContainer;
+    }
+
+    private List<String> getMatching(String input) {
+      String group = "";
+      List<String> groups = new ArrayList<>();
+      for (int i = 0; i < searchRequest.length(); i++) {
+
+        String value = String.valueOf(searchRequest.charAt(i)).toLowerCase();
+
+        if (input.toLowerCase().contains(group + value)) {
+          group += value;
+          if (i == searchRequest.length() - 1) {
+            groups.add(group);
+          }
+        } else if (!group.isEmpty()) {
+          groups.add(group);
+          if (i == searchRequest.length() - 1) {
+            groups.add(value);
+          } else if (input.toLowerCase().contains(value)) {
+            group = value;
+          } else {
+            group = "";
+          }
+        }
+      }
+      return groups;
     }
   }
 }
