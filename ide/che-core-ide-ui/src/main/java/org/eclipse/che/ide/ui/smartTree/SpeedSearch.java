@@ -15,8 +15,9 @@ import com.google.common.base.Strings;
 import com.google.gwt.dom.client.*;
 import com.google.gwt.user.client.ui.Label;
 import com.google.gwt.user.client.ui.SimplePanel;
+
+import java.util.ArrayList;
 import java.util.List;
-import java.util.Optional;
 import java.util.stream.Collectors;
 
 import org.eclipse.che.ide.DelayedTask;
@@ -42,13 +43,13 @@ public class SpeedSearch {
   private static final String ID = "speedSearch";
 
   private int searchDelay;
-  private List<Node> allNodes;
+  private List<Node> savedNodes;
   private List<Node> rootItems;
 
   private class SearchPopUp extends SimplePanel {
     private Label searchLabel;
 
-    public SearchPopUp() {
+    private SearchPopUp() {
       getElement().setId(ID);
       setVisible(false); // by default
       this.searchLabel = new Label(INITIAL_SEARCH_TEXT);
@@ -56,7 +57,7 @@ public class SpeedSearch {
       add(searchLabel);
     }
 
-    public void setSearchRequest(String request) {
+    private void setSearchRequest(String request) {
       searchLabel.setText(INITIAL_SEARCH_TEXT + request);
     }
   }
@@ -185,40 +186,28 @@ public class SpeedSearch {
     searchPopUp.setSearchRequest(searchRequest.toString());
     tree.getSelectionModel().deselectAll();
 
-    allNodes = allNodes == null ? getVisibleNodes() : allNodes;
+    savedNodes = savedNodes == null ? getVisibleNodes() : savedNodes;
     rootItems = rootItems == null ? tree.getRootNodes() : rootItems;
 
     List<Node> filter =
-        allNodes.stream().filter(matchesToSearchRequest()::apply).collect(Collectors.toList());
+        savedNodes.stream().filter(matchesToSearchRequest()::apply).collect(Collectors.toList());
 
     boolean first = false;
     NodeStorage nodeStorage = tree.getNodeStorage();
 
-    for (Node commonNode : allNodes) {
-      if (filter.stream().noneMatch(node -> node.getName().equals(commonNode.getName()))) {
-        if (filter
+    for (Node savedNode : savedNodes) {
+      if (filter.stream().noneMatch(node -> equals(node, savedNode))) {
+        if ((filter
             .stream()
-            .anyMatch(
-                node ->
-                    node.getParent() != null
-                        && node.getParent().getName().equals(commonNode.getName()))) {
-        } else if (getVisibleNodes()
-            .stream()
-            .anyMatch(node -> node.getName().equals(commonNode.getName()))) {
+            .noneMatch(node -> node.getParent() != null && equals(node.getParent(), savedNode)))) {
           getVisibleNodes()
               .stream()
-              .filter(node -> node.getName().equals(commonNode.getName()))
+              .filter(node -> equals(node, savedNode))
               .findFirst()
               .ifPresent(nodeStorage::remove);
         }
-      } else if (getVisibleNodes()
-          .stream()
-          .noneMatch(node -> node.getName().equals(commonNode.getName()))) {
-        allNodes
-            .stream()
-            .filter(node -> node.getName().equals(commonNode.getName()))
-            .findFirst()
-            .ifPresent(nodeStorage::add);
+      } else if (getVisibleNodes().stream().noneMatch(node -> equals(node, savedNode))) {
+        nodeStorage.insert(savedNode.getParent(), getIndex(savedNode), savedNode);
       }
     }
 
@@ -230,6 +219,22 @@ public class SpeedSearch {
       tree.getSelectionModel().select(filteredNode, true);
     }
     getVisibleNodes().forEach(node -> tree.refresh(node));
+  }
+
+  private boolean equals(Node node1, Node node2) {
+    return node1.getName().equals(node2.getName());
+  }
+
+  private int getIndex(Node name) {
+    List<String> collect =
+        tree.getNodeStorage()
+            .getChildren(name.getParent())
+            .stream()
+            .map(Node::getName)
+            .collect(Collectors.toList());
+    collect.add(name.getName());
+    collect.sort(String.CASE_INSENSITIVE_ORDER);
+    return collect.indexOf(name.getName());
   }
 
   private void cancelSearch() {
@@ -248,17 +253,20 @@ public class SpeedSearch {
   }
 
   private Predicate<Node> matchesToSearchRequest() {
-    return new Predicate<Node>() {
-      @Override
-      public boolean apply(Node inputNode) {
-        String nodeString = nodeConverter.convert(inputNode);
-        return nodeString.toLowerCase().contains(searchRequest.toString().toLowerCase());
-      }
+
+    StringBuilder pattern = new StringBuilder(".*");
+    for (int i = 0; i < searchRequest.length(); i++) {
+      pattern.append(searchRequest.charAt(i)).append(".*");
+    }
+
+    return inputNode -> {
+      String nodeString = nodeConverter.convert(inputNode);
+      return nodeString.toLowerCase().matches(pattern.toString().toLowerCase());
     };
   }
 
   class SearchRender extends DefaultPresentationRenderer<Node> {
-    public SearchRender(TreeStyles treeStyles) {
+    SearchRender(TreeStyles treeStyles) {
       super(treeStyles);
     }
 
@@ -281,27 +289,61 @@ public class SpeedSearch {
         innerText = item.getInnerText();
       }
 
-      if (!innerText.toLowerCase().contains(searchRequest.toString().toLowerCase())) {
+      String group = "";
+      List<String> groups = new ArrayList<>();
+      for (int i = 0; i < searchRequest.length(); i++) {
+
+        String value = String.valueOf(searchRequest.charAt(i)).toLowerCase();
+
+        if (innerText.toLowerCase().contains(group + value)) {
+          group += value;
+          if (i == searchRequest.length() - 1) {
+            groups.add(group);
+          }
+
+
+
+        } else if (!group.isEmpty()) {
+          groups.add(group);
+          if (i == searchRequest.length() - 1) {
+            groups.add(value);
+          } else if (innerText.toLowerCase().contains(value)) {
+            group = value;
+          } else {
+            group = "";
+          }
+        }
+      }
+
+      if (groups.isEmpty()) {
         return rootContainer;
       }
 
       item.setInnerText("");
-      SpanElement spanElement1 = (SpanElement) Elements.createSpanElement();
-      SpanElement spanElement2 = (SpanElement) Elements.createSpanElement();
-      SpanElement spanElement3 = (SpanElement) Elements.createSpanElement();
-      spanElement1.setInnerText(
-          innerText.substring(
-              0, innerText.toLowerCase().indexOf(searchRequest.toString().toLowerCase())));
-      int i = innerText.toLowerCase().indexOf(searchRequest.toString().toLowerCase());
-      spanElement2.setInnerText(innerText.substring(i, i + searchRequest.toString().length()));
-      spanElement2.getStyle().setColor("red");
-      spanElement3.setInnerText(
-          innerText.substring(
-              innerText.toLowerCase().indexOf(searchRequest.toString().toLowerCase())
-                  + searchRequest.toString().length()));
-      item.appendChild(spanElement1);
-      item.appendChild(spanElement2);
-      item.appendChild(spanElement3);
+
+      for (String groupValue : groups) {
+        SpanElement spanElement1 = (SpanElement) Elements.createSpanElement();
+        SpanElement spanElement2 = (SpanElement) Elements.createSpanElement();
+        spanElement1.setInnerText(
+            innerText.substring(0, innerText.toLowerCase().indexOf(groupValue)));
+        int i = innerText.toLowerCase().indexOf(groupValue);
+        spanElement2.setInnerText(innerText.substring(i, i + groupValue.length()));
+        spanElement2.getStyle().setColor("red");
+        item.appendChild(spanElement1);
+        item.appendChild(spanElement2);
+
+        if (groups.indexOf(groupValue) == groups.size() - 1) {
+          SpanElement spanElement3 = (SpanElement) Elements.createSpanElement();
+          spanElement3.setInnerText(
+              innerText.substring(
+                  innerText.toLowerCase().indexOf(groupValue) + groupValue.length()));
+          item.appendChild(spanElement3);
+        } else {
+          innerText =
+              innerText.substring(
+                  innerText.toLowerCase().indexOf(groupValue) + groupValue.length());
+        }
+      }
 
       return rootContainer;
     }
