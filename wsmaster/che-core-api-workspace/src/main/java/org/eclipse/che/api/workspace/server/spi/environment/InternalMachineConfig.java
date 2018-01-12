@@ -55,7 +55,8 @@ public class InternalMachineConfig {
 
     this.installers = new ArrayList<>();
     if (installers != null) {
-      installers.stream()
+      installers
+          .stream()
           .map(InstallerImpl::new)
           .collect(Collectors.toCollection(() -> this.installers));
     }

@@ -49,31 +49,31 @@ public class InstallerPortProvisionerTest {
     Map<String, ServerConfigImpl> servers1 = new HashMap<>();
     servers1.put("server1", new ServerConfigImpl("8080/tcp", "http", "/api", emptyMap()));
 
-    InstallerImpl installer1 = new InstallerImpl("installer1", "name", "v1", "description",
-        emptyList(), emptyMap(), "script", servers1);
+    InstallerImpl installer1 =
+        new InstallerImpl(
+            "installer1", "name", "v1", "description", emptyList(), emptyMap(), "script", servers1);
 
-    InternalMachineConfig machine1 = new InternalMachineConfig(
-        singletonList(installer1), servers1, new HashMap<>(), emptyMap(),
-        emptyMap());
+    InternalMachineConfig machine1 =
+        new InternalMachineConfig(
+            singletonList(installer1), servers1, new HashMap<>(), emptyMap(), emptyMap());
 
     Map<String, ServerConfigImpl> servers2 = new HashMap<>();
     servers2.put("server2-http", new ServerConfigImpl("8080/tcp", "http", "/api", emptyMap()));
     servers2.put("server2-ws", new ServerConfigImpl("8080/tcp", "ws", "/api", emptyMap()));
 
-    InstallerImpl installer2 = new InstallerImpl("installer2", "name", "v1", "description",
-        emptyList(), emptyMap(), "script", servers2);
+    InstallerImpl installer2 =
+        new InstallerImpl(
+            "installer2", "name", "v1", "description", emptyList(), emptyMap(), "script", servers2);
 
-    InternalMachineConfig machine2 = new InternalMachineConfig(
-        singletonList(installer2), servers2, new HashMap<>(), emptyMap(),
-        emptyMap());
+    InternalMachineConfig machine2 =
+        new InternalMachineConfig(
+            singletonList(installer2), servers2, new HashMap<>(), emptyMap(), emptyMap());
 
-    portProvisioner.fixPortConflicts(ImmutableMap.of("machine1", machine1,
-        "machine2", machine2));
+    portProvisioner.fixPortConflicts(ImmutableMap.of("machine1", machine1, "machine2", machine2));
 
     assertTrue(machine1.getEnv().isEmpty());
     assertEquals(machine1.getServers().get("server1").getPort(), "8080/tcp");
     assertEquals(machine1.getInstallers().get(0).getServers().get("server1").getPort(), "8080/tcp");
-
 
     String newPortEnv = machine2.getEnv().get("CHE_SERVER_SERVER2_HTTP_PORT");
     assertTrue(Pattern.compile("\\d{5}").matcher(newPortEnv).matches());
@@ -85,10 +85,12 @@ public class InstallerPortProvisionerTest {
     assertTrue(portPattern.matcher(newWsServerPort).matches());
     assertEquals(newHttpServerPort, newWsServerPort);
 
-    String newInstallerHttpServerPort = machine2.getInstallers().get(0).getServers().get("server2-http").getPort();
+    String newInstallerHttpServerPort =
+        machine2.getInstallers().get(0).getServers().get("server2-http").getPort();
     assertTrue(portPattern.matcher(newInstallerHttpServerPort).matches());
 
-    String newInstallerWsServerPort = machine2.getInstallers().get(0).getServers().get("server2-ws").getPort();
+    String newInstallerWsServerPort =
+        machine2.getInstallers().get(0).getServers().get("server2-ws").getPort();
     assertTrue(portPattern.matcher(newInstallerWsServerPort).matches());
 
     assertEquals(newHttpServerPort, newInstallerHttpServerPort);

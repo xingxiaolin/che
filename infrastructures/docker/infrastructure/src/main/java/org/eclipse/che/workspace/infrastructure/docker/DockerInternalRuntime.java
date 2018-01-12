@@ -339,7 +339,9 @@ public class DockerInternalRuntime extends InternalRuntime<DockerRuntimeContext>
 
     if (machineCfg != null && !machineCfg.getInstallers().isEmpty()) {
       checkInterruption();
-      bootstrapperFactory.create(name, identity, new ArrayList<>(machineCfg.getInstallers()), machine).bootstrap();
+      bootstrapperFactory
+          .create(name, identity, new ArrayList<>(machineCfg.getInstallers()), machine)
+          .bootstrap();
     }
   }
 

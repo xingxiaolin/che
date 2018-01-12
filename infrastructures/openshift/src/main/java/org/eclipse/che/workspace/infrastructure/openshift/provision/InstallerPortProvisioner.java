@@ -33,9 +33,7 @@ import org.eclipse.che.commons.lang.Pair;
 import org.eclipse.che.workspace.infrastructure.openshift.Names;
 import org.eclipse.che.workspace.infrastructure.openshift.environment.OpenShiftEnvironment;
 
-/**
- * @author Sergii Leshchenko
- */
+/** @author Sergii Leshchenko */
 public class InstallerPortProvisioner implements ConfigurationProvisioner {
 
   @Override
@@ -67,8 +65,8 @@ public class InstallerPortProvisioner implements ConfigurationProvisioner {
 
       for (InstallerImpl installer : machineConfig.getInstallers()) {
         Multimap<Integer, String> portToServerNames = ArrayListMultimap.create();
-        for (Entry<String, ? extends ServerConfig> serverEntry : installer.getServers()
-            .entrySet()) {
+        for (Entry<String, ? extends ServerConfig> serverEntry :
+            installer.getServers().entrySet()) {
           String serverName = serverEntry.getKey();
           ServerConfig serverConfig = serverEntry.getValue();
 
@@ -77,8 +75,8 @@ public class InstallerPortProvisioner implements ConfigurationProvisioner {
           portToServerNames.put(portProtocol.first, serverName);
         }
 
-        for (Entry<Integer, Collection<String>> portServersEntry : portToServerNames.asMap()
-            .entrySet()) {
+        for (Entry<Integer, Collection<String>> portServersEntry :
+            portToServerNames.asMap().entrySet()) {
           Integer port = portServersEntry.getKey();
 
           if (!occupiedPorts.add(port)) {
@@ -92,8 +90,8 @@ public class InstallerPortProvisioner implements ConfigurationProvisioner {
               ServerConfig serverConfig = installer.getServers().get(serverName);
               String protocol = getPortProtocol(serverConfig.getPort()).second;
 
-              InstallerServerConfigImpl newServerConfig = new InstallerServerConfigImpl(
-                  serverConfig);
+              InstallerServerConfigImpl newServerConfig =
+                  new InstallerServerConfigImpl(serverConfig);
 
               newServerConfig.setPort(newPort + "/" + protocol);
 
