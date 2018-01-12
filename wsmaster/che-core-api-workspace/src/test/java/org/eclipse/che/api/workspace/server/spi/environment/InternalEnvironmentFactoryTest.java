@@ -22,7 +22,9 @@ import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 import static org.testng.Assert.assertEquals;
 
+import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -30,6 +32,7 @@ import org.eclipse.che.api.core.ValidationException;
 import org.eclipse.che.api.core.model.workspace.config.Environment;
 import org.eclipse.che.api.core.model.workspace.config.ServerConfig;
 import org.eclipse.che.api.installer.server.InstallerRegistry;
+import org.eclipse.che.api.installer.server.model.impl.InstallerImpl;
 import org.eclipse.che.api.installer.shared.model.Installer;
 import org.eclipse.che.api.workspace.server.model.impl.EnvironmentImpl;
 import org.eclipse.che.api.workspace.server.model.impl.MachineConfigImpl;
@@ -86,7 +89,17 @@ public class InternalEnvironmentFactoryTest {
   @Test
   public void shouldUseRetrievedInstallerWhileInternalEnvironmentCreation() throws Exception {
     // given
-    List<Installer> installersToRetrieve = singletonList(mock(Installer.class));
+    List<Installer> installersToRetrieve =
+        ImmutableList.of(
+            new InstallerImpl(
+                "org.eclipse.che.terminal",
+                "terminal",
+                "0.0.1",
+                "Terminal",
+                Collections.emptyList(),
+                Collections.emptyMap(),
+                "script",
+                Collections.emptyMap()));
     doReturn(installersToRetrieve).when(installerRegistry).getOrderedInstallers(anyList());
 
     List<String> sourceInstallers = singletonList("ws-agent");

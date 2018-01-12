@@ -15,7 +15,6 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.stream.Collectors;
 import org.eclipse.che.api.core.model.workspace.config.ServerConfig;
 import org.eclipse.che.api.core.model.workspace.config.Volume;
 import org.eclipse.che.api.installer.server.model.impl.InstallerImpl;
@@ -55,10 +54,7 @@ public class InternalMachineConfig {
 
     this.installers = new ArrayList<>();
     if (installers != null) {
-      installers
-          .stream()
-          .map(InstallerImpl::new)
-          .collect(Collectors.toCollection(() -> this.installers));
+      installers.forEach(i -> this.installers.add(new InstallerImpl(i)));
     }
 
     this.env = new HashMap<>();
