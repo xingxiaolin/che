@@ -143,6 +143,7 @@ final class FileStructureImpl extends Window implements FileStructure {
       tree.getSelectionModel().select(tree.getRootNodes().get(0), false);
     }
     tree.expandAll();
+    tree.resetSpeedSearch();
   }
 
   /** {@inheritDoc} */

@@ -28,8 +28,11 @@ import org.eclipse.che.ide.FontAwesome;
 import org.eclipse.che.ide.ui.smartTree.compare.NameComparator;
 import org.eclipse.che.ide.ui.smartTree.converter.NodeConverter;
 import org.eclipse.che.ide.ui.smartTree.converter.impl.NodeNameConverter;
+import org.eclipse.che.ide.ui.smartTree.data.AbstractTreeNode;
 import org.eclipse.che.ide.ui.smartTree.data.Node;
+import org.eclipse.che.ide.ui.smartTree.presentation.AbstractPresentationNode;
 import org.eclipse.che.ide.ui.smartTree.presentation.DefaultPresentationRenderer;
+import org.eclipse.che.ide.ui.smartTree.presentation.HasPresentation;
 import org.eclipse.che.ide.util.dom.Elements;
 
 import static com.google.gwt.dom.client.Style.BorderStyle.SOLID;
@@ -54,7 +57,6 @@ public class SpeedSearch {
 
   private int searchDelay;
   private List<Node> savedNodes;
-  private List<Node> rootItems;
 
   private class SearchPopUp extends HorizontalPanel {
     private Label searchText;
@@ -116,7 +118,7 @@ public class SpeedSearch {
             case KEY_ESCAPE:
               if (searchRequest.length() != 0) {
                 event.stopPropagation();
-                cancelSearch();
+                doSearch();
               }
               break;
           }
@@ -166,18 +168,21 @@ public class SpeedSearch {
     searchTask.delay(searchDelay);
   }
 
+  protected void reset() {
+    savedNodes = null;
+  }
+
   private void doSearch() {
     if (Strings.isNullOrEmpty(searchRequest.toString())) {
-      cancelSearch();
-      return;
+      removeSearchPopUpFromTree();
+    } else {
+      addSearchPopUpToTree();
+      searchPopUp.setSearchRequest(searchRequest.toString());
     }
 
-    addSearchPopUpToTree();
-    searchPopUp.setSearchRequest(searchRequest.toString());
     tree.getSelectionModel().deselectAll();
 
     savedNodes = savedNodes == null ? getVisibleNodes() : savedNodes;
-    rootItems = rootItems == null ? tree.getRootNodes() : rootItems;
 
     List<Node> filter =
         savedNodes.stream().filter(matchesToSearchRequest()::apply).collect(Collectors.toList());
@@ -193,10 +198,10 @@ public class SpeedSearch {
             getVisibleNodes()
                 .stream()
                 .filter(node -> equals(node, savedNode))
-                .findFirst()
+                .findAny()
                 .ifPresent(nodeStorage::remove);
           }
-        } else if (getVisibleNodes().stream().noneMatch(node -> equals(node, savedNode))) {
+        } else if (savedNode.getParent() != null) {
           if (getVisibleNodes().isEmpty()) {
             nodeStorage.add(savedNode.getParent());
           }
@@ -223,26 +228,29 @@ public class SpeedSearch {
   }
 
   private int getIndex(Node node) {
+
     List<String> collect =
-        tree.getNodeStorage()
-            .getChildren(node.getParent())
+        savedNodes
             .stream()
-            .sorted(new NameComparator())
+            .filter(
+                savedNode ->
+                    (getVisibleNodes()
+                                .stream()
+                                .anyMatch(visibleNode -> equals(savedNode, visibleNode))
+                            && savedNode.getParent() != null)
+                        || equals(savedNode, node))
             .map(Node::getName)
             .collect(Collectors.toList());
-    collect.add(node.getName());
-    //    collect.sort(String.CASE_INSENSITIVE_ORDER);
-    return collect.indexOf(node.getName());
-  }
 
-  private void cancelSearch() {
-    removeSearchPopUpFromTree();
-    tree.getNodeStorage().clear();
-    tree.getNodeStorage().add(rootItems);
-    tree.expandAll();
-    Node node = tree.getRootNodes().get(0);
-    tree.getSelectionModel().select(node, false);
-    tree.scrollIntoView(node);
+    //    List<String> collect =
+    //        tree.getNodeStorage()
+    //            .getChildren(node.getParent())
+    //            .stream()
+    //            .sorted(new NameComparator())
+    //            .map(Node::getName)
+    //            .collect(Collectors.toList());
+    //    collect.add(node.getName());
+    return collect.indexOf(node.getName());
   }
 
   private List<Node> getVisibleNodes() {

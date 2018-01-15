@@ -252,6 +252,8 @@ public class Tree extends FocusWidget
 
   protected boolean focused = false;
 
+  private SpeedSearch speedSearch;
+
   public Tree(NodeStorage nodeStorage, NodeLoader nodeLoader) {
     this(nodeStorage, nodeLoader, GWT.<TreeStyles>create(TreeStyles.class));
   }
@@ -992,7 +994,11 @@ public class Tree extends FocusWidget
   }
 
   public void applySpeedSearch(boolean filterElements) {
-    new SpeedSearch(this, treeStyles.styles().searchMatch(), null, filterElements);
+    speedSearch = new SpeedSearch(this, treeStyles.styles().searchMatch(), null, filterElements);
+  }
+
+  public void resetSpeedSearch() {
+    speedSearch.reset();
   }
 
   /** {@inheritDoc} */
