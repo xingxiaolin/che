@@ -34,14 +34,12 @@ public class RuntimeLabelsProvisioner implements ConfigurationProvisioner {
     for (Map.Entry<String, InternalMachineConfig> entry : internalEnv.getMachines().entrySet()) {
       String name = entry.getKey();
       DockerContainerConfig container = internalEnv.getContainers().get(name);
-      HashMap<String, String> attributes = new HashMap<>();
-      attributes.put(Machine.MEMORY_LIMIT_ATTRIBUTE, String.valueOf(container.getMemLimit()));
       container
           .getLabels()
           .putAll(
               Labels.newSerializer()
                   .machineName(name)
-                  .machineAttributes(attributes)
+                  .machineAttributes(entry.getValue().getAttributes())
                   .runtimeId(identity)
                   .labels());
     }
