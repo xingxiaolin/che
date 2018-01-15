@@ -21,8 +21,8 @@ public interface Machine {
 
   /**
    * Name of the attribute from {@link #getAttributes()} which defines the memory limit in bytes for
-   * the machine runtime, value for this attribute is fetched from machine configuration when
-   * infrastructure doesn't provide it.
+   * the machine runtime, value for this attribute is provided by infrastructure that is evaluated
+   * with machine configuration or in infrastructure specific way.
    */
   String MEMORY_LIMIT_ATTRIBUTE = "memoryLimitBytes";
 
