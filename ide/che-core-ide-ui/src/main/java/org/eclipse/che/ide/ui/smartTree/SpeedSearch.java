@@ -12,15 +12,20 @@ package org.eclipse.che.ide.ui.smartTree;
 
 import com.google.common.base.Predicate;
 import com.google.common.base.Strings;
-import com.google.gwt.dom.client.*;
+import com.google.gwt.dom.client.Style;
+import com.google.gwt.dom.client.Document;
+import com.google.gwt.dom.client.Element;
+import com.google.gwt.dom.client.SpanElement;
+import com.google.gwt.user.client.ui.HorizontalPanel;
 import com.google.gwt.user.client.ui.Label;
-import com.google.gwt.user.client.ui.SimplePanel;
 
 import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Collectors;
 
 import org.eclipse.che.ide.DelayedTask;
+import org.eclipse.che.ide.FontAwesome;
+import org.eclipse.che.ide.ui.smartTree.compare.NameComparator;
 import org.eclipse.che.ide.ui.smartTree.converter.NodeConverter;
 import org.eclipse.che.ide.ui.smartTree.converter.impl.NodeNameConverter;
 import org.eclipse.che.ide.ui.smartTree.data.Node;
@@ -30,107 +35,92 @@ import org.eclipse.che.ide.util.dom.Elements;
 import static com.google.gwt.dom.client.Style.BorderStyle.SOLID;
 import static com.google.gwt.dom.client.Style.Position.FIXED;
 import static com.google.gwt.dom.client.Style.Unit.PX;
+import static com.google.gwt.event.dom.client.KeyCodes.KEY_BACKSPACE;
+import static com.google.gwt.event.dom.client.KeyCodes.KEY_ENTER;
+import static com.google.gwt.event.dom.client.KeyCodes.KEY_ESCAPE;
+import static org.eclipse.che.ide.api.theme.Style.theme;
 
 /** @author Vlad Zhukovskiy */
 public class SpeedSearch {
 
   private Tree tree;
+  private final String style;
+  private final boolean filterElements;
   private NodeConverter<Node, String> nodeConverter;
   private DelayedTask searchTask;
   private StringBuilder searchRequest;
   private SearchPopUp searchPopUp;
-  private static final String INITIAL_SEARCH_TEXT = "Search for: ";
   private static final String ID = "speedSearch";
 
   private int searchDelay;
   private List<Node> savedNodes;
   private List<Node> rootItems;
 
-  private class SearchPopUp extends SimplePanel {
-    private Label searchLabel;
+  private class SearchPopUp extends HorizontalPanel {
+    private Label searchText;
 
     private SearchPopUp() {
       getElement().setId(ID);
       setVisible(false); // by default
-      this.searchLabel = new Label(INITIAL_SEARCH_TEXT);
 
-      add(searchLabel);
+      Label icon = new Label();
+      icon.getElement().setInnerHTML(FontAwesome.SEARCH);
+      Style iconStyle = icon.getElement().getStyle();
+      iconStyle.setFontSize(16, PX);
+      iconStyle.setMarginLeft(5, PX);
+      iconStyle.setMarginRight(5, PX);
+
+      searchText = new Label();
+      Style searchTextStyle = searchText.getElement().getStyle();
+      searchTextStyle.setFontSize(12, PX);
+      searchTextStyle.setMarginRight(5, PX);
+      searchTextStyle.setMarginTop(4, PX);
+
+      add(icon);
+      add(searchText);
     }
 
     private void setSearchRequest(String request) {
-      searchLabel.setText(INITIAL_SEARCH_TEXT + request);
+      searchText.setText(request);
     }
   }
 
-  private KeyboardNavigationHandler keyNav =
-      new KeyboardNavigationHandler() {
-
-        @Override
-        public void onBackspace(NativeEvent evt) {
-          evt.preventDefault();
-          if (!Strings.isNullOrEmpty(searchRequest.toString())) {
-            searchRequest.setLength(searchRequest.length() - 1);
-            doSearch();
-          }
-        }
-
-        @Override
-        public void onUp(NativeEvent evt) {
-          // check if we have found nodes that matches search pattern and navigate to previous node
-          // by pressing Up key
-        }
-
-        @Override
-        public void onDown(NativeEvent evt) {
-          // check if we have found nodes that matches search pattern and navigate to previous node
-          // by pressing Down key
-        }
-
-        @Override
-        public void onEnd(NativeEvent evt) {
-          // iterate to last found node
-        }
-
-        @Override
-        public void onHome(NativeEvent evt) {
-          // iterate to first found node
-        }
-
-        @Override
-        public void onEsc(NativeEvent evt) {
-          removeSearchPopUpFromTree();
-          // clear search pattern and restore tree to normal mode
-        }
-
-        @Override
-        public void onEnter(NativeEvent evt) {
-          removeSearchPopUpFromTree();
-          // handle enter key, for leaf node we should check whether node is implemented by
-          // HasAction interface
-          // and fire action performed, otherwise for non-leaf node we should expand/collapse node
-        }
-
-        @Override
-        public void onKeyPress(NativeEvent evt) {
-          char sChar = (char) evt.getKeyCode();
-
-          if (Character.isLetterOrDigit(sChar)) {
-            //                evt.preventDefault(); //not sure if this right decision
-            evt.stopPropagation();
-            searchRequest.append(sChar);
-            update();
-          }
-          // gather key press and try to search through visible nodes to find nodes that matches
-          // search pattern
-        }
-      };
-
-  public SpeedSearch(Tree tree, NodeConverter<Node, String> nodeConverter) {
+  SpeedSearch(
+      Tree tree, String style, NodeConverter<Node, String> nodeConverter, boolean filterElements) {
     this.tree = tree;
+    this.style = style;
+    this.filterElements = filterElements;
     this.tree.setPresentationRenderer(new SearchRender(tree.getTreeStyles()));
     this.nodeConverter = nodeConverter != null ? nodeConverter : new NodeNameConverter();
 
-    keyNav.bind(tree);
+    this.tree.addKeyPressHandler(
+        event -> {
+          event.stopPropagation();
+          searchRequest.append(String.valueOf(event.getCharCode()));
+          update();
+        });
+
+    this.tree.addKeyDownHandler(
+        event -> {
+          switch (event.getNativeKeyCode()) {
+            case KEY_ENTER:
+              removeSearchPopUpFromTree();
+              break;
+            case KEY_BACKSPACE:
+              if (!Strings.isNullOrEmpty(searchRequest.toString())) {
+                event.preventDefault();
+                searchRequest.setLength(searchRequest.length() - 1);
+                doSearch();
+              }
+              break;
+            case KEY_ESCAPE:
+              if (searchRequest.length() != 0) {
+                event.stopPropagation();
+                cancelSearch();
+              }
+              break;
+          }
+        });
 
     this.searchDelay = 100; // 100ms
     this.searchRequest = new StringBuilder();
@@ -141,13 +131,13 @@ public class SpeedSearch {
     this.searchPopUp = new SearchPopUp();
     Style style = this.searchPopUp.getElement().getStyle();
 
-    style.setBackgroundColor("grey");
+    style.setBackgroundColor(theme.backgroundColor());
     style.setBorderStyle(SOLID);
-    style.setBorderColor("#dbdbdb");
+    style.setBorderColor(theme.getPopupBorderColor());
     style.setBorderWidth(1, PX);
     style.setPadding(2, PX);
     style.setPosition(FIXED);
-    style.setTop(1, PX);
+    style.setBottom(5, PX);
     style.setLeft(20, PX);
   }
 
@@ -191,50 +181,58 @@ public class SpeedSearch {
 
     List<Node> filter =
         savedNodes.stream().filter(matchesToSearchRequest()::apply).collect(Collectors.toList());
-
-    boolean first = false;
     NodeStorage nodeStorage = tree.getNodeStorage();
 
-    for (Node savedNode : savedNodes) {
-      if (filter.stream().noneMatch(node -> equals(node, savedNode))) {
-        if ((filter
-            .stream()
-            .noneMatch(node -> node.getParent() != null && equals(node.getParent(), savedNode)))) {
-          getVisibleNodes()
+    if (filterElements) {
+      for (Node savedNode : savedNodes) {
+        if (filter.stream().noneMatch(node -> equals(node, savedNode))) {
+          if ((filter
               .stream()
-              .filter(node -> equals(node, savedNode))
-              .findFirst()
-              .ifPresent(nodeStorage::remove);
+              .noneMatch(
+                  node -> node.getParent() != null && equals(node.getParent(), savedNode)))) {
+            getVisibleNodes()
+                .stream()
+                .filter(node -> equals(node, savedNode))
+                .findFirst()
+                .ifPresent(nodeStorage::remove);
+          }
+        } else if (getVisibleNodes().stream().noneMatch(node -> equals(node, savedNode))) {
+          if (getVisibleNodes().isEmpty()) {
+            nodeStorage.add(savedNode.getParent());
+          }
+          nodeStorage.insert(savedNode.getParent(), getIndex(savedNode), savedNode);
         }
-      } else if (getVisibleNodes().stream().noneMatch(node -> equals(node, savedNode))) {
-        nodeStorage.insert(savedNode.getParent(), getIndex(savedNode), savedNode);
       }
-    }
-
-    for (Node filteredNode : filter) {
-      if (!first) {
-        tree.scrollIntoView(filteredNode);
-        first = true;
-      }
-      tree.getSelectionModel().select(filteredNode, true);
     }
     getVisibleNodes().forEach(node -> tree.refresh(node));
+
+    filter
+        .stream()
+        .findFirst()
+        .ifPresent(
+            filtered ->
+                getVisibleNodes()
+                    .stream()
+                    .filter(visibleNode -> equals(visibleNode, filtered))
+                    .findFirst()
+                    .ifPresent(node -> tree.getSelectionModel().select(node, true)));
   }
 
   private boolean equals(Node node1, Node node2) {
     return node1.getName().equals(node2.getName());
   }
 
-  private int getIndex(Node name) {
+  private int getIndex(Node node) {
     List<String> collect =
         tree.getNodeStorage()
-            .getChildren(name.getParent())
+            .getChildren(node.getParent())
             .stream()
+            .sorted(new NameComparator())
             .map(Node::getName)
             .collect(Collectors.toList());
-    collect.add(name.getName());
-    collect.sort(String.CASE_INSENSITIVE_ORDER);
-    return collect.indexOf(name.getName());
+    collect.add(node.getName());
+    //    collect.sort(String.CASE_INSENSITIVE_ORDER);
+    return collect.indexOf(node.getName());
   }
 
   private void cancelSearch() {
@@ -291,7 +289,7 @@ public class SpeedSearch {
         innerText = item.getInnerText();
       }
 
-      List<String> groups = getMatching(innerText);
+      List<String> groups = getMatchings(innerText);
       if (groups.isEmpty()) {
         return rootContainer;
       }
@@ -305,12 +303,11 @@ public class SpeedSearch {
       for (int i = 0; i < groups.size(); i++) {
         String groupValue = groups.get(i);
         SpanElement spanElement1 = (SpanElement) Elements.createSpanElement();
-        SpanElement spanElement2 = (SpanElement) Elements.createSpanElement();
+        SpanElement spanElement2 = (SpanElement) Elements.createSpanElement(style);
         spanElement1.setInnerText(
             innerText.substring(0, innerText.toLowerCase().indexOf(groupValue)));
         int index = innerText.toLowerCase().indexOf(groupValue);
         spanElement2.setInnerText(innerText.substring(index, index + groupValue.length()));
-        spanElement2.getStyle().setColor("red");
         item.appendChild(spanElement1);
         item.appendChild(spanElement2);
 
@@ -330,7 +327,7 @@ public class SpeedSearch {
       return rootContainer;
     }
 
-    private List<String> getMatching(String input) {
+    private List<String> getMatchings(String input) {
       String group = "";
       List<String> groups = new ArrayList<>();
       for (int i = 0; i < searchRequest.length(); i++) {

@@ -18,7 +18,6 @@ import com.google.gwt.core.client.GWT;
 import com.google.gwt.dom.client.NativeEvent;
 import com.google.gwt.event.dom.client.DoubleClickEvent;
 import com.google.gwt.event.dom.client.DoubleClickHandler;
-import com.google.gwt.event.dom.client.KeyPressEvent;
 import com.google.gwt.uibinder.client.UiBinder;
 import com.google.gwt.uibinder.client.UiField;
 import com.google.gwt.user.client.ui.DockLayoutPanel;
@@ -113,7 +112,7 @@ final class FileStructureImpl extends Window implements FileStructure {
 
     treeContainer.add(tree);
 
-    new SpeedSearch(tree, null);
+    tree.applySpeedSearch(true);
   }
 
   /** {@inheritDoc} */

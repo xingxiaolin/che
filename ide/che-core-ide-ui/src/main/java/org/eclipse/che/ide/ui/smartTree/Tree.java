@@ -991,6 +991,10 @@ public class Tree extends FocusWidget
     return goInto;
   }
 
+  public void applySpeedSearch(boolean filterElements) {
+    new SpeedSearch(this, treeStyles.styles().searchMatch(), null, filterElements);
+  }
+
   /** {@inheritDoc} */
   @Override
   protected void onAttach() {
