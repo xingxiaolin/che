@@ -10,9 +10,7 @@
  */
 package org.eclipse.che.workspace.infrastructure.docker.provisioner.labels;
 
-import java.util.HashMap;
 import java.util.Map;
-import org.eclipse.che.api.core.model.workspace.runtime.Machine;
 import org.eclipse.che.api.core.model.workspace.runtime.RuntimeIdentity;
 import org.eclipse.che.api.workspace.server.spi.InfrastructureException;
 import org.eclipse.che.api.workspace.server.spi.environment.InternalMachineConfig;
