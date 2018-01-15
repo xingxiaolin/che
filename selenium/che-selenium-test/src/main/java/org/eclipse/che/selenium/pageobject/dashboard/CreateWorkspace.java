@@ -199,7 +199,8 @@ public class CreateWorkspace {
   }
 
   public void waitToolbar() {
-    elementTimeoutSec.until(visibilityOfElementLocated(By.id(Locators.TOOLBAR_TITLE_ID)));
+    new WebDriverWait(seleniumWebDriver, ELEMENT_TIMEOUT_SEC)
+        .until(visibilityOfElementLocated(By.id(Locators.TOOLBAR_TITLE_ID)));
   }
 
   public String getTextFromSearchInput() {
