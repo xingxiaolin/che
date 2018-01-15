@@ -46,13 +46,13 @@ public class OpenShiftMachine implements Machine {
     this.machineName = machineName;
     this.podName = podName;
     this.containerName = containerName;
-    this.attributes = new HashMap<>();
     this.ref2Server = new HashMap<>();
-    if (attributes != null) {
-      this.attributes.putAll(attributes);
-    }
     if (ref2Server != null) {
       this.ref2Server.putAll(ref2Server);
+    }
+    this.attributes = new HashMap<>();
+    if (attributes != null) {
+      this.attributes.putAll(attributes);
     }
     this.project = project;
     this.status = status;
