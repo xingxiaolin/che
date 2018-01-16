@@ -35,7 +35,6 @@ import org.eclipse.che.ide.ui.smartTree.NodeLoader;
 import org.eclipse.che.ide.ui.smartTree.NodeStorage;
 import org.eclipse.che.ide.ui.smartTree.NodeUniqueKeyProvider;
 import org.eclipse.che.ide.ui.smartTree.Tree;
-import org.eclipse.che.ide.ui.smartTree.SpeedSearch;
 import org.eclipse.che.ide.ui.smartTree.data.Node;
 import org.eclipse.che.ide.ui.smartTree.data.NodeInterceptor;
 import org.eclipse.che.ide.ui.window.Window;

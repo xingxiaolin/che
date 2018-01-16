@@ -496,7 +496,6 @@ public class NodeStorage implements StoreHandlers.HasStoreHandlers {
 
         List<Node> children = getAllChildren(wrapper.getNode());
 
-        idToNodeMap.remove(getKeyProvider().getKey(wrapper.getNode()));
         if (wrapper.getParent() == parent) {
           fireEvent(new StoreRemoveEvent(0, wrapper.getNode(), parent.getNode(), children));
         }
@@ -517,7 +516,6 @@ public class NodeStorage implements StoreHandlers.HasStoreHandlers {
       for (int i = 0; i < models.size(); i++) {
         NodeDescriptor wrapper = models.get(i);
         models.addAll(wrapper.getChildren());
-        idToNodeMap.remove(getKeyProvider().getKey(wrapper.getNode()));
         remove(wrapper.getNode());
       }
       parentNodeDescriptor.clear();

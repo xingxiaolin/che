@@ -21,18 +21,15 @@ import com.google.gwt.user.client.ui.Label;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Optional;
 import java.util.stream.Collectors;
 
 import org.eclipse.che.ide.DelayedTask;
 import org.eclipse.che.ide.FontAwesome;
-import org.eclipse.che.ide.ui.smartTree.compare.NameComparator;
 import org.eclipse.che.ide.ui.smartTree.converter.NodeConverter;
 import org.eclipse.che.ide.ui.smartTree.converter.impl.NodeNameConverter;
-import org.eclipse.che.ide.ui.smartTree.data.AbstractTreeNode;
 import org.eclipse.che.ide.ui.smartTree.data.Node;
-import org.eclipse.che.ide.ui.smartTree.presentation.AbstractPresentationNode;
 import org.eclipse.che.ide.ui.smartTree.presentation.DefaultPresentationRenderer;
-import org.eclipse.che.ide.ui.smartTree.presentation.HasPresentation;
 import org.eclipse.che.ide.util.dom.Elements;
 
 import static com.google.gwt.dom.client.Style.BorderStyle.SOLID;
@@ -118,6 +115,7 @@ public class SpeedSearch {
             case KEY_ESCAPE:
               if (searchRequest.length() != 0) {
                 event.stopPropagation();
+                searchRequest.setLength(0);
                 doSearch();
               }
               break;
@@ -190,67 +188,61 @@ public class SpeedSearch {
 
     if (filterElements) {
       for (Node savedNode : savedNodes) {
-        if (filter.stream().noneMatch(node -> equals(node, savedNode))) {
+        if (filter.stream().noneMatch(node -> node.equals(savedNode))) {
           if ((filter
               .stream()
-              .noneMatch(
-                  node -> node.getParent() != null && equals(node.getParent(), savedNode)))) {
-            getVisibleNodes()
-                .stream()
-                .filter(node -> equals(node, savedNode))
-                .findAny()
-                .ifPresent(nodeStorage::remove);
+              .noneMatch(node -> node.getParent() != null && node.getParent().equals(savedNode)))) {
+            nodeStorage.remove(savedNode);
           }
-        } else if (savedNode.getParent() != null) {
-          if (getVisibleNodes().isEmpty()) {
-            nodeStorage.add(savedNode.getParent());
+        } else if (getVisibleNodes().stream().noneMatch(node -> node.equals(savedNode))) {
+          if (savedNode.getParent() == null) {
+            nodeStorage.add(savedNode);
+          } else {
+            if (getVisibleNodes().isEmpty()) {
+              nodeStorage.add(savedNode.getParent());
+            }
+            nodeStorage.insert(savedNode.getParent(), getIndex(savedNode), savedNode);
           }
-          nodeStorage.insert(savedNode.getParent(), getIndex(savedNode), savedNode);
         }
       }
     }
     getVisibleNodes().forEach(node -> tree.refresh(node));
 
-    filter
-        .stream()
-        .findFirst()
-        .ifPresent(
-            filtered ->
-                getVisibleNodes()
-                    .stream()
-                    .filter(visibleNode -> equals(visibleNode, filtered))
-                    .findFirst()
-                    .ifPresent(node -> tree.getSelectionModel().select(node, true)));
-  }
+    Optional<Node> startsOptional =
+        filter
+            .stream()
+            .filter(
+                node ->
+                    node.getName().toLowerCase().startsWith(searchRequest.toString().toLowerCase()))
+            .findFirst();
+    Optional<Node> containsOptional =
+        filter
+            .stream()
+            .filter(
+                node ->
+                    node.getName().toLowerCase().contains(searchRequest.toString().toLowerCase()))
+            .findFirst();
 
-  private boolean equals(Node node1, Node node2) {
-    return node1.getName().equals(node2.getName());
+    if (startsOptional.isPresent()) {
+      tree.getSelectionModel().select(startsOptional.get(), true);
+    } else if (containsOptional.isPresent()) {
+      tree.getSelectionModel().select(containsOptional.get(), true);
+    } else {
+      filter.stream().findFirst().ifPresent(node -> tree.getSelectionModel().select(node, true));
+    }
   }
 
   private int getIndex(Node node) {
-
-    List<String> collect =
-        savedNodes
-            .stream()
-            .filter(
-                savedNode ->
-                    (getVisibleNodes()
-                                .stream()
-                                .anyMatch(visibleNode -> equals(savedNode, visibleNode))
-                            && savedNode.getParent() != null)
-                        || equals(savedNode, node))
-            .map(Node::getName)
-            .collect(Collectors.toList());
-
-    //    List<String> collect =
-    //        tree.getNodeStorage()
-    //            .getChildren(node.getParent())
-    //            .stream()
-    //            .sorted(new NameComparator())
-    //            .map(Node::getName)
-    //            .collect(Collectors.toList());
-    //    collect.add(node.getName());
-    return collect.indexOf(node.getName());
+    return savedNodes
+        .stream()
+        .filter(
+            savedNode ->
+                (getVisibleNodes().stream().anyMatch(savedNode::equals)
+                        && (savedNode.getParent() != null
+                            && savedNode.getParent().equals(node.getParent())))
+                    || savedNode.equals(node))
+        .collect(Collectors.toList())
+        .indexOf(node);
   }
 
   private List<Node> getVisibleNodes() {
@@ -261,11 +253,11 @@ public class SpeedSearch {
   private Predicate<Node> matchesToSearchRequest() {
     return inputNode -> {
       String nodeString = nodeConverter.convert(inputNode);
-      return nodeString.toLowerCase().matches(getPattern().toLowerCase());
+      return nodeString.toLowerCase().matches(getSearchPattern().toLowerCase());
     };
   }
 
-  private String getPattern() {
+  private String getSearchPattern() {
     StringBuilder pattern = new StringBuilder(".*");
     for (int i = 0; i < searchRequest.length(); i++) {
       pattern.append(searchRequest.charAt(i)).append(".*");
@@ -302,7 +294,7 @@ public class SpeedSearch {
         return rootContainer;
       }
 
-      if (!innerText.toLowerCase().matches(getPattern())) {
+      if (!innerText.toLowerCase().matches(getSearchPattern())) {
         return rootContainer;
       }
 
