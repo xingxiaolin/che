@@ -29,7 +29,7 @@ import org.eclipse.che.workspace.infrastructure.openshift.provision.Configuratio
  *
  * @author Anton Korneta
  */
-public class MemoryAttributeProvisioner implements ConfigurationProvisioner {
+public class RamLimitProvisioner implements ConfigurationProvisioner {
 
   @Override
   public void provision(OpenShiftEnvironment osEnv, RuntimeIdentity identity)

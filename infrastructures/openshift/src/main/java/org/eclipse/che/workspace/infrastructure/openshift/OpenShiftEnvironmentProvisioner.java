@@ -19,7 +19,7 @@ import org.eclipse.che.workspace.infrastructure.openshift.environment.OpenShiftE
 import org.eclipse.che.workspace.infrastructure.openshift.project.pvc.WorkspaceVolumesStrategy;
 import org.eclipse.che.workspace.infrastructure.openshift.provision.UniqueNamesProvisioner;
 import org.eclipse.che.workspace.infrastructure.openshift.provision.env.EnvVarsConverter;
-import org.eclipse.che.workspace.infrastructure.openshift.provision.limits.ram.MemoryAttributeProvisioner;
+import org.eclipse.che.workspace.infrastructure.openshift.provision.limits.ram.RamLimitProvisioner;
 import org.eclipse.che.workspace.infrastructure.openshift.provision.restartpolicy.RestartPolicyRewriter;
 import org.eclipse.che.workspace.infrastructure.openshift.provision.route.TlsRouteProvisioner;
 import org.eclipse.che.workspace.infrastructure.openshift.provision.server.ServersConverter;
@@ -41,7 +41,7 @@ public class OpenShiftEnvironmentProvisioner {
   private final ServersConverter serversConverter;
   private final EnvVarsConverter envVarsConverter;
   private final RestartPolicyRewriter restartPolicyRewriter;
-  private final MemoryAttributeProvisioner memoryAttributeProvisioner;
+  private final RamLimitProvisioner ramLimitProvisioner;
 
   @Inject
   public OpenShiftEnvironmentProvisioner(
@@ -52,7 +52,7 @@ public class OpenShiftEnvironmentProvisioner {
       EnvVarsConverter envVarsConverter,
       RestartPolicyRewriter restartPolicyRewriter,
       WorkspaceVolumesStrategy volumesStrategy,
-      MemoryAttributeProvisioner memoryAttributeConverter) {
+      RamLimitProvisioner ramLimitProvisioner) {
     this.pvcEnabled = pvcEnabled;
     this.volumesStrategy = volumesStrategy;
     this.uniqueNamesProvisioner = uniqueNamesProvisioner;
@@ -60,7 +60,7 @@ public class OpenShiftEnvironmentProvisioner {
     this.serversConverter = serversConverter;
     this.envVarsConverter = envVarsConverter;
     this.restartPolicyRewriter = restartPolicyRewriter;
-    this.memoryAttributeProvisioner = memoryAttributeConverter;
+    this.ramLimitProvisioner = ramLimitProvisioner;
   }
 
   public void provision(OpenShiftEnvironment osEnv, RuntimeIdentity identity)
@@ -76,6 +76,6 @@ public class OpenShiftEnvironmentProvisioner {
     restartPolicyRewriter.provision(osEnv, identity);
     uniqueNamesProvisioner.provision(osEnv, identity);
     tlsRouteProvisioner.provision(osEnv, identity);
-    memoryAttributeProvisioner.provision(osEnv, identity);
+    ramLimitProvisioner.provision(osEnv, identity);
   }
 }
