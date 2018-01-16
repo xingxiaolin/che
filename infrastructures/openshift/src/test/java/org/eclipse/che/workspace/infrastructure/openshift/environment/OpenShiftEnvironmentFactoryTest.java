@@ -47,6 +47,7 @@ import io.fabric8.openshift.api.model.Route;
 import io.fabric8.openshift.client.OpenShiftClient;
 import java.io.InputStream;
 import java.util.Arrays;
+import java.util.Collection;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -140,23 +141,19 @@ public class OpenShiftEnvironmentFactoryTest {
 
   @Test
   public void testSetsRamLimitAttributeFromOpenShiftResource() throws Exception {
-    final long recipeRamLimit = 3072;
+    final long firstMachineRamLimit = 3072;
+    final long secondMachineRamLimit = 1024;
     when(machineConfig1.getAttributes()).thenReturn(new HashMap<>());
     when(machineConfig2.getAttributes()).thenReturn(new HashMap<>());
     final Set<Pod> pods =
         ImmutableSet.of(
-            mockPod(MACHINE_NAME_1, recipeRamLimit), mockPod(MACHINE_NAME_2, recipeRamLimit));
+            mockPod(MACHINE_NAME_1, firstMachineRamLimit),
+            mockPod(MACHINE_NAME_2, secondMachineRamLimit));
 
     osEnvironmentFactory.addRamLimitAttribute(machines, pods);
 
-    final long[] actual =
-        machines
-            .values()
-            .stream()
-            .mapToLong(m -> Long.parseLong(m.getAttributes().get(MEMORY_LIMIT_ATTRIBUTE)))
-            .toArray();
-    final long[] expected = new long[actual.length];
-    fill(expected, recipeRamLimit);
+    final long[] actual = machinesRam(machines.values());
+    final long[] expected = new long[] {firstMachineRamLimit, secondMachineRamLimit};
     assertTrue(Arrays.equals(actual, expected));
   }
 
@@ -173,12 +170,22 @@ public class OpenShiftEnvironmentFactoryTest {
 
     osEnvironmentFactory.addRamLimitAttribute(machines, pods);
 
-    final long[] actual =
-        machines
-            .values()
-            .stream()
-            .mapToLong(m -> Long.parseLong(m.getAttributes().get(MEMORY_LIMIT_ATTRIBUTE)))
-            .toArray();
+    final long[] actual = machinesRam(machines.values());
+    final long[] expected = new long[actual.length];
+    fill(expected, customRamLimit);
+    assertTrue(Arrays.equals(actual, expected));
+  }
+
+  @Test
+  public void testAddsMachineConfIntoEnvAndSetsRamLimAttributeWhenMachinePresentOnlyInRecipe()
+      throws Exception {
+    final long customRamLimit = 2048;
+    final Map<String, InternalMachineConfig> machines = new HashMap<>();
+    final Set<Pod> pods = ImmutableSet.of(mockPod(MACHINE_NAME_2, customRamLimit));
+
+    osEnvironmentFactory.addRamLimitAttribute(machines, pods);
+
+    final long[] actual = machinesRam(machines.values());
     final long[] expected = new long[actual.length];
     fill(expected, customRamLimit);
     assertTrue(Arrays.equals(actual, expected));
@@ -203,5 +210,12 @@ public class OpenShiftEnvironmentFactoryTest {
             ImmutableMap.of(format(MACHINE_NAME_ANNOTATION_FMT, containerName), machineName));
     when(specMock.getContainers()).thenReturn(ImmutableList.of(containerMock));
     return podMock;
+  }
+
+  private static long[] machinesRam(Collection<InternalMachineConfig> configs) {
+    return configs
+        .stream()
+        .mapToLong(m -> Long.parseLong(m.getAttributes().get(MEMORY_LIMIT_ATTRIBUTE)))
+        .toArray();
   }
 }

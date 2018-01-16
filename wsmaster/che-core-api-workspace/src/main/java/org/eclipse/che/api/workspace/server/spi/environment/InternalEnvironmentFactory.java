@@ -127,7 +127,9 @@ public abstract class InternalEnvironmentFactory<T extends InternalEnvironment> 
   }
 
   /**
-   * Implementation validates downloaded recipe and creates specific InternalEnvironment.
+   * Implementation validates downloaded recipe and creates specific InternalEnvironment. Returned
+   * InternalEnvironment must contains all machine that are defined in recipe and in source machine
+   * collection.
    *
    * @param recipe downloaded recipe
    * @param machines machines configuration
