@@ -199,7 +199,7 @@ public class OpenShiftInternalRuntime extends InternalRuntime<OpenShiftRuntimeCo
       throws InfrastructureException, InterruptedException {
     InternalMachineConfig machineConfig =
         getContext().getEnvironment().getMachines().get(machine.getName());
-    if (machineConfig != null && !machineConfig.getInstallers().isEmpty())
+    if (!machineConfig.getInstallers().isEmpty())
       bootstrapperFactory
           .create(getContext().getIdentity(), machineConfig.getInstallers(), machine)
           .bootstrap();
