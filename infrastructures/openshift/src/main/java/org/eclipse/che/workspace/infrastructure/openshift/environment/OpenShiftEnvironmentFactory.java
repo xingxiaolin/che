@@ -20,8 +20,6 @@ import io.fabric8.kubernetes.api.model.HasMetadata;
 import io.fabric8.kubernetes.api.model.KubernetesList;
 import io.fabric8.kubernetes.api.model.PersistentVolumeClaim;
 import io.fabric8.kubernetes.api.model.Pod;
-import io.fabric8.kubernetes.api.model.Quantity;
-import io.fabric8.kubernetes.api.model.ResourceRequirements;
 import io.fabric8.kubernetes.api.model.Service;
 import io.fabric8.openshift.api.model.DeploymentConfig;
 import io.fabric8.openshift.api.model.Route;
@@ -46,7 +44,7 @@ import org.eclipse.che.api.workspace.server.spi.environment.MachineConfigsValida
 import org.eclipse.che.api.workspace.server.spi.environment.RecipeRetriever;
 import org.eclipse.che.workspace.infrastructure.openshift.Names;
 import org.eclipse.che.workspace.infrastructure.openshift.OpenShiftClientFactory;
-import org.eclipse.che.workspace.infrastructure.openshift.util.KubernetesSize;
+import org.eclipse.che.workspace.infrastructure.openshift.util.Containers;
 
 /**
  * Parses {@link InternalEnvironment} into {@link OpenShiftEnvironment}.
@@ -142,7 +140,7 @@ public class OpenShiftEnvironmentFactory extends InternalEnvironmentFactory<Open
       warnings.add(new WarningImpl(PVC_IGNORED_WARNING_CODE, PVC_IGNORED_WARNING_MESSAGE));
     }
 
-    setRamLimitAttribute(machines, pods.values());
+    addRamLimitAttribute(machines, pods.values());
 
     OpenShiftEnvironment osEnv =
         OpenShiftEnvironment.builder()
@@ -160,25 +158,20 @@ public class OpenShiftEnvironmentFactory extends InternalEnvironmentFactory<Open
   }
 
   @VisibleForTesting
-  void setRamLimitAttribute(Map<String, InternalMachineConfig> machines, Collection<Pod> pods) {
+  void addRamLimitAttribute(Map<String, InternalMachineConfig> machines, Collection<Pod> pods) {
     for (Pod pod : pods) {
       for (Container container : pod.getSpec().getContainers()) {
         final String machineName = Names.machineName(pod, container);
-        final InternalMachineConfig machineConfig = machines.get(machineName);
-        if (isNullOrEmpty(machineConfig.getAttributes().get(MEMORY_LIMIT_ATTRIBUTE))) {
-          long recipeRamLimit = 0;
-          final ResourceRequirements resources = container.getResources();
-          final Quantity quantity;
-          if (resources != null
-              && resources.getLimits() != null
-              && (quantity = resources.getLimits().get("memory")) != null
-              && quantity.getAmount() != null) {
-            recipeRamLimit = KubernetesSize.toBytes(quantity.getAmount());
-          }
-          if (recipeRamLimit > 0) {
-            machineConfig
-                .getAttributes()
-                .put(MEMORY_LIMIT_ATTRIBUTE, Long.toString(recipeRamLimit));
+        InternalMachineConfig machineConfig;
+        if ((machineConfig = machines.get(machineName)) == null) {
+          machineConfig = new InternalMachineConfig();
+          machines.put(machineName, machineConfig);
+        }
+        final Map<String, String> attributes = machineConfig.getAttributes();
+        if (isNullOrEmpty(attributes.get(MEMORY_LIMIT_ATTRIBUTE))) {
+          final long ramLimit = Containers.getRamLimit(container);
+          if (ramLimit > 0) {
+            attributes.put(MEMORY_LIMIT_ATTRIBUTE, String.valueOf(ramLimit));
           }
         }
       }

@@ -147,7 +147,7 @@ public class OpenShiftEnvironmentFactoryTest {
         ImmutableSet.of(
             mockPod(MACHINE_NAME_1, recipeRamLimit), mockPod(MACHINE_NAME_2, recipeRamLimit));
 
-    osEnvironmentFactory.setRamLimitAttribute(machines, pods);
+    osEnvironmentFactory.addRamLimitAttribute(machines, pods);
 
     final long[] actual =
         machines
@@ -171,7 +171,7 @@ public class OpenShiftEnvironmentFactoryTest {
     final Pod pod2 = mockPod(MACHINE_NAME_2, 0);
     final Set<Pod> pods = ImmutableSet.of(pod1, pod2);
 
-    osEnvironmentFactory.setRamLimitAttribute(machines, pods);
+    osEnvironmentFactory.addRamLimitAttribute(machines, pods);
 
     final long[] actual =
         machines

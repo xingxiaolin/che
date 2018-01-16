@@ -115,7 +115,7 @@ public abstract class InternalEnvironmentFactory<T extends InternalEnvironment> 
 
     final T environment = doCreate(recipe, machines, warnings);
 
-    // sets default memory limit attribute if it is not present.
+    // sets default ram limit attribute if not present
     for (InternalMachineConfig machineConfig : environment.getMachines().values()) {
       if (isNullOrEmpty(machineConfig.getAttributes().get(MEMORY_LIMIT_ATTRIBUTE))) {
         machineConfig

@@ -87,7 +87,7 @@ public class ComposeEnvironmentFactory extends InternalEnvironmentFactory<Compos
     }
     ComposeRecipe composeRecipe = doParse(recipeContent);
 
-    setRamLimitAttribute(machines, composeRecipe.getServices());
+    addRamLimitAttribute(machines, composeRecipe.getServices());
 
     ComposeEnvironment composeEnvironment =
         new ComposeEnvironment(
@@ -103,15 +103,20 @@ public class ComposeEnvironmentFactory extends InternalEnvironmentFactory<Compos
   }
 
   @VisibleForTesting
-  void setRamLimitAttribute(
-      Map<String, InternalMachineConfig> machines, Map<String, ComposeService> services) {
-    for (Entry<String, InternalMachineConfig> configEntry : machines.entrySet()) {
-      final Map<String, String> machineConfigAttributes = configEntry.getValue().getAttributes();
-      if (isNullOrEmpty(machineConfigAttributes.get(MEMORY_LIMIT_ATTRIBUTE))) {
-        final ComposeService composeService = services.get(configEntry.getKey());
-        final Long memLimit = composeService.getMemLimit();
-        if (memLimit != null && memLimit > 0) {
-          machineConfigAttributes.put(MEMORY_LIMIT_ATTRIBUTE, Long.toString(memLimit));
+  void addRamLimitAttribute(
+      Map<String, InternalMachineConfig> machines, Map<String, ComposeService> services)
+      throws InfrastructureException {
+    for (Entry<String, ComposeService> entry : services.entrySet()) {
+      InternalMachineConfig machineConfig;
+      if ((machineConfig = machines.get(entry.getKey())) == null) {
+        machineConfig = new InternalMachineConfig();
+        machines.put(entry.getKey(), machineConfig);
+      }
+      final Map<String, String> attributes = machineConfig.getAttributes();
+      if (isNullOrEmpty(attributes.get(MEMORY_LIMIT_ATTRIBUTE))) {
+        final Long ramLimit = entry.getValue().getMemLimit();
+        if (ramLimit != null && ramLimit > 0) {
+          attributes.put(MEMORY_LIMIT_ATTRIBUTE, String.valueOf(ramLimit));
         }
       }
     }

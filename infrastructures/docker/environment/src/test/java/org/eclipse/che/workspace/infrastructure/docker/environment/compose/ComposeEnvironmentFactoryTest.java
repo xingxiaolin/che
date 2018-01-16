@@ -1,3 +1,13 @@
+/*
+ * Copyright (c) 2012-2018 Red Hat, Inc.
+ * All rights reserved. This program and the accompanying materials
+ * are made available under the terms of the Eclipse Public License v1.0
+ * which accompanies this distribution, and is available at
+ * http://www.eclipse.org/legal/epl-v10.html
+ *
+ * Contributors:
+ *   Red Hat, Inc. - initial API and implementation
+ */
 package org.eclipse.che.workspace.infrastructure.docker.environment.compose;
 
 import static java.util.Arrays.fill;
@@ -38,11 +48,11 @@ public class ComposeEnvironmentFactoryTest {
   @Mock private ComposeEnvironmentValidator composeValidator;
   @Mock private ComposeServicesStartStrategy startStrategy;
 
-  private ComposeEnvironmentFactory factory;
+  private ComposeEnvironmentFactory composeEnvironmentFactory;
 
   @BeforeMethod
   public void setup() {
-    factory =
+    composeEnvironmentFactory =
         new ComposeEnvironmentFactory(
             installerRegistry,
             recipeRetriever,
@@ -68,7 +78,7 @@ public class ComposeEnvironmentFactoryTest {
             MACHINE_NAME_2,
             mockComposeService(customRamLimit));
 
-    factory.setRamLimitAttribute(machines, services);
+    composeEnvironmentFactory.addRamLimitAttribute(machines, services);
 
     final long[] actual =
         machines
@@ -96,7 +106,7 @@ public class ComposeEnvironmentFactoryTest {
         ImmutableMap.of(
             MACHINE_NAME_1, mockComposeService(0), MACHINE_NAME_2, mockComposeService(0));
 
-    factory.setRamLimitAttribute(machines, services);
+    composeEnvironmentFactory.addRamLimitAttribute(machines, services);
 
     final long[] actual =
         machines
