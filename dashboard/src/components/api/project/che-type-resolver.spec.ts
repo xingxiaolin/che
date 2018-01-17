@@ -169,7 +169,8 @@ describe('CheTypeResolver', () => {
         tags: ['java', 'maven']
       },
       source: {
-        location: 'https://github.com/che-samples/console-java-simple.git',
+        //location: 'https://github.com/che-samples/console-java-simple.git',
+        location: 'http://192.168.8.165:10080/root/ybxt.git';
         type: 'git',
         parameters: {}
       }

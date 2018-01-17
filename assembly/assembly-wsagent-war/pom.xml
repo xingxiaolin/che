@@ -127,6 +127,24 @@
             <groupId>org.eclipse.che.plugin</groupId>
             <artifactId>che-plugin-zend-debugger-server</artifactId>
         </dependency>
+        
+<!--//////////////////////////////////xxl20171113 
+		<dependency>
+		  <groupId>org.eclipse.che.sample</groupId>
+		  <artifactId>che-sample-plugin-json-server</artifactId>
+		</dependency>
+		<dependency>
+		  <groupId>org.eclipse.che.sample</groupId>
+		  <artifactId>che-sample-plugin-json-shared</artifactId>
+		</dependency>
+		-->
+		<!---->
+		<dependency>
+		  <groupId>org.eclipse.che.sample</groupId>
+		  <artifactId>che-service</artifactId>
+		  <version>5.12.0</version>
+		</dependency>
+
     </dependencies>
     <build>
         <plugins>

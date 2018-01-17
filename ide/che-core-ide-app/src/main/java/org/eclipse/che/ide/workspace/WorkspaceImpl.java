@@ -14,7 +14,7 @@ import org.eclipse.che.api.core.model.workspace.Workspace;
 import org.eclipse.che.api.core.model.workspace.WorkspaceConfig;
 import org.eclipse.che.api.core.model.workspace.WorkspaceRuntime;
 import org.eclipse.che.api.core.model.workspace.WorkspaceStatus;
-
+import org.eclipse.che.api.core.model.workspace.WorkspaceMode;
 import java.util.Map;
 
 /**
@@ -28,6 +28,7 @@ public class WorkspaceImpl implements Workspace {
     private final WorkspaceRuntime    workspaceRuntime;
     private final String              namespace;
     private final WorkspaceStatus     status;
+    private final WorkspaceMode     mode;
     private final Map<String, String> attributes;
     private final boolean             temporary;
     private final WorkspaceConfig     config;
@@ -38,6 +39,7 @@ public class WorkspaceImpl implements Workspace {
         workspaceRuntime = workspace.getRuntime();
         namespace = workspace.getNamespace();
         status = workspace.getStatus();
+        mode = workspace.getMode();
         attributes = workspace.getAttributes();
         temporary = workspace.isTemporary();
         config = workspace.getConfig();
@@ -57,6 +59,11 @@ public class WorkspaceImpl implements Workspace {
     @Override
     public WorkspaceStatus getStatus() {
         return status;
+    }
+    
+    @Override
+    public WorkspaceMode getMode() {
+        return mode;
     }
 
     @Override

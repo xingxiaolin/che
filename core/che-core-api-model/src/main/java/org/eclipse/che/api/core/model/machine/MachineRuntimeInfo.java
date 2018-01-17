@@ -13,18 +13,18 @@ package org.eclipse.che.api.core.model.machine;
 import java.util.Map;
 
 /**
- * Runtime information about machine.
+ * Runtime information about machine.关于机器的运行时信息。
  *
  * @author Alexander Garagatyi
  */
 public interface MachineRuntimeInfo {
     /**
-     * Returns environment variables of machine.
+     * Returns environment variables of machine.返回机器的环境变量。
      */
     Map<String, String> getEnvVariables();
 
     /**
-     * Returns machine specific properties.
+     * Returns machine specific properties.返回特定于机器的属性。
      */
     Map<String, String> getProperties();
 
@@ -33,10 +33,10 @@ public interface MachineRuntimeInfo {
      */
     String projectsRoot();
 
-    /**
+    /**将暴露端口映射到{链接服务器}。
      * Returns mapping of exposed ports to {@link Server}.
-     *
-     * <p>Key consist of port number and transport protocol - tcp or udp with slash between these parts.
+     *键由端口号和传输协议组成，TCP或UDP在这些部分之间有斜线。
+     * <p>Key consist of port number and transport protocol - tcp or udp with slash between these parts.键由端口号和传输协议组成，TCP或UDP在这些部分之间有斜线。
      * <br>Example:
      * <pre>
      * {
@@ -49,4 +49,11 @@ public interface MachineRuntimeInfo {
      * </pre>
      */
     Map<String, ? extends Server> getServers();
+    //"4401/tcp":{
+		//"ref":"wsagent",
+		//"protocol":"http",
+		//"address":"192.168.148.130:32878",
+		//"url":"http://192.168.148.130:32878/api",
+		//"properties":{"path":"/api","internalAddress":"192.168.148.130:32878","internalUrl":"http://192.168.148.130:32878/api"}
+	//},
 }

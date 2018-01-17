@@ -19,7 +19,9 @@ import org.eclipse.che.api.core.model.workspace.Workspace;
 import org.eclipse.che.api.core.model.workspace.WorkspaceConfig;
 import org.eclipse.che.api.core.model.workspace.WorkspaceRuntime;
 import org.eclipse.che.api.core.model.workspace.WorkspaceStatus;
+import org.eclipse.che.api.core.model.workspace.WorkspaceMode;
 import org.eclipse.che.api.machine.server.exception.SnapshotException;
+//import org.eclipse.che.api.machine.server.jpa.WorkspaceMode;
 import org.eclipse.che.api.machine.server.model.impl.MachineSourceImpl;
 import org.eclipse.che.api.machine.server.model.impl.SnapshotImpl;
 import org.eclipse.che.api.machine.server.spi.SnapshotDao;
@@ -283,6 +285,9 @@ public class SnapshotDaoTest {
 
         @Override
         public WorkspaceStatus getStatus() { return null; }
+        
+        @Override
+        public WorkspaceMode getMode() {return null;}
 
         @Override
         public Map<String, String> getAttributes() { return null; }

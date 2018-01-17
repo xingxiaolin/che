@@ -1,0 +1,150 @@
+﻿<?xml version="1.0" encoding="UTF-8"?>
+<!--
+
+    Copyright (c) 2012-2017 Codenvy, S.A.
+    All rights reserved. This program and the accompanying materials
+    are made available under the terms of the Eclipse Public License v1.0
+    which accompanies this distribution, and is available at
+    http://www.eclipse.org/legal/epl-v10.html
+
+    Contributors:
+      Codenvy, S.A. - initial API and implementation
+
+-->
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
+    <modelVersion>4.0.0</modelVersion>
+    <parent>
+        <artifactId>che-parent</artifactId>
+        <groupId>org.eclipse.che.sample</groupId>
+        <version>5.12.0</version>
+    </parent>
+    <artifactId>che-service</artifactId>
+	<version>5.12.0</version>
+    <packaging>jar</packaging>
+    <name>Che :: Service</name>
+    <dependencies>
+	    <dependency>
+	        <groupId>com.google.inject</groupId>
+	        <artifactId>guice</artifactId>
+	    </dependency>
+<!-- //////////////////////////////////2017-11-13   xxl  add jar begin-->
+        <dependency>
+		     	<groupId>com.sgitg.cuap</groupId>
+			    <artifactId>pojo</artifactId>
+			    <version>1.0.0</version>			    
+		</dependency>		
+<!-- //////////////////////////////////2017-11-13   xxl  add jar  end-->		
+<!-- //////////////////////////////////2017-11-27   xxl  add jar begin-->		
+		<dependency>
+		     	<groupId>com.sgitg.cuap</groupId>
+			    <artifactId>wpc-codejet</artifactId>
+			    <version>1.0.0</version>			    
+		</dependency>	
+<!-- //////////////////////////////////2017-11-27   xxl  add jar  end-->
+<!-- //////////////////////////////////2017-11-27   xxl  add jar begin-->
+		<dependency>
+	     	<groupId>com.sgitg.cuap</groupId>
+		    <artifactId>wpc-common-generator</artifactId>
+		    <version>1.0.0</version>			    
+		</dependency>	
+<!-- //////////////////////////////////2017-11-27   xxl  add jar  end-->			
+<!-- //////////////////////////////////2017-11-13   xxl  add jar begin-->
+		<dependency>
+		    <groupId>javax.inject</groupId>
+		    <artifactId>javax.inject</artifactId>
+		    <version>1</version>
+		</dependency>		
+<!-- //////////////////////////////////2017-11-13   xxl  add jar  end--> 
+<!-- //////////////////////////////////2017-11-13   xxl  add jar begin-->
+        <dependency>
+            <groupId>javax.ws.rs</groupId>
+            <artifactId>javax.ws.rs-api</artifactId>
+        </dependency>       
+<!-- //////////////////////////////////2017-11-13   xxl  add jar  end-->
+		<dependency>
+            <groupId>org.eclipse.che.core</groupId>
+            <artifactId>che-core-commons-inject</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>com.google.gwt</groupId>
+            <artifactId>gwt-user</artifactId>
+            <scope>provided</scope>
+        </dependency>	
+         <dependency>
+			<groupId>javax.servlet</groupId>
+			<artifactId>javax.servlet-api</artifactId>
+			<version>3.1.0</version>
+			<scope>provided</scope>
+		</dependency>
+<!-- //////////////////////////////////2017-11-13   xxl  add jar   begin-->
+        <dependency>
+            <groupId>org.eclipse.che.core</groupId>
+            <artifactId>che-core-api-dto</artifactId>
+            <scope>provided</scope>
+        </dependency>      
+<!-- //////////////////////////////////2017-11-13   xxl  add jar   end-->	
+<!-- //////////////////////////////////2017-11-29   xxl  add jar begin-->			
+		<dependency>
+	     	<groupId>com.sgitg.cuap</groupId>
+		    <artifactId>wpc-microscenecode-generator</artifactId>
+		    <version>1.0.0</version>    
+        	<scope>runntime</scope>  			    
+		</dependency>	
+<!-- //////////////////////////////////2017-11-29   xxl  add jar  end-->		 
+<!-- //////////////////////////////////2017-11-27   xxl  add jar begin-->		
+		<dependency>
+	     	<groupId>com.sgitg.cuap</groupId>
+		    <artifactId>wpc-mxgenerator</artifactId>
+		    <version>1.0.0</version>		    
+        	<scope>runntime</scope>  	    
+		</dependency>		 
+<!-- //////////////////////////////////2017-11-27   xxl  add jar  end-->		
+<!-- //////////////////////////////////2017-11-27   xxl  add jar begin-->			
+		<dependency>
+	     	<groupId>com.sgitg.cuap</groupId>
+		    <artifactId>wpc-scenecode-generator</artifactId>
+		    <version>1.0.0</version>    
+        	<scope>runntime</scope>  			    
+		</dependency>	
+<!-- //////////////////////////////////2017-11-27   xxl  add jar  end-->		
+<!-- //////////////////////////////////2017-11-29   xxl  add jar begin-->			
+		<dependency>
+	     	<groupId>org</groupId>
+		    <artifactId>dom4j</artifactId>
+		    <version>1.6.1</version>    
+        	<scope>runntime</scope>  			    
+		</dependency>	
+<!-- //////////////////////////////////2017-11-29  xxl  add jar  end-->
+    </dependencies>
+    <repositories>
+        <repository>
+            <id>codenvy-public-repo</id>
+            <name>codenvy public</name>
+            <url>https://maven.codenvycorp.com/content/groups/public/</url>
+        </repository>
+        <repository>
+            <id>codenvy-public-snapshots-repo</id>
+            <name>codenvy public snapshots</name>
+            <url>https://maven.codenvycorp.com/content/repositories/codenvy-public-snapshots/</url>
+        </repository>
+    </repositories>
+    <pluginRepositories>
+        <pluginRepository>
+            <id>codenvy-public-repo</id>
+            <name>codenvy public</name>
+            <url>https://maven.codenvycorp.com/content/groups/public/</url>
+        </pluginRepository>
+        <pluginRepository>
+            <id>codenvy-public-snapshots-repo</id>
+            <name>codenvy public snapshots</name>
+            <url>https://maven.codenvycorp.com/content/repositories/codenvy-public-snapshots/</url>
+        </pluginRepository>
+    </pluginRepositories>
+    <build>
+        <resources>
+            <resource>
+                <directory>src/main/java</directory>
+            </resource>
+        </resources>
+    </build>
+</project>

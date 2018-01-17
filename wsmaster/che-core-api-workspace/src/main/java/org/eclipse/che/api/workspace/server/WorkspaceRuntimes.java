@@ -28,6 +28,7 @@ import org.eclipse.che.api.core.model.workspace.Environment;
 import org.eclipse.che.api.core.model.workspace.ExtendedMachine;
 import org.eclipse.che.api.core.model.workspace.Workspace;
 import org.eclipse.che.api.core.model.workspace.WorkspaceStatus;
+import org.eclipse.che.api.core.model.workspace.WorkspaceMode;
 import org.eclipse.che.api.core.notification.EventService;
 import org.eclipse.che.api.core.util.WebsocketMessageConsumer;
 import org.eclipse.che.api.environment.server.CheEnvironmentEngine;
@@ -51,6 +52,7 @@ import org.eclipse.che.commons.lang.concurrent.StripedLocks;
 import org.eclipse.che.commons.lang.concurrent.Unlocker;
 import org.eclipse.che.dto.server.DtoFactory;
 import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import javax.inject.Inject;
 import javax.inject.Singleton;
@@ -81,6 +83,8 @@ import static java.util.Objects.requireNonNull;
 import static org.eclipse.che.api.core.model.workspace.WorkspaceStatus.RUNNING;
 import static org.eclipse.che.api.core.model.workspace.WorkspaceStatus.SNAPSHOTTING;
 import static org.eclipse.che.api.core.model.workspace.WorkspaceStatus.STARTING;
+import static org.eclipse.che.api.core.model.workspace.WorkspaceMode.GNGZ;
+import static org.eclipse.che.api.core.model.workspace.WorkspaceMode.IDE;
 import static org.eclipse.che.api.machine.shared.Constants.ENVIRONMENT_OUTPUT_CHANNEL_TEMPLATE;
 import static org.slf4j.LoggerFactory.getLogger;
 
@@ -105,7 +109,7 @@ import static org.slf4j.LoggerFactory.getLogger;
 @Singleton
 public class WorkspaceRuntimes {
 
-    private static final Logger LOG = getLogger(WorkspaceRuntimes.class);
+	private static final Logger LOG = LoggerFactory.getLogger(WorkspaceRuntimes.class);
 
     private final ConcurrentMap<String, RuntimeState> states;
     private final EventService                        eventsService;
@@ -136,7 +140,7 @@ public class WorkspaceRuntimes {
              agentRegistry,
              snapshotDao,
              sharedPool,
-             new ConcurrentHashMap<>());
+             new ConcurrentHashMap<>());//分段锁MAP
     }
 
     public WorkspaceRuntimes(EventService eventsService,
@@ -159,7 +163,7 @@ public class WorkspaceRuntimes {
         this.states = states;
     }
 
-    /**
+    /**异步启动工作区环境。执行开始任务之前检查所有条件:如果不符合，会抛出适当的异常，所以无法启动同一个工作区两次。
      * Asynchronously starts the environment of the workspace.
      * Before executing start task checks whether all conditions
      * are met and throws appropriate exceptions if not, so
@@ -200,6 +204,7 @@ public class WorkspaceRuntimes {
      *         when the workspace doesn't contain the environment
      * @throws NullPointerException
      *         when either {@code workspace} or {@code envName} is null
+     *         CompletableFuture: 构建异步应用
      */
     public CompletableFuture<WorkspaceRuntimeImpl> startAsync(Workspace workspace,
                                                               String envName,
@@ -218,7 +223,7 @@ public class WorkspaceRuntimes {
                                                    workspace.getConfig().getName()));
             }
             RuntimeState state = states.get(workspaceId);
-            if (state != null) {
+            if (state != null) {//启动前检查ID是否运行
                 throw new ConflictException(format("Could not start workspace '%s' because its status is '%s'",
                                                    workspace.getConfig().getName(),
                                                    state.status));
@@ -229,6 +234,7 @@ public class WorkspaceRuntimes {
                                       recover,
                                       cmpFuture = new CompletableFuture<>());
             states.put(workspaceId, new RuntimeState(WorkspaceStatus.STARTING,
+            										workspace.getMode(),
                                                      envName,
                                                      startTask,
                                                      sharedPool.submit(startTask)));
@@ -240,6 +246,7 @@ public class WorkspaceRuntimes {
         eventsService.publish(DtoFactory.newDto(WorkspaceStatusEvent.class)
                                         .withWorkspaceId(workspaceId)
                                         .withStatus(WorkspaceStatus.STARTING)
+                                        //.withMode(WorkspaceMode.IDE)
                                         .withEventType(EventType.STARTING)
                                         .withPrevStatus(WorkspaceStatus.STOPPED));
 
@@ -287,6 +294,39 @@ public class WorkspaceRuntimes {
             return state.status;
         }
     }
+    
+    /**
+     * Return mode of the workspace.
+     *
+     * @param workspaceId
+     *         ID of requested workspace
+     * @return {@link WorkspaceMode#IDE} if workspace is not running or,
+     * the mode of workspace runtime otherwise
+     */
+    public String getMode(String workspaceId) {
+    	String mode = "";
+        requireNonNull(workspaceId, "Required non-null workspace id");
+        try (@SuppressWarnings("unused") Unlocker u = locks.readLock(workspaceId)) {
+            RuntimeState state = states.get(workspaceId);
+            if (state.mode == WorkspaceMode.GNGZ){
+            	mode =  "GNGZ";
+            }else  if (state.mode == WorkspaceMode.IDE){
+            	mode =  "IDE";
+            }
+        }
+        LOG.info("mode ===/"+ mode);
+        return mode;
+    }
+    
+    /**
+     * 更新MODE值
+     * @param workspaceId
+     * @return
+     */
+    public void updateMode(String workspaceId,WorkspaceMode mode) {
+        requireNonNull(workspaceId, "Required non-null workspace id");
+            states.get(workspaceId).mode = mode;
+    }
 
     /**
      * Injects runtime information such as status and {@link WorkspaceRuntimeImpl}
@@ -306,8 +346,10 @@ public class WorkspaceRuntimes {
         }
         if (state == null) {
             workspace.setStatus(WorkspaceStatus.STOPPED);
+            //workspace.setMode(WorkspaceMode.IDE);
         } else {
             workspace.setStatus(state.status);
+            //workspace.setMode(state.mode);
             try {
                 workspace.setRuntime(new WorkspaceRuntimeImpl(state.envName, envEngine.getMachines(workspace.getId())));
             } catch (Exception x) {
@@ -363,15 +405,16 @@ public class WorkspaceRuntimes {
             }
             prevState = new RuntimeState(state);
             state.status = WorkspaceStatus.STOPPING;
+            //state.mode = state.mode;
         }
 
-        // workspace is running, stop normally
+        // workspace is running, stop normally 正常停止
         if (prevState.status == WorkspaceStatus.RUNNING) {
             stopEnvironmentAndPublishEvents(workspaceId, WorkspaceStatus.RUNNING);
             return;
         }
 
-        // interrupt workspace start thread
+        // interrupt workspace start thread 中断工作区开始线程
         prevState.startFuture.cancel(true);
 
         // if task wasn't called by executor service, then
@@ -679,9 +722,10 @@ public class WorkspaceRuntimes {
     private RuntimeState getRunningState(String workspaceId) throws NotFoundException, ConflictException {
         RuntimeState state = getExistingState(workspaceId);
         if (state.status != RUNNING) {
-            throw new ConflictException(format("Workspace with id '%s' is not 'RUNNING', it's status is '%s'",
+            throw new ConflictException(format("Workspace with id '%s' is not 'RUNNING', it's status is '%s',it's mode is '%s'",
                                                workspaceId,
-                                               state.status));
+                                               state.status,
+                                               state.mode));
         }
         return state;
     }
@@ -698,8 +742,8 @@ public class WorkspaceRuntimes {
     }
 
     /**
-     * Starts the environment publishing all the necessary events.
-     * Respects task interruption & stops the workspace if starting task is cancelled.
+     * Starts the environment publishing all the necessary events.启动环境，发布所有必要的事件。
+     * Respects task interruption & stops the workspace if starting task is cancelled.如果开始任务取消，则中断并停止工作区。
      */
     private void startEnvironmentAndPublishEvents(EnvironmentImpl environment,
                                                   String workspaceId,
@@ -734,7 +778,7 @@ public class WorkspaceRuntimes {
             throw x;
         }
 
-        // disallow direct start cancellation, STARTING -> RUNNING
+        // disallow direct start cancellation, STARTING -> RUNNING 不允许直接启动取消，
         WorkspaceStatus prevStatus;
         try (@SuppressWarnings("unused") Unlocker u = locks.writeLock(workspaceId)) {
             checkIsNotTerminated("finish workspace start");
@@ -744,6 +788,7 @@ public class WorkspaceRuntimes {
                 state.status = WorkspaceStatus.RUNNING;
                 state.startTask = null;
                 state.startFuture = null;
+               //state.mode = 
             }
         }
 
@@ -784,7 +829,7 @@ public class WorkspaceRuntimes {
                                         .withStatus(WorkspaceStatus.STOPPED));
     }
 
-    /**
+    /**停止工作区发布所有必要的事件
      * Stops the workspace publishing all the necessary events.
      */
     private void stopEnvironmentAndPublishEvents(String workspaceId,
@@ -820,7 +865,7 @@ public class WorkspaceRuntimes {
                                         .withStatus(WorkspaceStatus.STOPPED));
     }
 
-    /**
+    /**安全比较给定工作空间的当前状态
      * Safely compares current status of given workspace
      * with {@code from} and if they are equal sets the status to {@code to}.
      * Returns true if the status of workspace was updated with {@code to} value.
@@ -837,14 +882,14 @@ public class WorkspaceRuntimes {
         return false;
     }
 
-    /** Removes state from in-memory storage in write lock. */
+    /** Removes state from in-memory storage in write lock. 在写锁中从内存存储中删除状态*/
     private void removeState(String workspaceId) {
         try (@SuppressWarnings("unused") Unlocker u = locks.writeLock(workspaceId)) {
             states.remove(workspaceId);
         }
     }
 
-    /** Creates a snapshot and changes status SNAPSHOTTING -> RUNNING. */
+    /**创建快照并更改状态  Creates a snapshot and changes status SNAPSHOTTING -> RUNNING. */
     private void snapshotAndUpdateStatus(String workspaceId) throws NotFoundException,
                                                                     ConflictException,
                                                                     ServerException {
@@ -911,27 +956,31 @@ public class WorkspaceRuntimes {
                                         .withPrevStatus(WorkspaceStatus.SNAPSHOTTING));
     }
 
-    /** Holds runtime information while workspace is running. */
+    /** Holds runtime information while workspace is running. 在工作区运行时保存运行时信息。*/
     @VisibleForTesting
     static class RuntimeState {
 
         WorkspaceStatus              status;
+        WorkspaceMode              mode = WorkspaceMode.IDE;//新添加枚举类,管理工作空间是构造还是IDE
         String                       envName;
         StartTask                    startTask;
         Future<WorkspaceRuntimeImpl> startFuture;
 
         RuntimeState(RuntimeState state) {
             this.status = state.status;
+            this.mode = state.mode;
             this.envName = state.envName;
             this.startFuture = state.startFuture;
             this.startTask = state.startTask;
         }
 
         RuntimeState(WorkspaceStatus status,
+        			WorkspaceMode mode,
                      String envName,
                      StartTask startTask,
                      Future<WorkspaceRuntimeImpl> startFuture) {
             this.status = status;
+            this.mode = mode;
             this.envName = envName;
             this.startTask = startTask;
             this.startFuture = startFuture;

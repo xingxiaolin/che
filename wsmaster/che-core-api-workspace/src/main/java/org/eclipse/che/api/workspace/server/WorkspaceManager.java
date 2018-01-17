@@ -11,7 +11,7 @@
 package org.eclipse.che.api.workspace.server;
 
 import com.google.inject.Inject;
-
+import java.util.Collection;
 import org.eclipse.che.account.api.AccountManager;
 import org.eclipse.che.account.shared.model.Account;
 import org.eclipse.che.api.agent.server.exception.AgentException;
@@ -24,6 +24,7 @@ import org.eclipse.che.api.core.model.machine.MachineConfig;
 import org.eclipse.che.api.core.model.workspace.Workspace;
 import org.eclipse.che.api.core.model.workspace.WorkspaceConfig;
 import org.eclipse.che.api.core.model.workspace.WorkspaceStatus;
+import org.eclipse.che.api.core.model.workspace.WorkspaceMode;
 import org.eclipse.che.api.core.notification.EventService;
 import org.eclipse.che.api.environment.server.exception.EnvironmentException;
 import org.eclipse.che.api.machine.server.exception.SnapshotException;
@@ -62,7 +63,7 @@ import static org.eclipse.che.api.core.model.workspace.WorkspaceStatus.RUNNING;
 import static org.eclipse.che.api.workspace.shared.Constants.AUTO_CREATE_SNAPSHOT;
 import static org.eclipse.che.api.workspace.shared.Constants.AUTO_RESTORE_FROM_SNAPSHOT;
 import static org.eclipse.che.api.workspace.shared.Constants.WORKSPACE_STOPPED_BY;
-
+import org.eclipse.che.api.machine.server.model.impl.MachineImpl;
 /**
  * Facade for Workspace related operations.
  *
@@ -951,4 +952,54 @@ public class WorkspaceManager {
             workspace.getAttributes().put(SNAPSHOTTED_AT_ATTRIBUTE_NAME, Long.toString(snapshots.get(0).getCreationDate()));
         }
     }
+    //================================================================================//    
+    /**
+     * 获取工作空间的MODE值
+     * @param id
+     * @return
+     * @throws NotFoundException
+     * @throws ServerException
+     */
+    public String getWorkspaceMode(String id) throws NotFoundException, ServerException {
+    	LOG.info("id==/ " + id);
+//    	String mode = "";
+        requireNonNull(id, "Required non-null workspace id");
+//        WorkspaceMode m  = runtimes.getMode(id);
+//        if (m == WorkspaceMode.GNGZ){
+//        	mode =  "GNGZ";
+//        }else  if (m == WorkspaceMode.IDE){
+//        	mode =  "IDE";
+//        }
+        return  runtimes.getMode(id);
+    }
+    
+    /**
+     * 修改工作空间的mode的值:GNGZ
+     * @param id 工作空间ID
+     */
+    public  void updateWorkspaceModeToGNGZ(String id) throws ConflictException,
+    ServerException, NotFoundException {
+    	LOG.info("更新功能构造id="+id);
+//		requireNonNull(id, "Required non-null workspace id");
+//		WorkspaceImpl workspace = workspaceDao.get(id);
+    	runtimes.updateMode(id,WorkspaceMode.GNGZ);
+		//workspace.setMode(WorkspaceMode.GNGZ);
+		for(MachineImpl m :runtimes.getRuntime(id).getMachines()){
+			LOG.info( "更新后=" + m.getRuntime().getServers().values().toString());
+		}
+    }
+    
+    /**
+     * 修改工作空间的mode的值:IDE
+     * @param id 工作空间ID
+     */
+    public  void updateWorkspaceModeToIDE(String id) throws ConflictException,
+    ServerException, NotFoundException {
+    	LOG.info("更新IDE="+id);
+    	runtimes.updateMode(id,WorkspaceMode.IDE);
+    	for(MachineImpl m :runtimes.getRuntime(id).getMachines()){
+    		LOG.info( "更新后=" + m.getRuntime().getServers().values().toString());
+		}
+    }
+    
 }

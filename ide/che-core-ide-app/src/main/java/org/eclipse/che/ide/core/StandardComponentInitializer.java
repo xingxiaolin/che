@@ -545,22 +545,24 @@ public class StandardComponentInitializer {
         fileTypeRegistry.registerFileType(commandFileType);
         editorRegistry.registerDefaultEditor(commandFileType, commandEditorProvider);
 
-        // Workspace (New Menu)
+        // --------------------------Workspace (New Menu)------------------------------//
         DefaultActionGroup workspaceGroup = (DefaultActionGroup)actionManager.getAction(GROUP_WORKSPACE);
-
+		//import project
         actionManager.registerAction(IMPORT_PROJECT, importProjectAction);
         workspaceGroup.add(importProjectAction);
-
+        workspaceGroup.addSeparator();
+		//create project
         actionManager.registerAction(CREATE_PROJECT, createProjectAction);
         workspaceGroup.add(createProjectAction);
-
-        actionManager.registerAction("downloadWsAsZipAction", downloadWsAction);
-        workspaceGroup.add(downloadWsAction);
-
         workspaceGroup.addSeparator();
+		//down project to zip
+        actionManager.registerAction("downloadWsAsZipAction", downloadWsAction);
+        workspaceGroup.add(downloadWsAction);		
+        workspaceGroup.addSeparator();
+        //stop workspace
         workspaceGroup.add(stopWorkspaceAction);
 
-        // Project (New Menu)
+        // --------------------------Project (New Menu)--------------------------//
         DefaultActionGroup projectGroup = (DefaultActionGroup)actionManager.getAction(GROUP_PROJECT);
 
         DefaultActionGroup newGroup = new DefaultActionGroup("New", true, actionManager);
@@ -609,7 +611,7 @@ public class StandardComponentInitializer {
         saveGroup.addSeparator();
         saveGroup.add(saveAction);
 
-        // Edit (New Menu)
+        //-------------------------- Edit (New Menu)--------------------------//
         DefaultActionGroup editGroup = (DefaultActionGroup)actionManager.getAction(GROUP_EDIT);
         DefaultActionGroup recentGroup = new DefaultActionGroup(RECENT_GROUP_ID, true, actionManager);
         actionManager.registerAction(GROUP_RECENT_FILES, recentGroup);
@@ -662,7 +664,7 @@ public class StandardComponentInitializer {
         editGroup.addSeparator();
         editGroup.add(revealResourceAction);
 
-        // Assistant (New Menu)
+        // --------------------------Assistant (New Menu)--------------------------//
         DefaultActionGroup assistantGroup = (DefaultActionGroup)actionManager.getAction(GROUP_ASSISTANT);
 
         actionManager.registerAction(PREVIEW_IMAGE, previewImageAction);
@@ -818,7 +820,7 @@ public class StandardComponentInitializer {
         editorContextMenuGroup.add(fullTextSearchAction);
         editorContextMenuGroup.add(closeActiveEditorAction);
 
-        // Define hot-keys
+        // Define hot-keys 
         keyBinding.getGlobal().addKey(new KeyBuilder().action().alt().charCode('n').build(), NAVIGATE_TO_FILE);
         keyBinding.getGlobal().addKey(new KeyBuilder().action().charCode('F').build(), FULL_TEXT_SEARCH);
         keyBinding.getGlobal().addKey(new KeyBuilder().action().charCode('A').build(), FIND_ACTION);
@@ -853,7 +855,8 @@ public class StandardComponentInitializer {
 
 
         final Map<String, Perspective> perspectives = perspectiveManager.getPerspectives();
-        if (perspectives.size() > 1) { //if registered perspectives will be more then 2 Main Menu -> Window
+        if (perspectives.size() > 1) { 
+        	//if registered perspectives will be more then 2 Main Menu -> Window
             // will appears and contains all of them as sub-menu
             final DefaultActionGroup windowMenu = new DefaultActionGroup("Window", true, actionManager);
             actionManager.registerAction("Window", windowMenu);

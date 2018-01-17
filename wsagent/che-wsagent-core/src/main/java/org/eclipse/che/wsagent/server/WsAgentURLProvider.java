@@ -14,6 +14,8 @@ import org.eclipse.che.api.core.ApiException;
 import org.eclipse.che.api.core.rest.HttpJsonRequestFactory;
 import org.eclipse.che.api.machine.shared.dto.ServerDto;
 import org.eclipse.che.api.workspace.shared.dto.WorkspaceDto;
+import org.eclipse.che.api.machine.shared.dto.MachineDto;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -51,6 +53,7 @@ public class WsAgentURLProvider implements Provider<String> {
 
     @Override
     public String get() {
+	LOG.info("inject in WsAgentURLProvider");
         if (isNullOrEmpty(cachedAgentUrl)) {
             try {
                 final WorkspaceDto workspace = requestFactory.fromUrl(workspaceApiEndpoint + wsId)
@@ -58,11 +61,12 @@ public class WsAgentURLProvider implements Provider<String> {
                                                              .request()
                                                              .asDto(WorkspaceDto.class);
                 if (workspace.getRuntime() != null) {
-                    final Collection<ServerDto> servers = workspace.getRuntime()
+                   /* final Collection<ServerDto> servers = workspace.getRuntime()
                                                                    .getDevMachine()
                                                                    .getRuntime()
                                                                    .getServers()
-                                                                   .values();
+                                                                   .values();*/
+		    final Collection<ServerDto> servers = findServers(workspace);
                     for (ServerDto server : servers) {
                         if (WSAGENT_REFERENCE.equals(server.getRef())) {
                             cachedAgentUrl = server.getUrl();
@@ -76,5 +80,30 @@ public class WsAgentURLProvider implements Provider<String> {
             }
         }
         return cachedAgentUrl;
+    }
+    private Collection<ServerDto> findServers(final WorkspaceDto workspace){
+	MachineDto machine = workspace.getRuntime().getDevMachine();
+	LOG.info("DevMachine: "+machine);
+	if(machine != null){
+		return machine.getRuntime().getServers().values();
+	}else{
+         System.out.println("There is no devMachine");
+         final Collection<MachineDto> machines=workspace.getRuntime().getMachines();//.values();
+         for(MachineDto m : machines){
+        	 LOG.info(m.getEnvName() + "////" +m.getId());
+			 Collection<ServerDto> servers = m.getRuntime().getServers().values();
+			 for (ServerDto server : servers) {
+                    if (WSAGENT_REFERENCE.equals(server.getRef())) {
+                       // cachedAgentUrl = server.getUrl();
+                        LOG.info("Find a machine but not dev machine with wsagent");
+                        return servers;
+                    }
+                }
+	     }
+	     LOG.info("cannot find machine with wsagent ");
+
+	}
+	return null;
+
     }
 }

@@ -15,7 +15,7 @@ import com.google.inject.Inject;
 import com.google.inject.Provider;
 import com.google.inject.Singleton;
 import com.google.web.bindery.event.shared.EventBus;
-
+import org.eclipse.che.api.core.model.machine.MachineRuntimeInfo;
 import org.eclipse.che.api.core.model.workspace.Workspace;
 import org.eclipse.che.api.factory.shared.dto.FactoryDto;
 import org.eclipse.che.ide.api.app.AppContext;
@@ -30,6 +30,8 @@ import org.eclipse.che.ide.api.event.WindowActionEvent;
 import org.eclipse.che.ide.api.event.WindowActionHandler;
 import org.eclipse.che.ide.api.machine.ActiveRuntime;
 import org.eclipse.che.ide.api.machine.DevMachine;
+import org.eclipse.che.ide.api.machine.MachineEntity;
+import org.eclipse.che.ide.api.machine.MachineEntityImpl;
 import org.eclipse.che.ide.api.resources.Container;
 import org.eclipse.che.ide.api.resources.Project;
 import org.eclipse.che.ide.api.resources.Resource;
@@ -48,12 +50,11 @@ import org.eclipse.che.ide.resources.ResourceManagerInitializer;
 import org.eclipse.che.ide.resources.impl.ResourceDeltaImpl;
 import org.eclipse.che.ide.resources.impl.ResourceManager;
 import org.eclipse.che.ide.statepersistance.AppStateManager;
-
+import org.eclipse.che.ide.util.loging.Log;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-
 import static com.google.common.base.Preconditions.checkState;
 import static com.google.common.collect.Lists.newArrayList;
 import static com.google.gwt.user.client.Random.nextInt;
@@ -63,6 +64,13 @@ import static org.eclipse.che.ide.api.resources.ResourceDelta.MOVED_FROM;
 import static org.eclipse.che.ide.api.resources.ResourceDelta.MOVED_TO;
 import static org.eclipse.che.ide.api.resources.ResourceDelta.REMOVED;
 import static org.eclipse.che.ide.api.resources.ResourceDelta.UPDATED;
+import org.eclipse.che.api.machine.shared.dto.MachineDto;
+import static org.eclipse.che.api.machine.shared.Constants.WSAGENT_REFERENCE;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import java.util.Collection;
+import org.eclipse.che.api.machine.shared.dto.ServerDto;
+import org.eclipse.che.api.core.model.workspace.WorkspaceMode;
 
 /**
  * Implementation of {@link AppContext}.
@@ -79,6 +87,7 @@ public class AppContextImpl implements AppContext,
                                        WorkspaceStartedEvent.Handler,
                                        WorkspaceStoppedEvent.Handler,
                                        ResourceManagerInitializer {
+	private static final Logger LOG = LoggerFactory.getLogger(AppContextImpl.class);
     private static final String APP_ID =  String.valueOf(nextInt(Integer.MAX_VALUE));
 
     private final QueryParameters                        queryParameters;
@@ -206,7 +215,43 @@ public class AppContextImpl implements AppContext,
 
     @Override
     public DevMachine getDevMachine() {
-        return runtime.getDevMachine();
+    	//从工作空间中取出mode,等于GNGZ时,从Machines列表中取出agent=ws-agent的machine
+    	LOG.info("getDevMachine获取MODE=="+userWorkspace.getMode());
+    	if(userWorkspace.getMode().equals(WorkspaceMode.GNGZ)){
+    		return getMachine(runtime.getMachines(),runtime.getDevMachine().getId());
+    	}
+    	else{//等于IDE时,直接返回DevMachine;
+    		return runtime.getDevMachine();
+    	}
+    }
+    
+    /**
+     * 根据machines列表,取得包含org.eclipse.che.ws-agent的那个machine,过滤掉,继续读取并返回下一个machine
+     * @param machines  列表
+     * @id getDevMachine的ID
+     * @return  DevMachine
+     */
+    public DevMachine getMachine(List<MachineEntity> machines,String id){
+         LOG.info("machines: "+machines);
+         for(MachineEntity m : machines){
+        	 LOG.info(m.getDisplayName() + "////" +m.getId());
+        	 if(m.getId().equals(id)){
+        		 continue;
+        	 }
+        	 return new DevMachine(m.getDescriptor());
+//         	 Collection<ServerDto> servers = (Collection<ServerDto>) m.getRuntime().getServers().values();
+//				 for (ServerDto server : servers) {
+//                    if (WSAGENT_REFERENCE.equals(server.getRef())) {
+//                    	LOG.info("getAddress: "+server.getAddress());
+//                    	LOG.info("getProtocol: "+server.getProtocol());
+//                    	LOG.info("getRef: "+server.getRef());
+//                    	LOG.info("getUrl: "+server.getUrl());
+//                        //LOG.info("Find a machine but not dev machine with wsagent");
+//                        return new DevMachine(m.getDescriptor());
+//                    }
+//                }
+             }
+         return null;
     }
 
     @Override

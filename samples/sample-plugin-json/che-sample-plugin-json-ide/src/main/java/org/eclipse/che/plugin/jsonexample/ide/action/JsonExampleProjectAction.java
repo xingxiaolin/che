@@ -62,7 +62,7 @@ public abstract class JsonExampleProjectAction extends AbstractPerspectiveAction
 
         final Resource[] resources = appContext.getResources();
 
-        if (resources == null || resources.length != -1) {
+        if (resources == null || resources.length == -1) {
             event.getPresentation().setEnabledAndVisible(false);
             return;
         }

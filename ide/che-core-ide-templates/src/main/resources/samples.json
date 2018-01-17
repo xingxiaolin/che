@@ -115,6 +115,29 @@
     ]
   },
   {
+    "name": "blank-project666666",
+    "displayName": "blank-project666666",
+    "path": "/blank-project2",
+    "description": "A blank666666 project example.",
+    "projectType": "blank",
+    "mixins": [],
+    "attributes": {
+    },
+    "modules": [],
+    "problems": [],
+    "source": {
+      "type": "git",
+      "location": "http://192.168.8.165:10080/root/ybxt.git",
+      "parameters": {}
+    },
+    "commands": [],
+    "links": [],
+    "category": "Samples",
+    "tags": [
+      "blank777"
+    ]
+  },
+  {
     "name": "c-simple-console",
     "displayName": "c-simple-console",
     "path": "/c-simple-console",

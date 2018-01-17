@@ -30,9 +30,9 @@ public class PostgreSqlExceptionHandler implements ExceptionHandler {
             final SQLException sqlEx = (SQLException)exception.getCause();
             switch (sqlEx.getSQLState()) {
                 case "23505":
-                    throw new DuplicateKeyException(exception.getMessage(), exception);
+                    throw new DuplicateKeyException(exception.getMessage(), exception);//重复的键
                 case "23503":
-                    throw new IntegrityConstraintViolationException(exception.getMessage(), exception);
+                    throw new IntegrityConstraintViolationException(exception.getMessage(), exception);//违反完整性约束
             }
         }
         throw exception;

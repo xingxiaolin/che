@@ -1,0 +1,123 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+
+    Copyright (c) 2012-2017 Codenvy, S.A.
+    All rights reserved. This program and the accompanying materials
+    are made available under the terms of the Eclipse Public License v1.0
+    which accompanies this distribution, and is available at
+    http://www.eclipse.org/legal/epl-v10.html
+
+    Contributors:
+      Codenvy, S.A. - initial API and implementation
+
+-->
+<FORM ID="0B29C0622356411FA574168BC4DAD880">
+	<ID>RcpFormDesignerDefine</ID>
+	<DATA_ID>573C4F6ED09F48BB8306415332A4661E</DATA_ID>
+	<TITLE>功能构造工具</TITLE>
+	<SCRIPT>wpc-designer/designer/scripts/RcpFormDesignerDefine.js</SCRIPT>
+	<CSS>wpc-designer/designer/resources/css/designer.css</CSS>
+	<FULL_NAME>com.chinapower.xform.designer.RcpFormDesignerDefine</FULL_NAME>
+	<SCRIPT_CLASS>Rcp.FormDesignerDefine</SCRIPT_CLASS>
+	<NAME>RcpFormDesignerDefine</NAME>
+	<SERVICE>com.sgitg.cuap.wpc.designer.constructor.service.RcpFormDesignerDefineService</SERVICE>
+	<BUNDLE_ID>CBCD40A6698B4F4695A094B7CEFCEF10</BUNDLE_ID>
+	<DATA><![CDATA[
+		<div id="rootPane" rcpStyle="rootPane:true;layout:BorderLayout" style="width:100%;height:100%;" >
+			<input id="dataSourceList" name="dataSourceList"  type="hidden" rcpStyle="type:DataSource;"/>
+			<input id="dataSourceColList" name="dataSourceColList"  type="hidden" rcpStyle="type:DataSource;"/>  
+			<input id="projectTree" name="projectTree"  type="hidden" rcpStyle="type:DataSource;"/> 
+			<input id="dataSourceTree" name="dataSourceTree"  type="hidden" rcpStyle="type:DataSource;"/> 
+			<input id="dataSourceUnits" name="dataSourceUnits" type="hidden" rcpStyle="type:DataSource;"/> 
+			<input id="dataSourceProperty" name="dataSourceProperty" type="hidden" rcpStyle="type:DataSource;"/> 
+			<input id="genTableColProperty" name="genTableColProperty" type="hidden" rcpStyle="type:DataSource;"/> 
+			<input id="genPopViewDisplayColumn" name="genPopViewDisplayColumn" type="hidden" rcpStyle="type:DataSource;"/>
+			<div id="rcpDesignerToolbarPanel" rcpStyle="position:north;layout:FlowLayout" style="height:50px;" >
+				<span id="logoTitle" rcpStyle="position:left" style="width: 320px;">功能构造</span>
+				<input id="buttonSave" type="button" rcpStyle="position:left" value="保存"/>
+				<input id="buttonImp" type="button" rcpStyle="position:left" value="导入"/>
+				<input id="buttonExp" type="button" rcpStyle="position:left" value="导出"/>
+				<input id="buttonCut" type="button" rcpStyle="position:left" value="剪切"/>
+				<input id="buttonUnDo" type="button" disabled rcpStyle="position:left" value="撤销"/>
+				<input id="buttonReDo" type="button" disabled rcpStyle="position:left" value="恢复"/>
+				<input id="buttonSaveUnits" type="button" rcpStyle="position:left" value="部件"/>										
+				<input id="buttonReview" type="button" rcpStyle="position:left" value="预览"/>
+				<input id="buttonGenMx" type="button" rcpStyle="position:left" value="转MX"/>
+				<input id="buttonCanvas" type="button" rcpStyle="position:left" value="画板"/>
+			</div>
+			<div id="rcpDesignerWestPanel" rcpStyle="position:west;type:Panel;layout:BorderLayout;dragBar:5;dragButton:true"  style="width:260px;">
+				<div id="projectDirectPanel" rcpStyle="position:north;layout:BorderLayout;dragBar:5;" style="height:48%;">
+					<div id="catalogHeader" rcpStyle="layout:FlowLayout;position:north" style="height:35px;">
+						<span id="strutTitle" rcpStyle="position:left">目录结构</span>
+						<input id="addPage" type=button rcpStyle="position:right" title="新增页面"/>
+						<input id="addBundle" type=button rcpStyle="position:right" title="新增模块"/>
+						<input id="saveTree" type=button rcpStyle="position:right" title="保存"/>
+						<input id="deleteNode" type=button rcpStyle="position:right" title="删除"/>
+					</div>
+					<div id="catalogTree" rcpStyle="position:center;type:DataTree;dataSource:projectTree;idColumn:id;pidColumn:parent_id;nameColumn:name;isLeafCol:is_leaf;showIcon:true;">
+					</div>
+				</div>
+				<div id="rcpControlsPanel" rcpStyle="position:center;layout:BorderLayout;">
+					<div id="controlsHeaderPanel" rcpStyle="layout:FlowLayout;position:north" style="height:35px;">
+						<span id="controlTitle" rcpStyle="position:left">控件信息</span>
+					</div>
+					<div id="rcpControlsGroupPanel" rcpStyle="position:center;type:GroupPanel;icon:true;multiExpand:true">
+						<div id="layoutControlList" rcpStyle="type:Panel;title:布局控件" >
+						</div>
+						<div id="baseControlList" rcpStyle="type:Panel;title:基本控件" >
+						</div>
+						<div id="echartsControlList" rcpStyle="type:Panel;title:图表控件" >
+						</div>
+						<div id="cumUnitControlList" rcpStyle="type:Panel;title:常用部件库;dataSource:dataSourceUnits;position:center;" >
+						</div>
+					</div>
+				</div>
+			</div>
+			<div id="rcpDesignerCenterMain" rcpStyle="position:center;layout:BorderLayout" >
+				<div id="rcpPagesCenterTab" rcpStyle="position:center;type:TabPanel;closeButton:true" >
+				</div>
+			</div>
+			<div id="rcpDesignerEastPanel" rcpStyle="position:east;layout:BorderLayout;dragBar:5;dragButton:true;" style="width:280px;">
+				<div id="panelProps" rcpStyle="position:center;layout:AutoLayout;" >
+					<div id="htmlprops" rcpStyle="position:center;type:Panel;layout:BorderLayout;" style="width:100%;height:100%;" >
+						<div id="pagePropsTitlePanel" rcpStyle="position:north;layout:FlowLayout" style="height:35px;" >
+							<span id="pagePropsTitle" rcpStyle="position:left" >页面属性</span>
+						</div>
+						<div id="pagePropsGridPanel" rcpStyle="position:center;layout:GridLayout;rows:5,40,40,40,120,40,120,;cols:5,65,,5;hgap:0px;vgap:5px">
+							<span id="label4" rcpStyle="position:1,1,1,1" >页面标识：</span>
+							<div id="formId" rcpStyle="type:DataTextField;position:1,2,1,1;disabled:true;dataSource:projectTree;column:id" >									
+							</div>
+							<span id="label5" rcpStyle="position:2,1,1,1;" >页面名称：</span>
+							<div id="formName" rcpStyle="type:DataTextField;position:2,2,1,1;dataSource:projectTree;column:name" >
+							</div>
+							<span id="label6" rcpStyle="position:3,1,1,1" >页面标注：</span>
+							<textarea id="formRemark" rcpStyle="type:DataTextArea;position:3,2,2,1;disabled:true;" wrap="virtual" >
+							</textarea>
+							<span id="label7" rcpStyle="position:5,1,1,1" >脚本文件：</span>
+							<textarea id="formScript" rcpStyle="type:DataTextArea;position:5,2,2,1" wrap="virtual">
+							</textarea>								
+						</div>
+					</div>
+					<!----控件属性定义面板---->
+					<div id="controlsprops" rcpStyle="position:center;type:Panel;layout:BorderLayout;" style="width:100%;height:100%;display:none;" >
+						<div id="pageStructPanel" rcpStyle="position:north;layout:BorderLayout;dragBar:5;" style="height:48%;">
+							<div id="pageStructTitlePanel" rcpStyle="position:north;layout:FlowLayout" style="height:35px;" >
+								<span id="pageStruct"  rcpStyle="position:left" >页面结构</span>
+							</div>
+							<div id="domTree" rcpStyle="position:center;type:DataTree;dataSource:dataSourceTree;idColumn:id;pidColumn:parent_id;nameColumn:name;isLeafCol:is_leaf;showIcon:true;status:status" >
+							</div>
+						</div>
+						<div id="controlsPropsPanel" rcpStyle="position:center;layout:BorderLayout;dragBar:5;">
+							<div id="controlsPropsTitlePanel" rcpStyle="position:north;layout:FlowLayout" style="height:35px;" >
+								<span id="controlsProps" rcpStyle="position:left" >控件属性</span>
+							</div>
+							<div id="propTable" rcpStyle="position:center;type:DataTable;dataSource:dataSourceProperty" >
+							</div>
+						</div>
+					</div>
+				</div>
+			</div>
+		</div>
+		]]>
+	</DATA>
+</FORM>

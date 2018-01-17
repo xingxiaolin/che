@@ -211,6 +211,25 @@
             <groupId>org.eclipse.che.plugin</groupId>
             <artifactId>che-plugin-zend-debugger-ide</artifactId>
         </dependency>
+
+<!--//////////////////////////////////xxl20171113 
+		<dependency>
+		  <groupId>org.eclipse.che.sample</groupId>
+		  <artifactId>che-sample-plugin-json-ide</artifactId>
+		</dependency>
+		<dependency>
+		  <groupId>org.eclipse.che.sample</groupId>
+		  <artifactId>che-sample-plugin-json-shared</artifactId>
+		</dependency>
+		-->
+		<!-- -->
+		<dependency>
+		  <groupId>org.eclipse.che.sample</groupId>
+		  <artifactId>che-service</artifactId>  
+		  <version>5.12.0</version>
+		</dependency>
+		
+
         <dependency>
             <groupId>javax.servlet</groupId>
             <artifactId>javax.servlet-api</artifactId>

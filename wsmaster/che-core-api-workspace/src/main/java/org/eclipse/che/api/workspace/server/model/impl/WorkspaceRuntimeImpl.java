@@ -41,6 +41,7 @@ public class WorkspaceRuntimeImpl implements WorkspaceRuntime {
             for (Machine machine : machines) {
                 if (machine.getConfig().isDev()) {
                     if (machine.getRuntime() != null) {
+                    	System.out.println("aaaaaa======/ "+machine.getRuntime().projectsRoot());
                         rootFolder = machine.getRuntime().projectsRoot();
                     }
                     devMachine = new MachineImpl(machine);

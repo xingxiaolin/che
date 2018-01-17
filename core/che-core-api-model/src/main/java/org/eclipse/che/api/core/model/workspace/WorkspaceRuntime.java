@@ -47,7 +47,7 @@ public interface WorkspaceRuntime {
     @Nullable
     String getRootFolder();
 
-    /**
+    /**返回开发机仅当其状态为{@链接machinestatus #RUNNING}或{@链接machinestatus #DESTROYING}，否则返回null.
      * Returns development machine only if its status is either {@link MachineStatus#RUNNING running}
      * or {@link MachineStatus#DESTROYING destroying}, otherwise returns null
      * which means that machine is starting or hasn't been started yet.

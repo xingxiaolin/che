@@ -12,7 +12,7 @@ package org.eclipse.che.api.core.model.machine;
 
 import org.eclipse.che.commons.annotation.Nullable;
 
-/**
+/**提供机器中的服务器的描述。
  * Provides description of the Che server in machine
  *
  * @author gazarenkov
@@ -34,12 +34,12 @@ public interface Server {
     String getAddress();
 
     /**
-     * Protocol of access to the server.
+     * Protocol of access to the server.访问服务器协议。
      */
     @Nullable
     String getProtocol();
 
-    /**
+    /**URL的服务器，例如 http://localhost:8080
      * Url of the server, e.g.&nbsp;http://localhost:8080
      */
     @Nullable
@@ -47,7 +47,7 @@ public interface Server {
 
 
     /**
-     * Non mandatory properties of the server.
+     * Non mandatory properties of the server.服务器的非强制属性。
      */
     @Nullable
     ServerProperties getProperties();

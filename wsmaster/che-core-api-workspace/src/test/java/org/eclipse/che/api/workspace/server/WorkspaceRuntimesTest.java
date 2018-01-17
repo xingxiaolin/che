@@ -26,6 +26,7 @@ import org.eclipse.che.api.core.model.workspace.Environment;
 import org.eclipse.che.api.core.model.workspace.ExtendedMachine;
 import org.eclipse.che.api.core.model.workspace.Workspace;
 import org.eclipse.che.api.core.model.workspace.WorkspaceStatus;
+import org.eclipse.che.api.core.model.workspace.WorkspaceMode;
 import org.eclipse.che.api.core.notification.EventService;
 import org.eclipse.che.api.environment.server.CheEnvironmentEngine;
 import org.eclipse.che.api.environment.server.NoOpMachineInstance;
@@ -151,7 +152,7 @@ public class WorkspaceRuntimesTest {
 
     @Test(dataProvider = "allStatuses")
     public void getsStatus(WorkspaceStatus status) throws Exception {
-        setRuntime("workspace", status);
+        setRuntime("workspace", status,WorkspaceMode.IDE);
 
         assertEquals(runtimes.getStatus("workspace"), status);
     }
@@ -169,7 +170,7 @@ public class WorkspaceRuntimesTest {
 
     @Test
     public void getsRuntime() throws Exception {
-        setRuntime("workspace", WorkspaceStatus.RUNNING, "env-name");
+        setRuntime("workspace", WorkspaceStatus.RUNNING,WorkspaceMode.IDE, "env-name");
         List<Instance> machines = prepareMachines("workspace", "env-name");
 
         assertEquals(runtimes.getRuntime("workspace"), new WorkspaceRuntimeImpl("env-name", machines));
@@ -178,7 +179,7 @@ public class WorkspaceRuntimesTest {
 
     @Test
     public void hasRuntime() {
-        setRuntime("workspace", WorkspaceStatus.STARTING);
+        setRuntime("workspace", WorkspaceStatus.STARTING,WorkspaceMode.IDE);
 
         assertTrue(runtimes.hasRuntime("workspace"));
     }
@@ -190,7 +191,7 @@ public class WorkspaceRuntimesTest {
 
     @Test
     public void injectsRuntime() throws Exception {
-        setRuntime("workspace", WorkspaceStatus.RUNNING, "env-name");
+        setRuntime("workspace", WorkspaceStatus.RUNNING,WorkspaceMode.IDE, "env-name");
         List<Instance> machines = prepareMachines("workspace", "env-name");
         WorkspaceImpl workspace = WorkspaceImpl.builder()
                                                .setId("workspace")
@@ -216,7 +217,7 @@ public class WorkspaceRuntimesTest {
 
     @Test
     public void injectsStatusAndEmptyMachinesWhenCanNotGetEnvironmentMachines() throws Exception {
-        setRuntime("workspace", WorkspaceStatus.RUNNING, "env-name");
+        setRuntime("workspace", WorkspaceStatus.RUNNING,WorkspaceMode.IDE, "env-name");
         setNoMachinesForWorkspace("workspace");
         WorkspaceImpl workspace = WorkspaceImpl.builder()
                                                .setId("workspace")
@@ -258,7 +259,7 @@ public class WorkspaceRuntimesTest {
           expectedExceptionsMessageRegExp = "Could not start workspace 'test-workspace' because its status is 'RUNNING'")
     public void throwsConflictExceptionWhenWorkspaceIsRunning() throws Exception {
         WorkspaceImpl workspace = newWorkspace("workspace", "env-name");
-        setRuntime(workspace.getId(), WorkspaceStatus.RUNNING);
+        setRuntime(workspace.getId(), WorkspaceStatus.RUNNING,WorkspaceMode.IDE);
 
         runtimes.startAsync(workspace, "env-name", false);
     }
@@ -304,7 +305,7 @@ public class WorkspaceRuntimesTest {
         WorkspaceImpl workspace = newWorkspace("workspace", "env-name");
         // let's say status is changed to STOPPING by stop method,
         // but starting thread hasn't been interrupted yet
-        allowEnvironmentStart(workspace, "env-name", () -> setRuntime("workspace", WorkspaceStatus.STOPPING));
+        allowEnvironmentStart(workspace, "env-name", () -> setRuntime("workspace", WorkspaceStatus.STOPPING,WorkspaceMode.IDE));
 
         CompletableFuture<WorkspaceRuntimeImpl> cmpFuture = runtimes.startAsync(workspace, "env-name", false);
 
@@ -424,7 +425,7 @@ public class WorkspaceRuntimesTest {
 
     @Test
     public void stopsRunningWorkspace() throws Exception {
-        setRuntime("workspace", WorkspaceStatus.RUNNING);
+        setRuntime("workspace", WorkspaceStatus.RUNNING,WorkspaceMode.IDE);
 
         runtimes.stop("workspace");
 
@@ -444,7 +445,7 @@ public class WorkspaceRuntimesTest {
 
     @Test
     public void stopsTheRunningWorkspaceWhileServerExceptionOccurs() throws Exception {
-        setRuntime("workspace", WorkspaceStatus.RUNNING);
+        setRuntime("workspace", WorkspaceStatus.RUNNING,WorkspaceMode.IDE);
         doThrow(new ServerException("no!")).when(envEngine).stop("workspace");
 
         try {
@@ -469,7 +470,7 @@ public class WorkspaceRuntimesTest {
 
     @Test
     public void stopsTheRunningWorkspaceAndRethrowsTheErrorDifferentFromServerException() throws Exception {
-        setRuntime("workspace", WorkspaceStatus.RUNNING);
+        setRuntime("workspace", WorkspaceStatus.RUNNING,WorkspaceMode.IDE);
         doThrow(new EnvironmentNotRunningException("no!")).when(envEngine).stop("workspace");
 
         try {
@@ -545,6 +546,7 @@ public class WorkspaceRuntimesTest {
     public void cancellationOfRunningStartTask() throws Exception {
         setRuntime("workspace",
                    WorkspaceStatus.STARTING,
+                   WorkspaceMode.IDE,
                    "env-name",
                    runtimeFuture,
                    startTask);
@@ -566,14 +568,14 @@ public class WorkspaceRuntimesTest {
           expectedExceptionsMessageRegExp = "Couldn't stop the workspace 'workspace' because its status is '.*'.*",
           dataProvider = "notAllowedToStopStatuses")
     public void doesNotStopTheWorkspaceWhenStatusIsWrong(WorkspaceStatus status) throws Exception {
-        setRuntime("workspace", status);
+        setRuntime("workspace", status,WorkspaceMode.IDE);
 
         runtimes.stop("workspace");
     }
 
     @Test
     public void shutdown() throws Exception {
-        setRuntime("workspace", WorkspaceStatus.RUNNING, "env-name");
+        setRuntime("workspace", WorkspaceStatus.RUNNING,WorkspaceMode.IDE, "env-name");
 
         runtimes.shutdown();
 
@@ -603,7 +605,7 @@ public class WorkspaceRuntimesTest {
     @Test
     public void shouldBeAbleToStartMachine() throws Exception {
         // when
-        setRuntime("workspace", WorkspaceStatus.RUNNING, "env-name");
+        setRuntime("workspace", WorkspaceStatus.RUNNING,WorkspaceMode.IDE, "env-name");
         MachineConfig config = newMachine("workspace", "env-name", "new", false).getConfig();
         Instance instance = mock(Instance.class);
         when(envEngine.startMachine(anyString(), any(MachineConfig.class), any())).thenReturn(instance);
@@ -630,7 +632,7 @@ public class WorkspaceRuntimesTest {
     @Test
     public void shouldBeAbleToStopMachine() throws Exception {
         // when
-        setRuntime("workspace", WorkspaceStatus.RUNNING);
+        setRuntime("workspace", WorkspaceStatus.RUNNING,WorkspaceMode.IDE);
 
         // when
         runtimes.stopMachine("workspace", "testMachineId");
@@ -680,7 +682,7 @@ public class WorkspaceRuntimesTest {
 
     @Test
     public void changesStatusFromRunningToSnapshotting() throws Exception {
-        setRuntime("workspace", WorkspaceStatus.RUNNING);
+        setRuntime("workspace", WorkspaceStatus.RUNNING,WorkspaceMode.IDE);
 
         runtimes.snapshotAsync("workspace");
 
@@ -690,7 +692,7 @@ public class WorkspaceRuntimesTest {
     @Test
     public void changesStatusFromSnapshottingToRunning() throws Exception {
         WorkspaceImpl workspace = newWorkspace("workspace", "env-name");
-        setRuntime(workspace.getId(), WorkspaceStatus.RUNNING, "env-name");
+        setRuntime(workspace.getId(), WorkspaceStatus.RUNNING,WorkspaceMode.IDE, "env-name");
 
         runtimes.snapshotAsync(workspace.getId());
 
@@ -707,7 +709,7 @@ public class WorkspaceRuntimesTest {
     @Test(expectedExceptions = ConflictException.class,
           expectedExceptionsMessageRegExp = "Workspace with id '.*' is not 'RUNNING', it's status is 'SNAPSHOTTING'")
     public void throwsConflictExceptionWhenBeginningSnapshottingForNotRunningWorkspace() throws Exception {
-        setRuntime("workspace", WorkspaceStatus.RUNNING);
+        setRuntime("workspace", WorkspaceStatus.RUNNING,WorkspaceMode.IDE);
 
         runtimes.snapshotAsync("workspace");
         runtimes.snapshotAsync("workspace");
@@ -716,7 +718,7 @@ public class WorkspaceRuntimesTest {
     @Test(expectedExceptions = ServerException.class, expectedExceptionsMessageRegExp = "can't save")
     public void failsToCreateSnapshotWhenDevMachineSnapshottingFailed() throws Exception {
         WorkspaceImpl workspace = newWorkspace("workspace", "env-name");
-        setRuntime(workspace.getId(), WorkspaceStatus.RUNNING);
+        setRuntime(workspace.getId(), WorkspaceStatus.RUNNING,WorkspaceMode.IDE);
         prepareMachines(workspace.getId(), "env-name");
         when(envEngine.saveSnapshot(any(), any())).thenThrow(new ServerException("can't save"));
 
@@ -740,7 +742,7 @@ public class WorkspaceRuntimesTest {
     @Test
     public void removesNewlyCreatedSnapshotsWhenFailedToSaveTheirsMetadata() throws Exception {
         WorkspaceImpl workspace = newWorkspace("workspace", "env-name");
-        setRuntime(workspace.getId(), WorkspaceStatus.RUNNING, "env-name");
+        setRuntime(workspace.getId(), WorkspaceStatus.RUNNING, WorkspaceMode.IDE,"env-name");
         doThrow(new SnapshotException("test")).when(snapshotDao)
                                               .replaceSnapshots(any(), any(), any());
         SnapshotImpl snapshot = mock(SnapshotImpl.class);
@@ -769,7 +771,7 @@ public class WorkspaceRuntimesTest {
     @Test
     public void removesOldSnapshotsWhenNewSnapshotsMetadataSuccessfullySaved() throws Exception {
         WorkspaceImpl workspace = newWorkspace("workspace", "env-name");
-        setRuntime(workspace.getId(), WorkspaceStatus.RUNNING);
+        setRuntime(workspace.getId(), WorkspaceStatus.RUNNING,WorkspaceMode.IDE);
         SnapshotImpl oldSnapshot = mock(SnapshotImpl.class);
         doReturn((singletonList(oldSnapshot))).when(snapshotDao)
                                               .replaceSnapshots(any(), any(), any());
@@ -791,10 +793,10 @@ public class WorkspaceRuntimesTest {
 
     @Test
     public void getsRuntimesIds() {
-        setRuntime("workspace1", WorkspaceStatus.STARTING);
-        setRuntime("workspace2", WorkspaceStatus.RUNNING);
-        setRuntime("workspace3", WorkspaceStatus.STOPPING);
-        setRuntime("workspace4", WorkspaceStatus.SNAPSHOTTING);
+        setRuntime("workspace1", WorkspaceStatus.STARTING,WorkspaceMode.IDE);
+        setRuntime("workspace2", WorkspaceStatus.RUNNING,WorkspaceMode.IDE);
+        setRuntime("workspace3", WorkspaceStatus.STOPPING,WorkspaceMode.IDE);
+        setRuntime("workspace4", WorkspaceStatus.SNAPSHOTTING,WorkspaceMode.IDE);
 
         assertEquals(runtimes.getRuntimesIds(), Sets.newHashSet("workspace1",
                                                                 "workspace2",
@@ -809,7 +811,7 @@ public class WorkspaceRuntimesTest {
 
     @Test
     public void isAnyRunningReturnsTrueIfThereIsAtLeastOneRunningWorkspace() {
-        setRuntime("workspace1", WorkspaceStatus.STARTING);
+        setRuntime("workspace1", WorkspaceStatus.STARTING,WorkspaceMode.IDE);
 
         assertTrue(runtimes.isAnyRunning());
     }
@@ -900,20 +902,21 @@ public class WorkspaceRuntimesTest {
         return eventCaptor.getAllValues();
     }
 
-    private void setRuntime(String workspaceId, WorkspaceStatus status) {
-        runtimeStates.put(workspaceId, new RuntimeState(status, null, null, null));
+    private void setRuntime(String workspaceId, WorkspaceStatus status,WorkspaceMode mode) {
+        runtimeStates.put(workspaceId, new RuntimeState(status, mode, null, null, null));
     }
 
-    private void setRuntime(String workspaceId, WorkspaceStatus status, String envName) {
-        runtimeStates.put(workspaceId, new RuntimeState(status, envName, null, null));
+    private void setRuntime(String workspaceId, WorkspaceStatus status,WorkspaceMode mode, String envName) {
+        runtimeStates.put(workspaceId, new RuntimeState(status,mode, envName, null, null));
     }
 
     private void setRuntime(String workspaceId,
                             WorkspaceStatus status,
+                            WorkspaceMode mode,
                             String envName,
                             Future<WorkspaceRuntimeImpl> startFuture,
                             WorkspaceRuntimes.StartTask startTask) {
-        runtimeStates.put(workspaceId, new RuntimeState(status, envName, startTask, startFuture));
+        runtimeStates.put(workspaceId, new RuntimeState(status, mode, envName, startTask, startFuture));
     }
 
     private void setNoMachinesForWorkspace(String workspaceId) throws EnvironmentNotRunningException {

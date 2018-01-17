@@ -17,10 +17,8 @@ import io.swagger.annotations.ApiResponse;
 import io.swagger.annotations.ApiResponses;
 import io.swagger.annotations.Example;
 import io.swagger.annotations.ExampleProperty;
-
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Maps;
-
 import org.eclipse.che.api.agent.server.WsAgentHealthChecker;
 import org.eclipse.che.api.core.BadRequestException;
 import org.eclipse.che.api.core.ConflictException;
@@ -28,6 +26,7 @@ import org.eclipse.che.api.core.ForbiddenException;
 import org.eclipse.che.api.core.NotFoundException;
 import org.eclipse.che.api.core.ServerException;
 import org.eclipse.che.api.core.model.workspace.WorkspaceStatus;
+import org.eclipse.che.api.core.model.workspace.WorkspaceMode;
 import org.eclipse.che.api.core.rest.Service;
 import org.eclipse.che.api.core.rest.annotations.GenerateLink;
 import org.eclipse.che.api.machine.server.model.impl.CommandImpl;
@@ -44,7 +43,6 @@ import org.eclipse.che.api.workspace.shared.dto.WorkspaceConfigDto;
 import org.eclipse.che.api.workspace.shared.dto.WorkspaceDto;
 import org.eclipse.che.api.workspace.shared.dto.WsAgentHealthStateDto;
 import org.eclipse.che.commons.env.EnvironmentContext;
-
 import javax.inject.Inject;
 import javax.inject.Named;
 import javax.ws.rs.Consumes;
@@ -62,7 +60,6 @@ import javax.ws.rs.core.Response;
 import javax.ws.rs.core.SecurityContext;
 import java.util.List;
 import java.util.Map;
-
 import static com.google.common.base.MoreObjects.firstNonNull;
 import static java.lang.String.format;
 import static java.util.Collections.emptyMap;
@@ -77,6 +74,8 @@ import static org.eclipse.che.api.workspace.shared.Constants.LINK_REL_CREATE_WOR
 import static org.eclipse.che.api.workspace.shared.Constants.LINK_REL_GET_BY_NAMESPACE;
 import static org.eclipse.che.api.workspace.shared.Constants.LINK_REL_GET_WORKSPACES;
 import static org.eclipse.che.dto.server.DtoFactory.newDto;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * Defines Workspace REST API.
@@ -98,7 +97,7 @@ public class WorkspaceService extends Service {
     private final boolean                       cheWorkspaceAutoStart;
     @Context
     private SecurityContext securityContext;
-
+    private static final Logger LOG = LoggerFactory.getLogger(WorkspaceService.class);
     @Inject
     public WorkspaceService(@Named("che.api") String apiEndpoint,
                             WorkspaceManager workspaceManager,
@@ -797,5 +796,74 @@ public class WorkspaceService extends Service {
                 recipe.setLocation(location.substring(apiEndpoint.length()));
             }
         }
+    }
+    
+    //-----------------------------------------------------------------------------------------//
+    @GET
+    @Path("/{id}/getMode")
+    @Produces(APPLICATION_JSON)
+    @ApiOperation(value = "Get the workspace by the id",
+                  notes = "")
+    	@ApiResponses({@ApiResponse(code = 200, message = "The response contains requested workspace entity"),
+    	@ApiResponse(code = 204, message = "no content"),
+        @ApiResponse(code = 404, message = "The workspace with specified id does not exist"),
+        @ApiResponse(code = 500, message = "Internal server error occurred")})
+    public String getWorkspaceModeByID(@ApiParam(value = "Composite key",
+                                           examples = @Example({@ExampleProperty("workspace12345678"),
+                                                                @ExampleProperty("namespace/workspace_name"),
+                                                                @ExampleProperty("namespace_part_1/namespace_part_2/workspace_name")}))
+                                 @PathParam("id") String id) throws NotFoundException,
+                                                                      ServerException,
+                                                                      ForbiddenException,
+                                                                      BadRequestException {
+        validateKey(id);
+        LOG.info("id="+id);
+        return workspaceManager.getWorkspaceMode(id);
+        
+    }
+    
+    
+    @PUT
+    @Path("/{id}/updateWorkspaceModeToIDE")
+    @Consumes(APPLICATION_JSON)
+    @Produces(APPLICATION_JSON)
+    @ApiOperation(value = "Update the workspace mode to IDE",
+                  notes = "This operation can be performed only by the workspace owner")
+                  @ApiResponses({@ApiResponse(code = 200, message = "The workspace MODE successfully updated"),
+                  @ApiResponse(code = 204, message = "no content"),
+                  @ApiResponse(code = 500, message = "Internal server error occurred")})
+    public void updateWorkspaceModeToIDE(@ApiParam("The workspace id")
+                               @PathParam("id")
+                               String id) throws ServerException,
+                                                           ForbiddenException,
+                                                           NotFoundException,
+                                                           ConflictException {
+        //requiredNotNull(update, "Workspace configuration");
+        //validator.validateWorkspace(update);
+        //relativizeRecipeLinks(update.getConfig());
+    	 LOG.info("更新id="+id);
+        workspaceManager.updateWorkspaceModeToIDE(id);
+    }
+    
+    @PUT
+    @Path("/{id}/updateWorkspaceModeToGNGZ")
+    @Consumes(APPLICATION_JSON)
+    @Produces(APPLICATION_JSON)
+    @ApiOperation(value = "Update the workspace mode to GNGZ",
+                  notes = "This operation can be performed only by the workspace owner")
+        		 @ApiResponses({@ApiResponse(code = 200, message = "The workspace MODE successfully updated"),
+        		 @ApiResponse(code = 204, message = "no content"),
+        		 @ApiResponse(code = 500, message = "Internal server error occurred")})
+    public void updateWorkspaceModeToGNGZ(@ApiParam("The workspace id")
+                               @PathParam("id")
+                               String id) throws ServerException,
+                                                           ForbiddenException,
+                                                           NotFoundException,
+                                                           ConflictException {
+        //requiredNotNull(update, "Workspace configuration");
+        //validator.validateWorkspace(update);
+        //relativizeRecipeLinks(update.getConfig());
+    	LOG.info("更新id="+id);
+       workspaceManager.updateWorkspaceModeToGNGZ(id);
     }
 }

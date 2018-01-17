@@ -44,6 +44,13 @@ public interface Workspace {
      */
     WorkspaceStatus getStatus();
 
+    
+    /**
+     * Returns the mode of the current workspace instance.('ID' and 'GNGZ');
+     * 
+     */
+    WorkspaceMode  getMode();
+    
     /**
      * Returns workspace instance attributes (e.g. last modification date).
      * Workspace attributes must not contain null keys or values.
@@ -73,4 +80,5 @@ public interface Workspace {
      */
     @Nullable
     WorkspaceRuntime getRuntime();
+    
 }

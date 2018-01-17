@@ -26,7 +26,7 @@ import org.eclipse.che.ide.resource.Path;
 import java.util.List;
 import java.util.Map;
 
-/**
+/**表示IDE应用程序的当前上下文。
  * Represents current context of the IDE application.
  *
  * @author Vitaly Parfonov
@@ -36,7 +36,7 @@ import java.util.Map;
  */
 public interface AppContext {
 
-    /**
+    /**返回工作区根容器，它是已注册项目的所有者。
      * Returns the workspace root container, which is holder of registered projects.
      *
      * @return the workspace root
@@ -45,10 +45,9 @@ public interface AppContext {
     @Beta
     Container getWorkspaceRoot();
 
-    /**
-     * Returns the registered projects in current workspace. If no projects were registered before,
-     * then empty array is returned.
-     *
+    /**返回当前工作区中已注册的项目。如果未注册任何项目，则返回空数组。
+     * Returns the registered projects in current workspace. 
+     * If no projects were registered before,then empty array is returned.
      * @return the registered projects
      * @see Container#newProject()
      * @since 4.4.0
@@ -56,7 +55,8 @@ public interface AppContext {
     @Beta
     Project[] getProjects();
 
-    /**
+    /**返回当前上下文中的资源。按当前上下文方式，如果IDE中，该资源可能在指定的部分中使用。例如,
+     *  项目部分可以提供所属的资源。选择此时，编辑器可以提供打开的资源，全文搜索可以提供正在选择的资源。
      * Returns the resource which is in current context. By current context means, that resource may be
      * in use in specified part if IDE. For example, project part may provide resource which is under
      * selection at this moment, editor may provide resource which is open, full text search may provide
@@ -92,7 +92,7 @@ public interface AppContext {
     @Beta
     Resource[] getResources();
 
-    /**
+    /**返回处于上下文中的根项目。
      * Returns the root project which is in context. To find out specified sub-project in context, method
      * {@link #getResource()} should be called. Resource is bound to own project and to get {@link Project}
      * instance from {@link Resource}, method {@link Resource#getRelatedProject()} should be called.
@@ -116,7 +116,7 @@ public interface AppContext {
     @Beta
     String getWorkspaceName();
 
-    /**
+    /**返回开发人员机器的实例（工作区被绑定）
      * Returns instance  of the developer machine (where workspace is bound).
      *
      * @return the object which describes developer machine

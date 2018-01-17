@@ -14,7 +14,7 @@ import org.eclipse.che.api.core.model.workspace.Workspace;
 import org.eclipse.che.api.core.model.workspace.WorkspaceConfig;
 import org.eclipse.che.api.core.model.workspace.WorkspaceRuntime;
 import org.eclipse.che.api.core.model.workspace.WorkspaceStatus;
-
+import org.eclipse.che.api.core.model.workspace.WorkspaceMode;
 import javax.persistence.Column;
 import javax.persistence.Entity;
 import javax.persistence.Id;
@@ -63,6 +63,11 @@ public class TestWorkspaceEntity implements Workspace {
     @Override
     public WorkspaceStatus getStatus() {
         return WorkspaceStatus.STOPPED;
+    }
+    
+    @Override
+    public WorkspaceMode getMode() {
+        return WorkspaceMode.IDE;
     }
 
     @Override

@@ -284,6 +284,7 @@ if [ "${USE_HELP}" == "false" ]; then
     echo_stage "CHE SDK: Compiling everything into new IDE. ~5 minutes."
       
     # Re-build the che web application with extensions from ide/ and che/ directories included. This artifact is deployed into Che server.
+    echo "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
     cd "${PLUGIN_IDE_WAR_DIR}/temp"
     mvn sortpom:sort
     mvn -Denforcer.skip=true clean install -Dskip-validate-sources=true

@@ -16,6 +16,7 @@ import org.eclipse.che.api.core.model.workspace.Workspace;
 import org.eclipse.che.api.core.model.workspace.WorkspaceConfig;
 import org.eclipse.che.api.core.model.workspace.WorkspaceRuntime;
 import org.eclipse.che.api.core.model.workspace.WorkspaceStatus;
+import org.eclipse.che.api.core.model.workspace.WorkspaceMode;
 import org.eclipse.che.api.machine.server.model.impl.SnapshotImpl;
 import org.eclipse.che.commons.lang.NameGenerator;
 import org.eclipse.persistence.descriptors.DescriptorEvent;
@@ -110,6 +111,9 @@ public class WorkspaceImpl implements Workspace {
 
     @Transient
     private WorkspaceStatus status;
+    
+    @Transient
+    private WorkspaceMode  mode;
 
     @Transient
     private WorkspaceRuntimeImpl runtime;
@@ -117,7 +121,7 @@ public class WorkspaceImpl implements Workspace {
     public WorkspaceImpl() {}
 
     public WorkspaceImpl(String id, Account account, WorkspaceConfig config) {
-        this(id, account, config, null, null, false, null);
+        this(id, account, config, null, null, false, null,null);
     }
 
     public WorkspaceImpl(String id,
@@ -126,7 +130,8 @@ public class WorkspaceImpl implements Workspace {
                          WorkspaceRuntime runtime,
                          Map<String, String> attributes,
                          boolean isTemporary,
-                         WorkspaceStatus status) {
+                         WorkspaceStatus status,
+                         WorkspaceMode  mode) {
         this.id = id;
         if (account != null) {
             this.account = new AccountImpl(account);
@@ -142,6 +147,7 @@ public class WorkspaceImpl implements Workspace {
         }
         this.isTemporary = isTemporary;
         this.status = status;
+        this.mode = mode;
     }
 
     public WorkspaceImpl(Workspace workspace, Account account) {
@@ -151,7 +157,8 @@ public class WorkspaceImpl implements Workspace {
              workspace.getRuntime(),
              workspace.getAttributes(),
              workspace.isTemporary(),
-             workspace.getStatus());
+             workspace.getStatus(),
+             workspace.getMode());
     }
 
     public WorkspaceImpl(WorkspaceImpl workspace) {
@@ -221,6 +228,15 @@ public class WorkspaceImpl implements Workspace {
     public void setStatus(WorkspaceStatus status) {
         this.status = status;
     }
+    
+     @Override
+    public WorkspaceMode getMode() {
+        return mode;
+    }
+
+    public void setMode(WorkspaceMode mode) {
+        this.mode = mode;
+    }
 
     @Override
     public WorkspaceRuntimeImpl getRuntime() {
@@ -239,6 +255,7 @@ public class WorkspaceImpl implements Workspace {
         return Objects.equals(id, other.id)
                && Objects.equals(getNamespace(), other.getNamespace())
                && Objects.equals(status, other.status)
+               && Objects.equals(mode, other.mode)
                && isTemporary == other.isTemporary
                && getAttributes().equals(other.getAttributes())
                && Objects.equals(config, other.config)
@@ -251,6 +268,7 @@ public class WorkspaceImpl implements Workspace {
         hash = 31 * hash + Objects.hashCode(id);
         hash = 31 * hash + Objects.hashCode(getNamespace());
         hash = 31 * hash + Objects.hashCode(status);
+        hash = 31 * hash + Objects.hashCode(mode);
         hash = 31 * hash + Objects.hashCode(config);
         hash = 31 * hash + getAttributes().hashCode();
         hash = 31 * hash + Boolean.hashCode(isTemporary);
@@ -267,6 +285,7 @@ public class WorkspaceImpl implements Workspace {
                ", config=" + config +
                ", isTemporary=" + isTemporary +
                ", status=" + status +
+               ", mode=" + mode +
                ", attributes=" + attributes +
                ", runtime=" + runtime +
                '}';
@@ -310,6 +329,7 @@ public class WorkspaceImpl implements Workspace {
         private Account             account;
         private boolean             isTemporary;
         private WorkspaceStatus     status;
+        private WorkspaceMode     mode;
         private WorkspaceConfig     config;
         private WorkspaceRuntime    runtime;
         private Map<String, String> attributes;
@@ -317,7 +337,7 @@ public class WorkspaceImpl implements Workspace {
         private WorkspaceImplBuilder() {}
 
         public WorkspaceImpl build() {
-            return new WorkspaceImpl(id, account, config, runtime, attributes, isTemporary, status);
+            return new WorkspaceImpl(id, account, config, runtime, attributes, isTemporary, status,mode);
         }
 
         public WorkspaceImplBuilder generateId() {
@@ -347,6 +367,11 @@ public class WorkspaceImpl implements Workspace {
 
         public WorkspaceImplBuilder setStatus(WorkspaceStatus status) {
             this.status = status;
+            return this;
+        }
+        
+         public WorkspaceImplBuilder setMode(WorkspaceMode mode) {
+            this.mode = mode;
             return this;
         }
 

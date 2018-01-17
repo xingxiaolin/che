@@ -78,7 +78,7 @@ import java.util.Map;
 import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 
-/**
+/**认为基于PostgreSQL模块运行。
  * Module for running TCKs based on PostgreSQL.
  *
  * @author Yevhenii Voevodin

@@ -24,6 +24,8 @@ import org.eclipse.che.api.agent.SshAgentLauncher;
 import org.eclipse.che.api.agent.UnisonAgent;
 import org.eclipse.che.api.agent.WsAgent;
 import org.eclipse.che.api.agent.WsAgentLauncher;
+import org.eclipse.che.api.agent.GZAgent;
+import org.eclipse.che.api.agent.GZAgentLauncher;
 import org.eclipse.che.api.agent.server.launcher.AgentLauncher;
 import org.eclipse.che.api.agent.shared.model.Agent;
 import org.eclipse.che.api.core.rest.CheJsonProvider;
@@ -145,6 +147,7 @@ public class WsMasterModule extends AbstractModule {
         agents.addBinding().to(org.eclipse.che.api.agent.ExecAgent.class);
         agents.addBinding().to(org.eclipse.che.api.agent.TerminalAgent.class);
         agents.addBinding().to(WsAgent.class);
+         agents.addBinding().to(GZAgent.class);
         agents.addBinding().to(LSPhpAgent.class);
         agents.addBinding().to(LSPythonAgent.class);
         agents.addBinding().to(LSJsonAgent.class);
@@ -153,6 +156,7 @@ public class WsMasterModule extends AbstractModule {
 
         Multibinder<AgentLauncher> launchers = Multibinder.newSetBinder(binder(), AgentLauncher.class);
         launchers.addBinding().to(WsAgentLauncher.class);
+        launchers.addBinding().to(GZAgentLauncher.class);
         launchers.addBinding().to(org.eclipse.che.api.agent.ExecAgentLauncher.class);
         launchers.addBinding().to(org.eclipse.che.api.agent.TerminalAgentLauncher.class);
         launchers.addBinding().to(SshAgentLauncher.class);
@@ -168,7 +172,8 @@ public class WsMasterModule extends AbstractModule {
                           "-addr :4412 " +
                           "-cmd ${SHELL_INTERPRETER} " +
                           "-logs-dir $HOME/che/exec-agent/logs");
-
+                          
+        
         bind(org.eclipse.che.api.deploy.WsMasterAnalyticsAddresser.class);
 
         Multibinder<org.eclipse.che.api.machine.server.spi.InstanceProvider> machineImageProviderMultibinder =

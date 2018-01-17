@@ -52,7 +52,7 @@ public class WsAgentPingRequestFactory {
 
     /**
      * Creates request which can check if workspace agent is pinging.
-     *
+     *创建可请求的,检查工作区代理是否正在运行。
      * @param machine
      *         machine instance
      * @return instance of {@link HttpJsonRequest}
@@ -67,6 +67,7 @@ public class WsAgentPingRequestFactory {
                       WS_AGENT_SERVER_NOT_FOUND_ERROR, machine.getWorkspaceId(), machine.getId(), servers);
             throw new ServerException(WS_AGENT_SERVER_NOT_FOUND_ERROR);
         }
+        //che提供对外访问地址(4401/TCP映射):192.168.148.130:32878"
         String wsAgentPingUrl = wsAgentServer.getProperties().getInternalUrl();
         if (isNullOrEmpty(wsAgentPingUrl)) {
             LOG.error(WS_AGENT_URL_IS_NULL_OR_EMPTY_ERROR);

@@ -20,12 +20,12 @@ import org.eclipse.che.commons.annotation.Nullable;
 public interface ServerProperties {
 
     /**
-     * Path to access the server.
+     * Path to access the server.访问服务器的路径。
      */
     @Nullable
     String getPath();
 
-    /**
+    /**服务器的内部地址，形式为 host:port。
      * Internal address of the server in form <b>host:port</b>.
      * <p>
      * Used by wsmaster to communicate with the server
@@ -34,10 +34,10 @@ public interface ServerProperties {
     String getInternalAddress();
 
 
-    /**
+    /**服务器的内部URL，例如http://localhost:8080.
      * Internal Url of the server, e.g.&nbsp;http://localhost:8080.
      * <p>
-     * Used by wsmaster to comunicate with the server
+     * Used by wsmaster to comunicate with the server 用wsmaster交流服务器
      */
     @Nullable
     String getInternalUrl();

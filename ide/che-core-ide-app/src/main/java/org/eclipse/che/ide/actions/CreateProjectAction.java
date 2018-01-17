@@ -37,12 +37,14 @@ public class CreateProjectAction extends AbstractPerspectiveAction {
     @Inject
     public CreateProjectAction(Resources resources,
                                ProjectWizardPresenter wizard) {
-        super(singletonList(PROJECT_PERSPECTIVE_ID), "Create Project...", "Create new project", null, resources.newProject());
+        super(singletonList(PROJECT_PERSPECTIVE_ID), "Create Project...", "Create new project1111", null, resources.newProject());
+        System.out.println("bbb");
         this.wizard = wizard;
     }
 
     @Override
     public void actionPerformed(ActionEvent e) {
+    	System.out.println("ccc");
         wizard.show(Path.ROOT);
     }
 
