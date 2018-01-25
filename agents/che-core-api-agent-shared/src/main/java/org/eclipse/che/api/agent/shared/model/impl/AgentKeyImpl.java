@@ -13,13 +13,15 @@ package org.eclipse.che.api.agent.shared.model.impl;
 import org.eclipse.che.api.agent.shared.model.Agent;
 import org.eclipse.che.api.agent.shared.model.AgentKey;
 import org.eclipse.che.commons.annotation.Nullable;
-
 import java.util.Objects;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * @author Anatolii Bazko
  */
 public class AgentKeyImpl implements AgentKey {
+	private static final Logger LOG = LoggerFactory.getLogger(AgentKeyImpl.class);
     private static final String DEFAULT_VERSION = "latest";
     private final String id;
     private final String version;
@@ -79,6 +81,7 @@ public class AgentKeyImpl implements AgentKey {
     }
 
     public String asString() {
+    	LOG.info(id + (version != null ? ":" + version : ""));
         return id + (version != null ? ":" + version : "");
     }
 

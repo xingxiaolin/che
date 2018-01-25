@@ -58,9 +58,12 @@ public class AgentRegistryImpl implements AgentRegistry {
     public AgentRegistryImpl(Set<Agent> agents) throws IllegalArgumentException {
         this.agents = new HashMap<>(agents.size());
         for (Agent agent : agents) {
+        	LOG.info("********************"+agent.getId() +"//"+agent.getName()+"//"+agent.getVersion());
             AgentKeyImpl key = new AgentKeyImpl(agent);
             Agent registeredAgent = this.agents.put(key, agent);
+            LOG.info("111111111111111");
             if (registeredAgent != null) {
+            	LOG.info("2222222222222");
                 throw new IllegalArgumentException(format("Agent with key %s has been registered already.", key));
             }
         }
@@ -68,6 +71,7 @@ public class AgentRegistryImpl implements AgentRegistry {
 
     @Override
     public Agent getAgent(AgentKey agentKey) throws AgentException {
+    	LOG.info("55555555555555555");
         return doGetAgent(agentKey);
     }
 
@@ -85,7 +89,9 @@ public class AgentRegistryImpl implements AgentRegistry {
     }
 
     private Agent doGetAgent(AgentKey key) throws AgentException {
+    	LOG.info("666666666666");
         Optional<Agent> agent = Optional.ofNullable(agents.get(key));
+        LOG.info("7777777777777777");
         return agent.orElseThrow(() -> new AgentNotFoundException(format("Agent %s not found", key.getId())));
     }
 }

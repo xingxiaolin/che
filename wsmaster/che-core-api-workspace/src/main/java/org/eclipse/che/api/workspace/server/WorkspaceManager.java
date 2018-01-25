@@ -751,9 +751,10 @@ public class WorkspaceManager {
         workspace.getAttributes().put(UPDATED_ATTRIBUTE_NAME, Long.toString(currentTimeMillis()));
         workspaceDao.update(workspace);
         final String env = firstNonNull(envName, workspace.getConfig().getDefaultEnv());
-
+        LOG.info("QQQQQQQQQQQQQQQQQQQ");
         runtimes.startAsync(workspace, env, recover)
                 .whenComplete((runtime, ex) -> {
+                	LOG.info("WWWWWWWWWWWWWW");
                     if (ex == null) {
                         LOG.info("Workspace '{}/{}' with id '{}' started by user '{}'",
                                  workspace.getNamespace(),

@@ -11,7 +11,6 @@
 package org.eclipse.che.api.workspace.server.jpa;
 
 import com.google.inject.persist.Transactional;
-
 import org.eclipse.che.account.event.BeforeAccountRemovedEvent;
 import org.eclipse.che.api.core.ConflictException;
 import org.eclipse.che.api.core.NotFoundException;
@@ -25,7 +24,6 @@ import org.eclipse.che.api.workspace.server.model.impl.WorkspaceImpl;
 import org.eclipse.che.api.workspace.server.spi.WorkspaceDao;
 import org.eclipse.che.core.db.cascade.CascadeEventSubscriber;
 import org.eclipse.che.core.db.jpa.DuplicateKeyException;
-
 import javax.annotation.PostConstruct;
 import javax.annotation.PreDestroy;
 import javax.inject.Inject;
@@ -36,11 +34,12 @@ import javax.persistence.NoResultException;
 import java.util.List;
 import java.util.Optional;
 import java.util.stream.Collectors;
-
 import static com.google.common.base.Preconditions.checkArgument;
 import static java.lang.String.format;
 import static java.util.Objects.requireNonNull;
 import static java.util.stream.Collectors.toList;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * JPA based implementation of {@link WorkspaceDao}.
@@ -54,7 +53,7 @@ public class JpaWorkspaceDao implements WorkspaceDao {
     private EventService            eventService;
     @Inject
     private Provider<EntityManager> managerProvider;
-
+    private static final Logger LOG = LoggerFactory.getLogger(JpaWorkspaceDao.class);
     @Override
     public WorkspaceImpl create(WorkspaceImpl workspace) throws ConflictException, ServerException {
         requireNonNull(workspace, "Required non-null workspace");
@@ -166,6 +165,7 @@ public class JpaWorkspaceDao implements WorkspaceDao {
     @Override
     @Transactional
     public List<WorkspaceImpl> getWorkspaces(boolean isTemporary, int skipCount, int maxItems) throws ServerException {
+    	LOG.info("12331212122111111111");
         checkArgument(maxItems >= 0, "The number of items to return can't be negative.");
         checkArgument(skipCount >= 0, "The number of items to skip can't be negative or greater than " + Integer.MAX_VALUE);
         try {

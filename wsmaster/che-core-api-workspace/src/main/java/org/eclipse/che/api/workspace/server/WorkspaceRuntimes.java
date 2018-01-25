@@ -212,34 +212,43 @@ public class WorkspaceRuntimes {
         requireNonNull(workspace, "Non-null workspace required");
         requireNonNull(envName, "Non-null environment name required");
         EnvironmentImpl environment = copyEnv(workspace, envName);
+        LOG.info("environment==/"+environment.toString());
         String workspaceId = workspace.getId();
+        LOG.info("workspaceId==/"+workspaceId);
         CompletableFuture<WorkspaceRuntimeImpl> cmpFuture;
         StartTask startTask;
         try (@SuppressWarnings("unused") Unlocker u = locks.writeLock(workspaceId)) {
+        	LOG.info("----------------------------------------------");
             checkIsNotTerminated("start the workspace");
             if (isStartRefused.get()) {
+            	LOG.info("AAAAAAAAAAAAAAAAAAAA");
                 throw new ConflictException(format("Start of the workspace '%s' is rejected by the system, " +
                                                    "no more workspaces are allowed to start",
                                                    workspace.getConfig().getName()));
             }
+            LOG.info("BBBBBBBBBBBBBBBBBBBBBBBBBBB");
             RuntimeState state = states.get(workspaceId);
+            LOG.info("CCCCCCCCCCCCCCCCCCCCCCCCC");
             if (state != null) {//启动前检查ID是否运行
+            	LOG.info("DDDDDDDDDDDDDDD");
                 throw new ConflictException(format("Could not start workspace '%s' because its status is '%s'",
                                                    workspace.getConfig().getName(),
                                                    state.status));
             }
+            LOG.info("FFFFFFFFFFFFFFFFFFFFFF");
             startTask = new StartTask(workspaceId,
                                       envName,
                                       environment,
                                       recover,
                                       cmpFuture = new CompletableFuture<>());
+            LOG.info("GGGGGGGGGGGGGGG");
             states.put(workspaceId, new RuntimeState(WorkspaceStatus.STARTING,
             										workspace.getMode(),
                                                      envName,
                                                      startTask,
                                                      sharedPool.submit(startTask)));
         }
-
+        LOG.info("HHHHHHHHHHHHHHHH");
         // publish event synchronously as the task may not be executed by
         // executors service(due to legal cancellation), clients still have
         // to receive STOPPED -> STARTING event
@@ -249,7 +258,7 @@ public class WorkspaceRuntimes {
                                         //.withMode(WorkspaceMode.IDE)
                                         .withEventType(EventType.STARTING)
                                         .withPrevStatus(WorkspaceStatus.STOPPED));
-
+        LOG.info("JJJJJJJJJJJJJJJJJJJJJJJJJJJJJJ");
         // so the start thread is free to go and start the environment
         startTask.unlockStart();
 

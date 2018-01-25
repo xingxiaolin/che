@@ -63,17 +63,21 @@ public class TemporaryWorkspaceRemover {
 
     @VisibleForTesting
     void removeTemporaryWs() throws ServerException {
+    	LOG.info("yyyyyyyyyyyyyyyyyyyy");
         final int count = 100;
         int skip = 0;
         List<WorkspaceImpl> workspaces = workspaceDao.getWorkspaces(true, skip, count);
         while (!workspaces.isEmpty()) {
+        	LOG.info("uuuuuuuuuuuuuuuuuuuuuuuuuuuuuu");
             for (WorkspaceImpl workspace : workspaces) {
                 try {
+                	LOG.info("iiiiiiiiiiiiiiiiiiiiiiiiii");
                     workspaceDao.remove(workspace.getId());
                 } catch (ServerException e) {
                     LOG.error("Unable to cleanup temporary workspace {}. Reason is {}", workspace.getId(), e.getLocalizedMessage());
                 }
             }
+            LOG.info("ooooooooooooooooooooooooooo");
             skip = skip + count;
             workspaces = workspaceDao.getWorkspaces(true, skip, count);
         }
