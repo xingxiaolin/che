@@ -414,17 +414,20 @@
         <artifactId>che-core-api-debug-shared</artifactId>
         <version>${che.version}</version>
       </dependency>
+      <!--
       <dependency>
         <groupId>org.eclipse.che.core</groupId>
         <artifactId>che-core-api-dto</artifactId>
         <version>${che.docs.version}</version>
       </dependency>
+      -->
       <!--///////////////////////////////////2017-11-13   xxl  add jar begin//////////////////-->
       <dependency>
         <groupId>org.eclipse.che.core</groupId>
         <artifactId>che-core-api-dto</artifactId>
         <version>${che.version}</version>
       </dependency>
+      
       <dependency>
         <groupId>org.eclipse.che.core</groupId>
         <artifactId>che-core-api-factory</artifactId>
@@ -1349,7 +1352,7 @@
       <dependency>
         <groupId>org.eclipse.che.sample</groupId>
         <artifactId>che-service</artifactId>
-        <version>5.12.0</version>
+        <version>${che.version}</version>
       </dependency>
       <!--///////////////////////////////////xxl add extends end////////////////////////////////////-->
       <dependency>

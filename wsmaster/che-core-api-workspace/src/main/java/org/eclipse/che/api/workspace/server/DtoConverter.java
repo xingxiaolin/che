@@ -13,6 +13,7 @@ package org.eclipse.che.api.workspace.server;
 import org.eclipse.che.api.core.model.machine.Command;
 import org.eclipse.che.api.core.model.machine.Snapshot;
 import org.eclipse.che.api.core.model.project.ProjectConfig;
+//import org.eclipse.che.api.core.model.project.GZProjectConfig;
 import org.eclipse.che.api.core.model.project.SourceStorage;
 import org.eclipse.che.api.core.model.workspace.Environment;
 import org.eclipse.che.api.core.model.workspace.ExtendedMachine;
@@ -27,6 +28,7 @@ import org.eclipse.che.api.workspace.shared.dto.EnvironmentDto;
 import org.eclipse.che.api.workspace.shared.dto.EnvironmentRecipeDto;
 import org.eclipse.che.api.workspace.shared.dto.ExtendedMachineDto;
 import org.eclipse.che.api.workspace.shared.dto.ProjectConfigDto;
+//import org.eclipse.che.api.workspace.shared.dto.GZProjectConfigDto;
 import org.eclipse.che.api.workspace.shared.dto.ServerConf2Dto;
 import org.eclipse.che.api.workspace.shared.dto.SourceStorageDto;
 import org.eclipse.che.api.workspace.shared.dto.WorkspaceConfigDto;
@@ -37,10 +39,8 @@ import org.eclipse.che.api.workspace.shared.dto.stack.StackDto;
 import org.eclipse.che.api.workspace.shared.dto.stack.StackSourceDto;
 import org.eclipse.che.api.workspace.shared.stack.Stack;
 import org.eclipse.che.api.workspace.shared.stack.StackSource;
-
 import java.util.List;
 import java.util.Map;
-
 import static java.util.stream.Collectors.toList;
 import static java.util.stream.Collectors.toMap;
 import static org.eclipse.che.dto.server.DtoFactory.newDto;
@@ -66,23 +66,29 @@ public final class DtoConverter {
     /** Converts {@link WorkspaceConfig} to {@link WorkspaceConfigDto}. */
     public static WorkspaceConfigDto asDto(WorkspaceConfig workspace) {
         List<CommandDto> commands = workspace.getCommands()
-                                             .stream()
-                                             .map(DtoConverter::asDto)
-                                             .collect(toList());
+										                                             .stream()
+										                                             .map(DtoConverter::asDto)
+										                                             .collect(toList());
         List<ProjectConfigDto> projects = workspace.getProjects()
-                                                   .stream()
-                                                   .map(DtoConverter::asDto)
-                                                   .collect(toList());
+								                                                   .stream()
+								                                                   .map(DtoConverter::asDto)
+								                                                   .collect(toList());
+//2018-01-01XXL  添加GZProject							                                                   
+//        List<GZProjectConfigDto> gzprojects = workspace.getGZProjects()
+//																			                .stream()
+//																			                .map(DtoConverter::asDto)
+//																			                .collect(toList());
         Map<String, EnvironmentDto> environments = workspace.getEnvironments()
                                                             .entrySet()
                                                             .stream()
-                                                            .collect(toMap(Map.Entry::getKey,
-                                                                           entry -> asDto(entry.getValue())));
+                                                            .collect(toMap(Map.Entry::getKey,entry -> asDto(entry.getValue())));
 
-        return newDto(WorkspaceConfigDto.class).withName(workspace.getName())
+        return newDto(WorkspaceConfigDto.class)
+        									   .withName(workspace.getName())
                                                .withDefaultEnv(workspace.getDefaultEnv())
                                                .withCommands(commands)
                                                .withProjects(projects)
+//                                               .withGZProjects(gzprojects)
                                                .withEnvironments(environments)
                                                .withDescription(workspace.getDescription());
     }
@@ -112,8 +118,9 @@ public final class DtoConverter {
         if (stack.getComponents() != null) {
             componentsDto = stack.getComponents()
                                  .stream()
-                                 .map(component -> newDto(StackComponentDto.class).withName(component.getName())
-                                                                                  .withVersion(component.getVersion()))
+                                 .map(component -> newDto(StackComponentDto.class)
+                                		 										.withName(component.getName())
+                                                                                .withVersion(component.getVersion()))
                                  .collect(toList());
         }
 
@@ -144,6 +151,26 @@ public final class DtoConverter {
         }
         return projectConfigDto;
     }
+    
+    /** Converts {@link ProjectConfig} to {@link ProjectConfigDto}. */
+  //2018-01-01XXL  添加GZProject
+//    public static GZProjectConfigDto asDto(GZProjectConfig gzprojectCfg) {
+//        final GZProjectConfigDto gzprojectConfigDto = newDto(GZProjectConfigDto.class)
+//		        																		.withName(gzprojectCfg.getName())
+//		                                                                                .withDescription(gzprojectCfg.getDescription())
+//		                                                                                .withPath(gzprojectCfg.getPath())
+//		                                                                                .withType(gzprojectCfg.getType())
+//		                                                                                .withAttributes(gzprojectCfg.getAttributes())
+//		                                                                                .withMixins(gzprojectCfg.getMixins());
+//        final SourceStorage source = gzprojectCfg.getSource();
+//        if (source != null) {
+//            gzprojectConfigDto.withSource(newDto(SourceStorageDto.class)
+//    															.withLocation(source.getLocation())
+//    															.withType(source.getType())
+//    															.withParameters(source.getParameters()));
+//        }
+//        return gzprojectConfigDto;
+//    }
 
     /** Converts {@link Environment} to {@link EnvironmentDto}. */
     public static EnvironmentDto asDto(Environment env) {

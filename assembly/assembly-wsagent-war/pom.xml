@@ -142,7 +142,7 @@
 		<dependency>
 		  <groupId>org.eclipse.che.sample</groupId>
 		  <artifactId>che-service</artifactId>
-		  <version>5.12.0</version>
+		  <version>${che.version}</version>
 		</dependency>
 
     </dependencies>

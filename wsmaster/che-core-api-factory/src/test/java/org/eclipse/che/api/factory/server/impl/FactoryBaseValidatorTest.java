@@ -11,7 +11,6 @@
 package org.eclipse.che.api.factory.server.impl;
 
 import com.google.common.collect.ImmutableMap;
-
 import org.eclipse.che.api.core.ApiException;
 import org.eclipse.che.api.core.BadRequestException;
 import org.eclipse.che.api.core.NotFoundException;
@@ -30,6 +29,7 @@ import org.eclipse.che.api.user.server.model.impl.UserImpl;
 import org.eclipse.che.api.user.server.spi.PreferenceDao;
 import org.eclipse.che.api.user.server.spi.UserDao;
 import org.eclipse.che.api.workspace.shared.dto.ProjectConfigDto;
+//import org.eclipse.che.api.workspace.shared.dto.GZProjectConfigDto;
 import org.eclipse.che.api.workspace.shared.dto.SourceStorageDto;
 import org.eclipse.che.api.workspace.shared.dto.WorkspaceConfigDto;
 import org.eclipse.che.dto.server.DtoFactory;
@@ -39,7 +39,6 @@ import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.DataProvider;
 import org.testng.annotations.Listeners;
 import org.testng.annotations.Test;
-
 import javax.servlet.http.HttpServletRequest;
 import java.io.IOException;
 import java.io.UnsupportedEncodingException;
@@ -52,7 +51,6 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
-
 import static java.util.Collections.singletonList;
 import static java.util.Objects.*;
 import static org.eclipse.che.dto.server.DtoFactory.*;
@@ -169,9 +167,10 @@ public class FactoryBaseValidatorTest {
                                             "digits or these following special characters -._.")
     public void shouldThrowFactoryUrlExceptionIfProjectNameInvalid(String projectName) throws Exception {
         // given
-        factory.withWorkspace(newDto(WorkspaceConfigDto.class).withProjects(singletonList(newDto(ProjectConfigDto.class)
-                                                                                                  .withType("type")
-                                                                                                  .withName(projectName))));
+        factory.withWorkspace(newDto(WorkspaceConfigDto.class)
+        										  .withProjects(singletonList(newDto(ProjectConfigDto.class).withType("type").withName(projectName) ) )
+        										  //.withGZProjects(singletonList(newDto(GZProjectConfigDto.class).withType("type").withName(projectName) ) )
+        									);
         // when, then
         validator.validateProjects(factory);
     }
@@ -180,13 +179,21 @@ public class FactoryBaseValidatorTest {
     public void shouldBeAbleToValidateValidProjectName(String projectName) throws Exception {
         // given
         prepareFactoryWithGivenStorage("git", VALID_REPOSITORY_URL, VALID_PROJECT_PATH);
-        factory.withWorkspace(newDto(WorkspaceConfigDto.class).withProjects(
-                singletonList(newDto(ProjectConfigDto.class).withType("type")
-                                                            .withName(projectName)
-                                                            .withSource(newDto(SourceStorageDto.class)
-                                                                                .withType("git")
-                                                                                .withLocation(VALID_REPOSITORY_URL))
-                                                            .withPath(VALID_PROJECT_PATH))));
+        factory.withWorkspace(newDto(WorkspaceConfigDto.class)
+								        		.withProjects(singletonList(newDto(ProjectConfigDto.class).withType("type")
+									                                                            .withName(projectName)
+									                                                            .withSource(newDto(SourceStorageDto.class)
+									                                                            .withType("git")
+									                                                            .withLocation(VALID_REPOSITORY_URL))
+									                                                            .withPath(VALID_PROJECT_PATH)))   
+//								        		.withGZProjects(singletonList(newDto(GZProjectConfigDto.class)
+//																		        				.withType("type")
+//																		                        .withName(projectName)
+//																		                        .withSource(newDto(SourceStorageDto.class)
+//													                                            .withType("git")
+//													                                            .withLocation(VALID_REPOSITORY_URL))
+//																		                        .withPath(VALID_PROJECT_PATH)) ) 
+        		);
         // when, then
         validator.validateProjects(factory);
     }
@@ -473,11 +480,16 @@ public class FactoryBaseValidatorTest {
 
     private FactoryDto prepareFactoryWithGivenStorage(String type, String location, String path) {
         return factory.withWorkspace(newDto(WorkspaceConfigDto.class)
-                                             .withProjects(singletonList(newDto(ProjectConfigDto.class)
-                                                                                 .withSource(newDto(SourceStorageDto.class)
-                                                                                                     .withType(type)
-                                                                                                     .withLocation(
-                                                                                                             location))
-                                                                                 .withPath(path))));
+			                                             	.withProjects(singletonList(newDto(ProjectConfigDto.class)
+					                                                                                 .withSource(newDto(SourceStorageDto.class)
+					                                                                                 .withType(type)
+					                                                                                 .withLocation(location))
+					                                                                                 .withPath(path)))
+//			                                             	.withGZProjects(singletonList(newDto(GZProjectConfigDto.class)
+//                                                                    .withSource(newDto(SourceStorageDto.class)
+//                                                                    .withType(type)
+//                                                                    .withLocation(location))
+//                                                                    .withPath(path)))
+                                             );
     }
 }

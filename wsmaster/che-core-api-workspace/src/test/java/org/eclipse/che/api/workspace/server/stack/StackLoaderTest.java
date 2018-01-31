@@ -13,7 +13,6 @@ package org.eclipse.che.api.workspace.server.stack;
 import com.google.common.io.Resources;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
-
 import org.eclipse.che.api.core.ConflictException;
 import org.eclipse.che.api.core.NotFoundException;
 import org.eclipse.che.api.core.ServerException;
@@ -26,6 +25,7 @@ import org.eclipse.che.api.workspace.shared.dto.EnvironmentRecipeDto;
 import org.eclipse.che.api.workspace.shared.dto.ExtendedMachineDto;
 import org.eclipse.che.api.workspace.shared.dto.ProjectConfigDto;
 import org.eclipse.che.api.workspace.shared.dto.ProjectProblemDto;
+//import org.eclipse.che.api.workspace.shared.dto.GZProjectConfigDto;
 import org.eclipse.che.api.workspace.shared.dto.ServerConf2Dto;
 import org.eclipse.che.api.workspace.shared.dto.SourceStorageDto;
 import org.eclipse.che.api.workspace.shared.dto.WorkspaceConfigDto;
@@ -35,14 +35,12 @@ import org.mockito.Mock;
 import org.mockito.testng.MockitoTestNGListener;
 import org.testng.annotations.Listeners;
 import org.testng.annotations.Test;
-
 import java.net.URL;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-
 import static java.util.Collections.singletonMap;
 import static org.eclipse.che.dto.server.DtoFactory.newDto;
 import static org.mockito.Matchers.any;
@@ -143,7 +141,17 @@ public class StackLoaderTest {
                                                                           .withMixins(Collections.singletonList("mixin time"))
                                                                           .withProblems(Collections.singletonList(projectProblem))
                                                                           .withSource(sourceStorageDto);
-
+        //2018-01-01XXL  添加GZProject
+//        GZProjectConfigDto gzprojectConfigDto = newDto(GZProjectConfigDto.class)
+//        		.withName("project")
+//                .withPath("somePath")
+//                .withAttributes(projectMap)
+//                .withType("maven type")
+//                .withDescription("some project description")
+//                .withLinks(Collections.singletonList(link))
+//                .withMixins(Collections.singletonList("mixin time"))
+//                .withProblems(Collections.singletonList(projectProblem))
+//                .withSource(sourceStorageDto);
 
         EnvironmentRecipeDto environmentRecipe = newDto(EnvironmentRecipeDto.class).withContent("some content")
                                                                                    .withContentType("some content type")
@@ -164,12 +172,13 @@ public class StackLoaderTest {
         CommandDto commandDto = newDto(CommandDto.class).withType("command type")
                                                         .withName("command name")
                                                         .withCommandLine("command line");
-
+        ////2018-01-01XXL  添加GZProject
         WorkspaceConfigDto workspaceConfigDto = newDto(WorkspaceConfigDto.class).withName("SomeWorkspaceConfig")
                                                                                 .withDescription("some workspace")
                                                                                 .withLinks(Collections.singletonList(link))
                                                                                 .withDefaultEnv("some Default Env name")
                                                                                 .withProjects(Collections.singletonList(projectConfigDto))
+//                                                                                .withGZProjects(Collections.singletonList(gzprojectConfigDto))
                                                                                 .withEnvironments(singletonMap("name", environmentDto))
                                                                                 .withCommands(Collections.singletonList(commandDto));
 

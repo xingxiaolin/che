@@ -25,6 +25,10 @@ CREATE TABLE gzprojectconfig (
 -- constraints
 ALTER TABLE gzprojectconfig ADD CONSTRAINT fk_gzprojectconfig_gzprojects_id FOREIGN KEY (gzprojects_id) REFERENCES workspaceconfig (id);
 ALTER TABLE gzprojectconfig ADD CONSTRAINT fk_gzprojectconfig_source_id FOREIGN KEY (source_id) REFERENCES sourcestorage (id);
+
 CREATE INDEX index_gzprojectconfig_gzprojectsid ON gzprojectconfig (gzprojects_id);
-CREATE INDEX index_gzprojectconfig_gzsourceid ON gzprojectconfig (source_id);
+CREATE INDEX index_gzprojectconfig_sourceid ON gzprojectconfig (source_id);
 --------------------------------------------------------------------------------
+--constraints
+ALTER TABLE projectattribute ADD CONSTRAINT fk_gzprojectattribute_dbattributes_id FOREIGN KEY (dbattributes_id) REFERENCES gzprojectconfig (id);
+

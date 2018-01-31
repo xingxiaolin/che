@@ -16,10 +16,8 @@ import org.eclipse.che.api.core.rest.shared.dto.Hyperlinks;
 import org.eclipse.che.api.core.rest.shared.dto.Link;
 import org.eclipse.che.api.machine.shared.dto.CommandDto;
 import org.eclipse.che.dto.shared.DTO;
-
 import java.util.List;
 import java.util.Map;
-
 import static org.eclipse.che.api.core.factory.FactoryParameter.Obligation.MANDATORY;
 import static org.eclipse.che.api.core.factory.FactoryParameter.Obligation.OPTIONAL;
 
@@ -68,6 +66,16 @@ public interface WorkspaceConfigDto extends WorkspaceConfig, Hyperlinks {
     void setProjects(List<ProjectConfigDto> projects);
 
     WorkspaceConfigDto withProjects(List<ProjectConfigDto> projects);
+    
+    
+//    @Override
+//    @FactoryParameter(obligation = MANDATORY)
+  //2018-01-01XXL  添加GZProject
+//    List<GZProjectConfigDto> getGZProjects();
+//
+//    void setGZProjects(List<GZProjectConfigDto> gzprojects);
+//
+//    WorkspaceConfigDto withGZProjects(List<GZProjectConfigDto> gzprojects);
 
     @Override
     @FactoryParameter(obligation = MANDATORY)

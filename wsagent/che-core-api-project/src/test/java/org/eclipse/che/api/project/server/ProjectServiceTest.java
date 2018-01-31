@@ -163,7 +163,6 @@ public class ProjectServiceTest {
     private org.eclipse.che.commons.env.EnvironmentContext env;
 
     private List<ProjectConfigDto> projects;
-
     @Mock
     private UserDao                userDao;
     @Mock
@@ -265,7 +264,6 @@ public class ProjectServiceTest {
         when(httpJsonResponse.asDto(WorkspaceDto.class)).thenReturn(usersWorkspaceMock);
         when(usersWorkspaceMock.getConfig()).thenReturn(workspaceConfigMock);
         when(workspaceConfigMock.getProjects()).thenReturn(projects);
-
 //        verify(httpJsonRequestFactory).fromLink(eq(DtoFactory.newDto(Link.class)
 //                                                             .withHref(apiEndpoint + "/workspace/" + workspace + "/project")
 //                                                             .withMethod(PUT)));

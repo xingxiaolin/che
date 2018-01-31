@@ -11,7 +11,6 @@
 package org.eclipse.che.api.factory.server.builder;
 
 import com.google.common.collect.ImmutableMap;
-
 import org.eclipse.che.api.core.ApiException;
 import org.eclipse.che.api.core.factory.FactoryParameter;
 import org.eclipse.che.api.core.model.factory.Button;
@@ -34,6 +33,7 @@ import org.eclipse.che.api.workspace.shared.dto.EnvironmentDto;
 import org.eclipse.che.api.workspace.shared.dto.EnvironmentRecipeDto;
 import org.eclipse.che.api.workspace.shared.dto.ExtendedMachineDto;
 import org.eclipse.che.api.workspace.shared.dto.ProjectConfigDto;
+//import org.eclipse.che.api.workspace.shared.dto.GZProjectConfigDto;
 import org.eclipse.che.api.workspace.shared.dto.SourceStorageDto;
 import org.eclipse.che.api.workspace.shared.dto.WorkspaceConfigDto;
 import org.eclipse.che.dto.server.DtoFactory;
@@ -43,11 +43,9 @@ import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.DataProvider;
 import org.testng.annotations.Listeners;
 import org.testng.annotations.Test;
-
 import java.io.IOException;
 import java.lang.reflect.InvocationTargetException;
 import java.net.URISyntaxException;
-
 import static java.util.Arrays.asList;
 import static java.util.Collections.singletonList;
 import static java.util.Collections.singletonMap;
@@ -156,23 +154,34 @@ public class FactoryBuilderTest {
     private static FactoryDto prepareFactory() {
         ProjectConfigDto project = dto.createDto(ProjectConfigDto.class)
                                       .withSource(dto.createDto(SourceStorageDto.class)
-                                                     .withType("git")
+                                    		  		 .withType("git")
                                                      .withLocation("location"))
                                       .withType("type")
                                       .withAttributes(singletonMap("key", singletonList("value")))
                                       .withDescription("description")
                                       .withName("name")
                                       .withPath("/path");
+//2018-01-01XXL  添加GZProject        
+//        GZProjectConfigDto gzproject = dto.createDto(GZProjectConfigDto.class)
+//                .withSource(dto.createDto(SourceStorageDto.class)
+//                .withType("git")
+//                .withLocation("location"))
+//                .withType("type")
+//                .withAttributes(singletonMap("key", singletonList("value")))
+//                .withDescription("description")
+//                .withName("name")
+//                .withPath("/path");
         EnvironmentDto environment = dto.createDto(EnvironmentDto.class)
                                         .withRecipe(newDto(EnvironmentRecipeDto.class).withType("compose")
-                                                                                      .withContentType("application/x-yaml")
-                                                                                      .withContent("some content"))
+                                        .withContentType("application/x-yaml")
+                                        .withContent("some content"))
                                         .withMachines(singletonMap("devmachine",
-                                                                   newDto(ExtendedMachineDto.class).withAgents(singletonList("org.eclipse.che.ws-agent"))
-                                                                                                   .withAttributes(singletonMap("memoryLimitBytes", "" + 512L * 1024L * 1024L))));
+                                                                newDto(ExtendedMachineDto.class).withAgents(singletonList("org.eclipse.che.ws-agent"))
+                                                                              .withAttributes(singletonMap("memoryLimitBytes", "" + 512L * 1024L * 1024L))));
 
         WorkspaceConfigDto workspaceConfig = dto.createDto(WorkspaceConfigDto.class)
                                                 .withProjects(singletonList(project))
+//                                                .withGZProjects(singletonList(gzproject))
                                                 .withCommands(singletonList(dto.createDto(CommandDto.class)
                                                                                .withName("command1")
                                                                                .withType("maven")

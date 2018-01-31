@@ -11,21 +11,18 @@
 package org.eclipse.che.api.workspace.server;
 
 import com.google.common.annotations.VisibleForTesting;
-
 import org.eclipse.che.api.core.ServerException;
 import org.eclipse.che.api.workspace.server.model.impl.WorkspaceImpl;
 import org.eclipse.che.api.workspace.server.spi.WorkspaceDao;
 import org.slf4j.Logger;
-
 import javax.annotation.PostConstruct;
 import javax.annotation.PreDestroy;
 import javax.inject.Inject;
 import javax.inject.Singleton;
 import java.util.List;
-
 import static org.slf4j.LoggerFactory.getLogger;
 
-/**
+/**删除服务器启动和关机时的临时工作区。
  * Removes temporary workspaces on server startup and shutdown.
  *
  * @author Max Shaposhnik (mshaposhnik@codenvy.com)
@@ -39,6 +36,8 @@ public class TemporaryWorkspaceRemover {
 
     @Inject
     public TemporaryWorkspaceRemover(WorkspaceDao workspaceDao) {
+    	LOG.info("999999999999999999999");
+    	LOG.info("////" + workspaceDao.toString());
         this.workspaceDao = workspaceDao;
     }
 
