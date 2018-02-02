@@ -36,8 +36,6 @@ public class TemporaryWorkspaceRemover {
 
     @Inject
     public TemporaryWorkspaceRemover(WorkspaceDao workspaceDao) {
-    	LOG.info("999999999999999999999");
-    	LOG.info("////" + workspaceDao.toString());
         this.workspaceDao = workspaceDao;
     }
 
@@ -67,16 +65,13 @@ public class TemporaryWorkspaceRemover {
         int skip = 0;
         List<WorkspaceImpl> workspaces = workspaceDao.getWorkspaces(true, skip, count);
         while (!workspaces.isEmpty()) {
-        	LOG.info("uuuuuuuuuuuuuuuuuuuuuuuuuuuuuu");
             for (WorkspaceImpl workspace : workspaces) {
                 try {
-                	LOG.info("iiiiiiiiiiiiiiiiiiiiiiiiii");
                     workspaceDao.remove(workspace.getId());
                 } catch (ServerException e) {
                     LOG.error("Unable to cleanup temporary workspace {}. Reason is {}", workspace.getId(), e.getLocalizedMessage());
                 }
             }
-            LOG.info("ooooooooooooooooooooooooooo");
             skip = skip + count;
             workspaces = workspaceDao.getWorkspaces(true, skip, count);
         }

@@ -95,6 +95,7 @@ public class ProjectManager {
                           FileTreeWatcher fileTreeWatcher,
                           WorkspaceProjectsSyncer workspaceProjectsHolder,
                           FileWatcherManager fileWatcherManager) throws ServerException {
+    	LOG.info("11111111111111111------20180202");
         this.vfs = vfsProvider.getVirtualFileSystem();
         this.projectTypeRegistry = projectTypeRegistry;
         this.projectRegistry = projectRegistry;
@@ -113,6 +114,7 @@ public class ProjectManager {
     }
 
     void initWatcher() throws IOException {
+    	LOG.info("222222222222222222------20180202");
         FileWatcherNotificationListener defaultListener =
                 new FileWatcherNotificationListener(file -> !(file.getPath().toString().contains(".che")
                                                               || file.getPath().toString().contains(".#"))) {
@@ -132,14 +134,17 @@ public class ProjectManager {
 
     @PreDestroy
     void stop() {
+    	LOG.info("3333333333333333333------20180202");
         executor.shutdownNow();
     }
 
     public FolderEntry getProjectsRoot() throws ServerException {
+    	LOG.info("44444444444------20180202");
         return new FolderEntry(vfs.getRoot(), projectRegistry);
     }
 
     public Searcher getSearcher() throws NotFoundException, ServerException {
+    	LOG.info("55555555555555------20180202");
         final SearcherProvider provider = vfs.getSearcherProvider();
         if (provider == null) {
             throw new NotFoundException("SearcherProvider is not defined in VFS");
@@ -149,18 +154,22 @@ public class ProjectManager {
     }
 
     public void addWatchListener(FileWatcherNotificationListener listener) {
+    	LOG.info("666666666666666------20180202");
         fileWatchNotifier.addNotificationListener(listener);
     }
 
     public void removeWatchListener(FileWatcherNotificationListener listener) {
+    	LOG.info("7777777777777------20180202");
         fileWatchNotifier.removeNotificationListener(listener);
     }
 
     public void addWatchExcludeMatcher(PathMatcher matcher) {
+    	LOG.info("8888888888------20180202");
         fileWatcher.addExcludeMatcher(matcher);
     }
 
     public void removeWatchExcludeMatcher(PathMatcher matcher) {
+    	LOG.info("999999999999------20180202");
         fileWatcher.removeExcludeMatcher(matcher);
     }
 
@@ -171,6 +180,7 @@ public class ProjectManager {
      *         if projects are not initialized yet
      */
     public List<RegisteredProject> getProjects() throws ServerException {
+    	LOG.info("101010101010------20180202");
         return projectRegistry.getProjects();
     }
 
@@ -185,6 +195,7 @@ public class ProjectManager {
      *         if project not found
      */
     public RegisteredProject getProject(String projectPath) throws ServerException, NotFoundException {
+    	LOG.info("aaaaaaaaaaaaaaaaaaa------20180202");
         final RegisteredProject project = projectRegistry.getProject(projectPath);
         if (project == null) {
             throw new NotFoundException(format("Project '%s' doesn't exist.", projectPath));
@@ -213,6 +224,7 @@ public class ProjectManager {
                                                                                                             ForbiddenException,
                                                                                                             ServerException,
                                                                                                             NotFoundException {
+    	LOG.info("bbbbbbbbbbbbbbb------20180202");
         fileWatcherManager.suspend();
         try {
             // path and primary type is mandatory
@@ -240,6 +252,7 @@ public class ProjectManager {
                                                                                                                ForbiddenException,
                                                                                                                ServerException,
                                                                                                                NotFoundException {
+    	LOG.info("cccccccccccccccccccccccc------20180202");
         final String path = ProjectRegistry.absolutizePath(projectConfig.getPath());
         final CreateProjectHandler generator = handlers.getCreateProjectHandler(projectConfig.getType());
         FolderEntry projectFolder;
@@ -302,6 +315,7 @@ public class ProjectManager {
     public List<RegisteredProject> createBatchProjects(List<? extends NewProjectConfig> projectConfigList, boolean rewrite, ProjectOutputLineConsumerFactory lineConsumerFactory)
             throws BadRequestException, ConflictException, ForbiddenException, NotFoundException, ServerException, UnauthorizedException,
                    IOException {
+    	LOG.info("ddddddddddddddddddddd------20180202");
         fileWatcherManager.suspend();
         try {
             final List<RegisteredProject> projects = new ArrayList<>(projectConfigList.size());
@@ -358,6 +372,7 @@ public class ProjectManager {
     }
 
     private void rollbackCreatingBatchProjects(List<RegisteredProject> projects) {
+    	LOG.info("eeeeeeeeeeeeeeeeeee------20180202");
         for (RegisteredProject project : projects) {
             try {
                 final FolderEntry projectFolder = project.getBaseFolder();
@@ -373,7 +388,7 @@ public class ProjectManager {
 
     private void validateProjectConfigurations(List<? extends NewProjectConfig> projectConfigList, boolean rewrite)
             throws NotFoundException, ServerException, ConflictException, ForbiddenException, BadRequestException {
-
+    	LOG.info("fffffffffffffffffffffffffff------20180202");
         for (NewProjectConfig projectConfig : projectConfigList) {
             final String pathToProject = projectConfig.getPath();
             if (isNullOrEmpty(pathToProject)) {
@@ -416,6 +431,7 @@ public class ProjectManager {
                                                                            ServerException,
                                                                            NotFoundException,
                                                                            ConflictException {
+    	LOG.info("gggggggggggggggggggggggg------20180202");
         final String path = newConfig.getPath();
         if (path == null) {
             throw new ConflictException("Project path is not defined");
@@ -457,6 +473,7 @@ public class ProjectManager {
                                                                                                              UnauthorizedException,
                                                                                                              ConflictException,
                                                                                                              NotFoundException {
+    	LOG.info("hhhhhhhhhhhhhhhhhhhhh------20180202");
         fileWatcherManager.suspend();
         try {
             return doImportProject(path, sourceStorage, rewrite, lineConsumerFactory);
@@ -472,6 +489,7 @@ public class ProjectManager {
                                                                                                                 UnauthorizedException,
                                                                                                                 ConflictException,
                                                                                                                 NotFoundException {
+    	LOG.info("iiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiii------20180202");
         final ProjectImporter importer = importers.getImporter(sourceStorage.getType());
         if (importer == null) {
             throw new NotFoundException(format("Unable import sources project from '%s'. Sources type '%s' is not supported.",
@@ -528,6 +546,7 @@ public class ProjectManager {
      */
     public ProjectTypeResolution estimateProject(String path, String projectTypeId) throws ServerException,
                                                                                            NotFoundException {
+    	LOG.info("jjjjjjjjjjjjjjjjjjjjjjjjjjjjjj------20180202");
         final ProjectTypeDef projectType = projectTypeRegistry.getProjectType(projectTypeId);
         if (projectType == null) {
             throw new NotFoundException("Project Type to estimate needed.");
@@ -553,6 +572,7 @@ public class ProjectManager {
      * @throws NotFoundException
      */
     public List<ProjectTypeResolution> resolveSources(String path, boolean transientOnly) throws ServerException, NotFoundException {
+    	LOG.info("kkkkkkkkkkkkkkkkkkkkkk------20180202");
         final List<ProjectTypeResolution> resolutions = new ArrayList<>();
 
         for (ProjectType type : projectTypeRegistry.getProjectTypes(ProjectTypeRegistry.CHILD_TO_PARENT_COMPARATOR)) {
@@ -580,6 +600,7 @@ public class ProjectManager {
      * @throws ConflictException
      */
     public void delete(String path) throws ServerException, ForbiddenException, NotFoundException, ConflictException {
+    	LOG.info("llllllllllllllllllllllllllllllll------20180202");
         final String apath = ProjectRegistry.absolutizePath(path);
 
         // delete item

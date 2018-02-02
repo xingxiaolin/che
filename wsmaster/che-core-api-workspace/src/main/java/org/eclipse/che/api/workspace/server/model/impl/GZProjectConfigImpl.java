@@ -70,7 +70,7 @@ public class GZProjectConfigImpl implements GZProjectConfig {
     private SourceStorageImpl source;
 
     @ElementCollection(fetch = FetchType.EAGER)
-    @CollectionTable(name = "projectconfig_mixins", joinColumns = @JoinColumn(name = "projectconfig_id"))
+    @CollectionTable(name = "gzprojectconfig_mixins", joinColumns = @JoinColumn(name = "projectconfig_id"))
     @Column(name = "mixins")
     private List<String> mixins;
 

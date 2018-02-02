@@ -67,15 +67,14 @@ public interface WorkspaceConfigDto extends WorkspaceConfig, Hyperlinks {
 
     WorkspaceConfigDto withProjects(List<ProjectConfigDto> projects);
     
-    
-//    @Override
-//    @FactoryParameter(obligation = MANDATORY)
-  //2018-01-01XXL  添加GZProject
-//    List<GZProjectConfigDto> getGZProjects();
-//
-//    void setGZProjects(List<GZProjectConfigDto> gzprojects);
-//
-//    WorkspaceConfigDto withGZProjects(List<GZProjectConfigDto> gzprojects);
+//  2018-01-01XXL  添加GZProject
+    @Override
+    @FactoryParameter(obligation = MANDATORY)
+    List<GZProjectConfigDto> getGZProjects();
+
+    void setGZProjects(List<GZProjectConfigDto> gzprojects);
+
+    WorkspaceConfigDto withGZProjects(List<GZProjectConfigDto> gzprojects);
 
     @Override
     @FactoryParameter(obligation = MANDATORY)

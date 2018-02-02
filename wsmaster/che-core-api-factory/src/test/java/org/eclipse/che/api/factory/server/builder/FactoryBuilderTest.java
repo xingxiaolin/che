@@ -33,7 +33,7 @@ import org.eclipse.che.api.workspace.shared.dto.EnvironmentDto;
 import org.eclipse.che.api.workspace.shared.dto.EnvironmentRecipeDto;
 import org.eclipse.che.api.workspace.shared.dto.ExtendedMachineDto;
 import org.eclipse.che.api.workspace.shared.dto.ProjectConfigDto;
-//import org.eclipse.che.api.workspace.shared.dto.GZProjectConfigDto;
+import org.eclipse.che.api.workspace.shared.dto.GZProjectConfigDto;
 import org.eclipse.che.api.workspace.shared.dto.SourceStorageDto;
 import org.eclipse.che.api.workspace.shared.dto.WorkspaceConfigDto;
 import org.eclipse.che.dto.server.DtoFactory;
@@ -162,15 +162,15 @@ public class FactoryBuilderTest {
                                       .withName("name")
                                       .withPath("/path");
 //2018-01-01XXL  添加GZProject        
-//        GZProjectConfigDto gzproject = dto.createDto(GZProjectConfigDto.class)
-//                .withSource(dto.createDto(SourceStorageDto.class)
-//                .withType("git")
-//                .withLocation("location"))
-//                .withType("type")
-//                .withAttributes(singletonMap("key", singletonList("value")))
-//                .withDescription("description")
-//                .withName("name")
-//                .withPath("/path");
+        GZProjectConfigDto gzproject = dto.createDto(GZProjectConfigDto.class)
+                .withSource(dto.createDto(SourceStorageDto.class)
+                .withType("git")
+                .withLocation("location"))
+                .withType("type")
+                .withAttributes(singletonMap("key", singletonList("value")))
+                .withDescription("description")
+                .withName("name")
+                .withPath("/path");
         EnvironmentDto environment = dto.createDto(EnvironmentDto.class)
                                         .withRecipe(newDto(EnvironmentRecipeDto.class).withType("compose")
                                         .withContentType("application/x-yaml")
@@ -181,7 +181,7 @@ public class FactoryBuilderTest {
 
         WorkspaceConfigDto workspaceConfig = dto.createDto(WorkspaceConfigDto.class)
                                                 .withProjects(singletonList(project))
-//                                                .withGZProjects(singletonList(gzproject))
+                                                .withGZProjects(singletonList(gzproject))
                                                 .withCommands(singletonList(dto.createDto(CommandDto.class)
                                                                                .withName("command1")
                                                                                .withType("maven")

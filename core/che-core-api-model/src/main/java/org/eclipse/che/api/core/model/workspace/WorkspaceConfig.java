@@ -12,7 +12,7 @@ package org.eclipse.che.api.core.model.workspace;
 
 import org.eclipse.che.api.core.model.machine.Command;
 import org.eclipse.che.api.core.model.project.ProjectConfig;
-//import org.eclipse.che.api.core.model.project.GZProjectConfig;
+import org.eclipse.che.api.core.model.project.GZProjectConfig;
 import org.eclipse.che.commons.annotation.Nullable;
 import java.util.List;
 import java.util.Map;
@@ -64,7 +64,7 @@ public interface WorkspaceConfig {
      * It is optional, workspace may contain 0 or N gzproject configurations.
      */
   //2018-01-01XXL  添加GZProject    
-    //    List<? extends GZProjectConfig> getGZProjects();
+        List<? extends GZProjectConfig> getGZProjects();
 
     /**
      * Returns mapping of environment names to environment configurations.

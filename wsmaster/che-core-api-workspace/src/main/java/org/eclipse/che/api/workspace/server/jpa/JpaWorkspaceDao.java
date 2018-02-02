@@ -169,7 +169,6 @@ public class JpaWorkspaceDao implements WorkspaceDao {
         checkArgument(maxItems >= 0, "The number of items to return can't be negative.");
         checkArgument(skipCount >= 0, "The number of items to skip can't be negative or greater than " + Integer.MAX_VALUE);
         try {
-        	LOG.info("8888888==/"+ managerProvider.toString());
             return managerProvider.get()
                                   .createNamedQuery("Workspace.getByTemporary", WorkspaceImpl.class)
                                   .setParameter("temporary", isTemporary)

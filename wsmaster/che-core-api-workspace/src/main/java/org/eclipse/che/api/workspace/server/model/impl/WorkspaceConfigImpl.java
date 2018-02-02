@@ -12,7 +12,7 @@ package org.eclipse.che.api.workspace.server.model.impl;
 
 import org.eclipse.che.api.core.model.machine.Command;
 import org.eclipse.che.api.core.model.project.ProjectConfig;
-//import org.eclipse.che.api.core.model.project.GZProjectConfig;
+import org.eclipse.che.api.core.model.project.GZProjectConfig;
 import org.eclipse.che.api.core.model.workspace.Environment;
 import org.eclipse.che.api.core.model.workspace.WorkspaceConfig;
 import org.eclipse.che.api.machine.server.model.impl.CommandImpl;
@@ -72,9 +72,9 @@ public class WorkspaceConfigImpl implements WorkspaceConfig {
     @JoinColumn(name = "projects_id")
     private List<ProjectConfigImpl> projects;
     
-//    @OneToMany(cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.EAGER)
-//    @JoinColumn(name = "gzprojects_id")
-//    private List<GZProjectConfigImpl> gzprojects;
+    @OneToMany(cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.EAGER)
+    @JoinColumn(name = "gzprojects_id")
+    private List<GZProjectConfigImpl> gzprojects;
 
     @OneToMany(cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.EAGER)
     @JoinColumn(name = "environments_id")
@@ -88,7 +88,7 @@ public class WorkspaceConfigImpl implements WorkspaceConfig {
                                String defaultEnv,
                                List<? extends Command> commands,
                                List<? extends ProjectConfig> projects,
-//                               List<? extends GZProjectConfig> gzprojects,
+                               List<? extends GZProjectConfig> gzprojects,
                                Map<String, ? extends Environment> environments) {
         this.name = name;
         this.defaultEnv = defaultEnv;
@@ -109,11 +109,11 @@ public class WorkspaceConfigImpl implements WorkspaceConfig {
                                     .map(ProjectConfigImpl::new)
                                     .collect(toList());
         }
-//        if (gzprojects != null) {
-//            this.gzprojects = gzprojects.stream()
-//                                    .map(GZProjectConfigImpl::new)
-//                                    .collect(toList());
-//        }
+        if (gzprojects != null) {
+            this.gzprojects = gzprojects.stream()
+                                    .map(GZProjectConfigImpl::new)
+                                    .collect(toList());
+        }
     }
 
     public WorkspaceConfigImpl(WorkspaceConfig workspaceConfig) {
@@ -122,7 +122,7 @@ public class WorkspaceConfigImpl implements WorkspaceConfig {
              workspaceConfig.getDefaultEnv(),
              workspaceConfig.getCommands(),
              workspaceConfig.getProjects(),
-//             workspaceConfig.getGZProjects(),
+             workspaceConfig.getGZProjects(),
              workspaceConfig.getEnvironments());
     }
 
@@ -178,17 +178,17 @@ public class WorkspaceConfigImpl implements WorkspaceConfig {
         this.projects = projects;
     }
     
-//    @Override
-//    public List<GZProjectConfigImpl> getGZProjects() {
-//        if (gzprojects == null) {
-//            gzprojects = new ArrayList<>();
-//        }
-//        return gzprojects;
-//    }
-//
-//    public void setGZProjects(List<GZProjectConfigImpl> gzprojects) {
-//        this.gzprojects = gzprojects;
-//    }
+    @Override
+    public List<GZProjectConfigImpl> getGZProjects() {
+        if (gzprojects == null) {
+            gzprojects = new ArrayList<>();
+        }
+        return gzprojects;
+    }
+
+    public void setGZProjects(List<GZProjectConfigImpl> gzprojects) {
+        this.gzprojects = gzprojects;
+    }
 
     @Override
     public Map<String, EnvironmentImpl> getEnvironments() {
@@ -217,7 +217,7 @@ public class WorkspaceConfigImpl implements WorkspaceConfig {
                && Objects.equals(defaultEnv, that.defaultEnv)
                && getCommands().equals(that.getCommands())
                && getProjects().equals(that.getProjects())
-//               && getGZProjects().equals(that.getGZProjects())
+               && getGZProjects().equals(that.getGZProjects())
                && getEnvironments().equals(that.getEnvironments());
     }
 
@@ -230,7 +230,7 @@ public class WorkspaceConfigImpl implements WorkspaceConfig {
         hash = 31 * hash + Objects.hashCode(defaultEnv);
         hash = 31 * hash + getCommands().hashCode();
         hash = 31 * hash + getProjects().hashCode();
-//        hash = 31 * hash + getGZProjects().hashCode();
+        hash = 31 * hash + getGZProjects().hashCode();
         hash = 31 * hash + getEnvironments().hashCode();
         return hash;
     }
@@ -244,7 +244,7 @@ public class WorkspaceConfigImpl implements WorkspaceConfig {
                ", defaultEnv='" + defaultEnv + '\'' +
                ", commands=" + commands +
                ", projects=" + projects +
-//                ", gzprojects=" + gzprojects +
+                ", gzprojects=" + gzprojects +
                ", environments=" + environments +
                '}';
     }
@@ -260,7 +260,7 @@ public class WorkspaceConfigImpl implements WorkspaceConfig {
         private String                             defaultEnvName;
         private List<? extends Command>            commands;
         private List<? extends ProjectConfig>      projects;
-//        private List<? extends GZProjectConfig>      gzprojects;
+        private List<? extends GZProjectConfig>      gzprojects;
         private Map<String, ? extends Environment> environments;
         private String                             description;
 
@@ -272,7 +272,7 @@ public class WorkspaceConfigImpl implements WorkspaceConfig {
                                            defaultEnvName,
                                            commands,
                                            projects,
-//                                           gzprojects,
+                                           gzprojects,
                                            environments);
         }
 
@@ -281,7 +281,7 @@ public class WorkspaceConfigImpl implements WorkspaceConfig {
             this.description = workspaceConfig.getDescription();
             this.defaultEnvName = workspaceConfig.getDefaultEnv();
             this.projects = workspaceConfig.getProjects();
-//            this.gzprojects = workspaceConfig.getGZProjects();
+            this.gzprojects = workspaceConfig.getGZProjects();
             this.commands = workspaceConfig.getCommands();
             this.environments = workspaceConfig.getEnvironments();
             return this;
@@ -307,10 +307,10 @@ public class WorkspaceConfigImpl implements WorkspaceConfig {
             return this;
         }
         
-//        public WorkspaceConfigImplBuilder setGZProjects(List<? extends GZProjectConfig> gzprojects) {
-//            this.gzprojects = gzprojects;
-//            return this;
-//        }
+        public WorkspaceConfigImplBuilder setGZProjects(List<? extends GZProjectConfig> gzprojects) {
+            this.gzprojects = gzprojects;
+            return this;
+        }
 
         public WorkspaceConfigImplBuilder setEnvironments(Map<String, ? extends Environment> environments) {
             this.environments = environments;

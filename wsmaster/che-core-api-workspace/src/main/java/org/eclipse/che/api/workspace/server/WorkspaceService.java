@@ -35,10 +35,12 @@ import org.eclipse.che.api.machine.shared.dto.CommandDto;
 import org.eclipse.che.api.machine.shared.dto.SnapshotDto;
 import org.eclipse.che.api.workspace.server.model.impl.EnvironmentImpl;
 import org.eclipse.che.api.workspace.server.model.impl.ProjectConfigImpl;
+import org.eclipse.che.api.workspace.server.model.impl.GZProjectConfigImpl;
 import org.eclipse.che.api.workspace.server.model.impl.WorkspaceImpl;
 import org.eclipse.che.api.workspace.shared.dto.EnvironmentDto;
 import org.eclipse.che.api.workspace.shared.dto.EnvironmentRecipeDto;
 import org.eclipse.che.api.workspace.shared.dto.ProjectConfigDto;
+import org.eclipse.che.api.workspace.shared.dto.GZProjectConfigDto;
 import org.eclipse.che.api.workspace.shared.dto.WorkspaceConfigDto;
 import org.eclipse.che.api.workspace.shared.dto.WorkspaceDto;
 import org.eclipse.che.api.workspace.shared.dto.WsAgentHealthStateDto;
@@ -628,6 +630,9 @@ public class WorkspaceService extends Service {
         validator.validateConfig(workspace.getConfig());
         return linksInjector.injectLinks(asDto(workspaceManager.updateWorkspace(id, workspace)), getServiceContext());
     }
+    
+    
+    
 
     @PUT
     @Path("/{id}/project/{path:.*}")
@@ -865,5 +870,100 @@ public class WorkspaceService extends Service {
         //relativizeRecipeLinks(update.getConfig());
     	LOG.info("更新id="+id);
        workspaceManager.updateWorkspaceModeToGNGZ(id);
+    }
+    
+    @POST
+    @Path("/{id}/gzproject")
+    @Consumes(APPLICATION_JSON)
+    @Produces(APPLICATION_JSON)
+    @ApiOperation(value = "Adds a new gzproject to the workspace",
+                  notes = "This operation can be performed only by the workspace owner")
+    @ApiResponses({@ApiResponse(code = 200, message = "The gzproject successfully added to the workspace"),
+                   @ApiResponse(code = 400, message = "Missed required parameters, parameters are not valid"),
+                   @ApiResponse(code = 403, message = "The user does not have access to add the gzproject"),
+                   @ApiResponse(code = 404, message = "The workspace not found"),
+                   @ApiResponse(code = 409, message = "Any conflict error occurs"),
+                   @ApiResponse(code = 500, message = "Internal server error occurred")})
+    public WorkspaceDto addGZProject(@ApiParam("The workspace id")
+                                   @PathParam("id")
+                                   String id,
+                                   @ApiParam(value = "The new gzproject", required = true)
+                                   GZProjectConfigDto newProject) throws ServerException,
+                                                                       BadRequestException,
+                                                                       NotFoundException,
+                                                                       ConflictException,
+                                                                       ForbiddenException {
+        requiredNotNull(newProject, "New gzproject config");
+        final WorkspaceImpl workspace = workspaceManager.getWorkspace(id);
+        workspace.getConfig().getGZProjects().add(new GZProjectConfigImpl(newProject));
+        validator.validateConfig(workspace.getConfig());
+        return linksInjector.injectLinks(asDto(workspaceManager.updateWorkspace(id, workspace)), getServiceContext());
+    }
+    
+    @PUT
+    @Path("/{id}/gzproject/{path:.*}")
+    @Consumes(APPLICATION_JSON)
+    @Produces(APPLICATION_JSON)
+    @ApiOperation(value = "Update the workspace gzproject by replacing it with a new one",
+                  notes = "This operation can be performed only by the workspace owner")
+    @ApiResponses({@ApiResponse(code = 200, message = "The gzproject successfully updated"),
+                   @ApiResponse(code = 400, message = "Missed required parameters, parameters are not valid"),
+                   @ApiResponse(code = 403, message = "The user does not have access to update the gzproject"),
+                   @ApiResponse(code = 404, message = "The workspace or the gzproject not found"),
+                   @ApiResponse(code = 500, message = "Internal server error occurred")})
+    public WorkspaceDto updateGZProject(@ApiParam("The workspace id")
+                                      @PathParam("id")
+                                      String id,
+                                      @ApiParam("The path to the gzproject")
+                                      @PathParam("path")
+                                      String path,
+                                      @ApiParam(value = "The gzproject update", required = true)
+                                      GZProjectConfigDto update) throws ServerException,
+                                                                      BadRequestException,
+                                                                      NotFoundException,
+                                                                      ConflictException,
+                                                                      ForbiddenException {
+        requiredNotNull(update, "GZProject config");
+        final WorkspaceImpl workspace = workspaceManager.getWorkspace(id);
+        final List<GZProjectConfigImpl> projects = workspace.getConfig().getGZProjects();
+        final String normalizedPath = path.startsWith("/") ? path : '/' + path;
+        if (!projects.removeIf(project -> project.getPath().equals(normalizedPath))) {
+            throw new NotFoundException(format("Workspace '%s' doesn't contain gzproject with path '%s'",
+                                               id,
+                                               normalizedPath));
+        }
+        projects.add(new GZProjectConfigImpl(update));
+        validator.validateConfig(workspace.getConfig());
+        return linksInjector.injectLinks(asDto(workspaceManager.updateWorkspace(id, workspace)), getServiceContext());
+    }
+    
+    @DELETE
+    @Path("/{id}/gzproject/{path:.*}")
+    @ApiOperation(value = "Remove the gzproject from the workspace",
+                  notes = "This operation can be performed only by the workspace owner")
+    @ApiResponses({@ApiResponse(code = 204, message = "The gzproject successfully removed"),
+                   @ApiResponse(code = 403, message = "The user does not have access remove the gzproject"),
+                   @ApiResponse(code = 404, message = "The workspace not found"),
+                   @ApiResponse(code = 500, message = "Internal server error occurred")})
+    public void deleteGZProject(@ApiParam("The workspace id")
+                              @PathParam("id")
+                              String id,
+                              @ApiParam("The name of the gzproject to remove")
+                              @PathParam("path")
+                              String path) throws ServerException,
+                                                  BadRequestException,
+                                                  NotFoundException,
+                                                  ConflictException,
+                                                  ForbiddenException {
+        final WorkspaceImpl workspace = workspaceManager.getWorkspace(id);
+        final String normalizedPath = path.startsWith("/") ? path : '/' + path;
+        LOG.info("******************normalizedPath==/"+normalizedPath);
+        if (workspace.getConfig().getGZProjects().removeIf(project -> project.getPath().equals(normalizedPath))) {
+        	List<GZProjectConfigImpl> gzprojects = workspace.getConfig().getGZProjects();
+        	for(GZProjectConfigImpl gz :gzprojects){
+        		LOG.info("******************NAME===/"+gz.getName());
+        	}
+            workspaceManager.updateWorkspace(id, workspace);
+        }
     }
 }

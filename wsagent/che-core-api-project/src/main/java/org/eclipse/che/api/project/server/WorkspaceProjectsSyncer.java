@@ -12,42 +12,51 @@ package org.eclipse.che.api.project.server;
 
 import org.eclipse.che.api.core.ServerException;
 import org.eclipse.che.api.core.model.project.ProjectConfig;
-
+import org.eclipse.che.api.core.model.project.GZProjectConfig;
 import java.util.ArrayList;
 import java.util.List;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
-/**
+/**存储在工作区配置中的项目配置与代理状态同步器
  * Synchronizer for Project Configurations stored in Workspace Configuration with Agent's state
  *
  * @author gazarenkov
  */
 public abstract class WorkspaceProjectsSyncer {
-
-    /**
+	private static final Logger LOG = LoggerFactory.getLogger(WorkspaceProjectsSyncer.class);
+	
+    /**在代理和主程序上同步项目配置状态
      * Synchronizes Project Config state on Agent and Master
      * @param projectRegistry project registry
      * @throws ServerException
      */
     public final void sync(ProjectRegistry projectRegistry) throws ServerException {
-
+    	LOG.info("20180202*********************************");
         List<? extends ProjectConfig> remote = getProjects();
-
         // check on removed
         List <ProjectConfig> removed = new ArrayList<>();
         for(ProjectConfig r  : remote) {
             if(projectRegistry.getProject(r.getPath()) == null)
                 removed.add(r);
         }
-
-        for(ProjectConfig r : removed)
+        for(ProjectConfig r : removed){
             removeProject(r);
-
-
+        }
+        ///////////////////////////////////////////////////////////////////
+        List<? extends GZProjectConfig> gzremote = getGZProjects();
+        // check on removed
+        List <GZProjectConfig> gzremoved = new ArrayList<>();
+        for(GZProjectConfig r  : gzremote) {
+            if(projectRegistry.getProject(r.getPath()) == null)
+                gzremoved.add(r);
+        }
+        for(GZProjectConfig r : gzremoved){
+            removeGZProject(r);
+        }
         // update or add
         for(RegisteredProject project : projectRegistry.getProjects()) {
-
             if(!project.isSynced() && !project.isDetected()) {
-
                 final ProjectConfig config = new NewProjectConfigImpl(project.getPath(),
                                                                       project.getType(),
                                                                       project.getMixins(),
@@ -56,7 +65,6 @@ public abstract class WorkspaceProjectsSyncer {
                                                                       project.getPersistableAttributes(),
                                                                       null,
                                                                       project.getSource());
-
                 boolean found = false;
                 for(ProjectConfig r  : remote) {
                     if(r.getPath().equals(project.getPath())) {
@@ -64,17 +72,11 @@ public abstract class WorkspaceProjectsSyncer {
                         found = true;
                     }
                 }
-
                 if(!found)
                     addProject(config);
-
                 project.setSync();
-
             }
-
-
         }
-
     }
 
     /**
@@ -108,5 +110,33 @@ public abstract class WorkspaceProjectsSyncer {
      * @throws ServerException
      */
     protected abstract void removeProject(ProjectConfig project) throws ServerException;
+    
+    
+    /**
+     * @return gzprojects from Workspace Config
+     * @throws ServerException
+     */
+    public abstract List<? extends GZProjectConfig> getGZProjects() throws ServerException;
+    
+    /**
+     * Adds gzproject to Workspace Config
+     * @param gzproject the project config
+     * @throws ServerException
+     */
+    protected abstract void addGZProject(GZProjectConfig project) throws ServerException;
+
+    /**
+     * Updates particular gzproject in Workspace Config
+     * @param gzproject the project config
+     * @throws ServerException
+     */
+    protected abstract void updateGZProject(GZProjectConfig project) throws ServerException;
+
+    /**
+     * Removes particular gzproject in Workspace Config
+     * @param gzproject the project config
+     * @throws ServerException
+     */
+    protected abstract void removeGZProject(GZProjectConfig project) throws ServerException;
 
 }

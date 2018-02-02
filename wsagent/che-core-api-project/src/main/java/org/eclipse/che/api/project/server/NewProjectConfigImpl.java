@@ -76,7 +76,7 @@ public class NewProjectConfigImpl implements NewProjectConfig {
         this.origin = origin;
     }
 
-    /**
+    /**导入
      * Constructor for project import
      *
      * @param path
@@ -92,7 +92,7 @@ public class NewProjectConfigImpl implements NewProjectConfig {
         this(path, type, null, name, null, null, null, origin);
     }
 
-    /**
+    /**重新初始化
      * Constructor for reinit
      *
      * @param path

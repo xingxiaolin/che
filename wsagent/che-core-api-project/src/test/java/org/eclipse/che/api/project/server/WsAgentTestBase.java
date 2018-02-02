@@ -11,6 +11,7 @@
 package org.eclipse.che.api.project.server;
 
 import org.eclipse.che.api.core.ServerException;
+import org.eclipse.che.api.core.model.project.GZProjectConfig;
 import org.eclipse.che.api.core.model.project.ProjectConfig;
 import org.eclipse.che.api.core.notification.EventService;
 import org.eclipse.che.api.project.server.handlers.ProjectHandlerRegistry;
@@ -165,6 +166,23 @@ public class WsAgentTestBase {
         @Override
         protected void removeProject(ProjectConfig project) throws ServerException {
 
+        }
+        
+        @Override
+        protected  void removeGZProject(GZProjectConfig project) throws ServerException{
+        	
+        }
+        @Override
+        protected  void addGZProject(GZProjectConfig project) throws ServerException{
+        	
+        }
+        @Override
+        protected  void updateGZProject(GZProjectConfig project) throws ServerException{
+        	
+        }
+        @Override
+        public  List<? extends GZProjectConfig> getGZProjects() throws ServerException{
+        	return null;
         }
     }
 

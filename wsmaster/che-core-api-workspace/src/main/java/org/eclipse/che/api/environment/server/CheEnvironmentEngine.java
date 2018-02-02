@@ -163,7 +163,7 @@ public class CheEnvironmentEngine {
         this.containerNameGenerator = containerNameGenerator;
     }
 
-    /**
+    /**从特定工作区环境返回所有machines
      * Returns all machines from environment of specific workspace.
      *
      * @param workspaceId
@@ -173,9 +173,11 @@ public class CheEnvironmentEngine {
      *         if environment is not running
      */
     public List<Instance> getMachines(String workspaceId) throws EnvironmentNotRunningException {
+    	LOG.info("20180202/workspaceId==/"+workspaceId);
         EnvironmentHolder environment;
         try (@SuppressWarnings("unused") Unlocker u = stripedLocks.readLock(workspaceId)) {
             environment = environments.get(workspaceId);
+            LOG.info("20180202/environment==/"+environment.toString());
             if (environment == null) {
                 throw new EnvironmentNotRunningException("Environment with ID '" + workspaceId + "' is not found");
             }

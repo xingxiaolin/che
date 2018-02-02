@@ -88,7 +88,7 @@ import static org.eclipse.che.api.core.model.workspace.WorkspaceMode.IDE;
 import static org.eclipse.che.api.machine.shared.Constants.ENVIRONMENT_OUTPUT_CHANNEL_TEMPLATE;
 import static org.slf4j.LoggerFactory.getLogger;
 
-/**
+/**定义一个内部API管理{@链接workspaceruntimeimpl }实例。
  * Defines an internal API for managing {@link WorkspaceRuntimeImpl} instances.
  *
  * <p>This component implements {@link WorkspaceStatus} contract.
@@ -209,6 +209,7 @@ public class WorkspaceRuntimes {
     public CompletableFuture<WorkspaceRuntimeImpl> startAsync(Workspace workspace,
                                                               String envName,
                                                               boolean recover) throws ConflictException, ServerException {
+    	LOG.info("************************************1111111111111************************************************");
         requireNonNull(workspace, "Non-null workspace required");
         requireNonNull(envName, "Non-null environment name required");
         EnvironmentImpl environment = copyEnv(workspace, envName);
@@ -218,54 +219,44 @@ public class WorkspaceRuntimes {
         CompletableFuture<WorkspaceRuntimeImpl> cmpFuture;
         StartTask startTask;
         try (@SuppressWarnings("unused") Unlocker u = locks.writeLock(workspaceId)) {
-        	LOG.info("----------------------------------------------");
             checkIsNotTerminated("start the workspace");
             if (isStartRefused.get()) {
-            	LOG.info("AAAAAAAAAAAAAAAAAAAA");
                 throw new ConflictException(format("Start of the workspace '%s' is rejected by the system, " +
                                                    "no more workspaces are allowed to start",
                                                    workspace.getConfig().getName()));
             }
-            LOG.info("BBBBBBBBBBBBBBBBBBBBBBBBBBB");
             RuntimeState state = states.get(workspaceId);
-            LOG.info("CCCCCCCCCCCCCCCCCCCCCCCCC");
             if (state != null) {//启动前检查ID是否运行
-            	LOG.info("DDDDDDDDDDDDDDD");
                 throw new ConflictException(format("Could not start workspace '%s' because its status is '%s'",
                                                    workspace.getConfig().getName(),
                                                    state.status));
             }
-            LOG.info("FFFFFFFFFFFFFFFFFFFFFF");
             startTask = new StartTask(workspaceId,
                                       envName,
                                       environment,
                                       recover,
                                       cmpFuture = new CompletableFuture<>());
-            LOG.info("GGGGGGGGGGGGGGG");
             states.put(workspaceId, new RuntimeState(WorkspaceStatus.STARTING,
             										workspace.getMode(),
                                                      envName,
                                                      startTask,
                                                      sharedPool.submit(startTask)));
         }
-        LOG.info("HHHHHHHHHHHHHHHH");
         // publish event synchronously as the task may not be executed by
         // executors service(due to legal cancellation), clients still have
         // to receive STOPPED -> STARTING event
         eventsService.publish(DtoFactory.newDto(WorkspaceStatusEvent.class)
                                         .withWorkspaceId(workspaceId)
                                         .withStatus(WorkspaceStatus.STARTING)
-                                        //.withMode(WorkspaceMode.IDE)
                                         .withEventType(EventType.STARTING)
                                         .withPrevStatus(WorkspaceStatus.STOPPED));
-        LOG.info("JJJJJJJJJJJJJJJJJJJJJJJJJJJJJJ");
         // so the start thread is free to go and start the environment
         startTask.unlockStart();
 
         return cmpFuture;
     }
 
-    /**
+    /**获取工作区运行时描述符。
      * Gets workspace runtime descriptor.
      *
      * @param workspaceId
@@ -277,6 +268,7 @@ public class WorkspaceRuntimes {
      *         if any error occurs while getting machines runtime information
      */
     public WorkspaceRuntimeImpl getRuntime(String workspaceId) throws NotFoundException, ServerException {
+    	LOG.info("************************************222222222222************************************************");
         requireNonNull(workspaceId, "Required non-null workspace id");
         RuntimeState state;
         try (@SuppressWarnings("unused") Unlocker u = locks.readLock(workspaceId)) {
@@ -294,6 +286,7 @@ public class WorkspaceRuntimes {
      * the status of workspace runtime otherwise
      */
     public WorkspaceStatus getStatus(String workspaceId) {
+    	LOG.info("************************************33333333************************************************");
         requireNonNull(workspaceId, "Required non-null workspace id");
         try (@SuppressWarnings("unused") Unlocker u = locks.readLock(workspaceId)) {
             RuntimeState state = states.get(workspaceId);
@@ -337,7 +330,7 @@ public class WorkspaceRuntimes {
             states.get(workspaceId).mode = mode;
     }
 
-    /**
+    /**将运行状态信息（如状态）注入到工作区对象中，如果工作区没有运行时设置的状态将停止
      * Injects runtime information such as status and {@link WorkspaceRuntimeImpl}
      * into the workspace object, if the workspace doesn't have runtime sets the
      * status to {@link WorkspaceStatus#STOPPED}.
@@ -346,6 +339,7 @@ public class WorkspaceRuntimes {
      *         the workspace to inject runtime into
      */
     public void injectRuntime(WorkspaceImpl workspace) {
+    	LOG.info("************************************555555555555************************************************");
         requireNonNull(workspace, "Required non-null workspace");
         RuntimeState state = null;
         try (@SuppressWarnings("unused") Unlocker u = locks.readLock(workspace.getId())) {
@@ -355,10 +349,8 @@ public class WorkspaceRuntimes {
         }
         if (state == null) {
             workspace.setStatus(WorkspaceStatus.STOPPED);
-            //workspace.setMode(WorkspaceMode.IDE);
         } else {
             workspace.setStatus(state.status);
-            //workspace.setMode(state.mode);
             try {
                 workspace.setRuntime(new WorkspaceRuntimeImpl(state.envName, envEngine.getMachines(workspace.getId())));
             } catch (Exception x) {
@@ -468,7 +460,7 @@ public class WorkspaceRuntimes {
                                                                      NotFoundException,
                                                                      AgentException,
                                                                      EnvironmentException {
-
+    	LOG.info("************************************6666666666666************************************************");
         try (@SuppressWarnings("unused") Unlocker u = locks.readLock(workspaceId)) {
             getRunningState(workspaceId);
         }
@@ -523,7 +515,7 @@ public class WorkspaceRuntimes {
         snapshotAndUpdateStatus(workspaceId);
     }
 
-    /**
+    /**异步创建给定工作区的快照，但同步切换工作状态{@链接workspacestatus #快照}或者如果不可能抛出错误。
      * Asynchronously creates a snapshot of a given workspace,
      * but synchronously toggles workspace status to {@link WorkspaceStatus#SNAPSHOTTING}
      * or throws an error if it is impossible to do so.
@@ -610,7 +602,7 @@ public class WorkspaceRuntimes {
         envEngine.stopMachine(workspaceId, machineId);
     }
 
-    /**
+    /**通过指定的工作区和机器ID查找机器{链接实例}。
      * Finds machine {@link Instance} by specified workspace and machine IDs.
      *
      * @param workspaceId
@@ -622,6 +614,7 @@ public class WorkspaceRuntimes {
      *         if environment or machine is not running
      */
     public Instance getMachine(String workspaceId, String machineId) throws NotFoundException {
+    	LOG.info("************************************7777777************************************************");
         return envEngine.getMachine(workspaceId, machineId);
     }
 
@@ -634,6 +627,7 @@ public class WorkspaceRuntimes {
      * or an empty set if there is no a single running workspace
      */
     public Set<String> getRuntimesIds() {
+    	LOG.info("************************************8888************************************************");
         return new HashSet<>(states.keySet());
     }
 
@@ -740,6 +734,7 @@ public class WorkspaceRuntimes {
     }
 
     protected void launchAgents(Instance instance, List<String> agents) throws ServerException, AgentException {
+    	LOG.info("************************************9999************************************************");
         for (AgentKey agentKey : agentSorter.sort(agents)) {
             if (!Thread.currentThread().isInterrupted()) {
                 LOG.info("Launching '{}' agent at workspace {}", agentKey.getId(), instance.getWorkspaceId());
@@ -761,6 +756,7 @@ public class WorkspaceRuntimes {
                                                                           EnvironmentException,
                                                                           ConflictException,
                                                                           AgentException {
+    	LOG.info("************************************0000000000000************************************************");
         try {
             envEngine.start(workspaceId,
                             envName,
@@ -902,6 +898,7 @@ public class WorkspaceRuntimes {
     private void snapshotAndUpdateStatus(String workspaceId) throws NotFoundException,
                                                                     ConflictException,
                                                                     ServerException {
+    	LOG.info("************************************aaaaaaa************************************************");
         eventsService.publish(DtoFactory.newDto(WorkspaceStatusEvent.class)
                                         .withWorkspaceId(workspaceId)
                                         .withStatus(WorkspaceStatus.SNAPSHOTTING)

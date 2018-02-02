@@ -204,6 +204,7 @@ public class WorkspaceManager {
      *         when any server error occurs
      */
     public WorkspaceImpl getWorkspace(String key) throws NotFoundException, ServerException {
+    	LOG.info("20180202/key==/"+key);
         requireNonNull(key, "Required non-null workspace key");
         WorkspaceImpl workspace = getByKey(key);
         runtimes.injectRuntime(workspace);
@@ -228,7 +229,8 @@ public class WorkspaceManager {
      *         when any server error occurs
      */
     public WorkspaceImpl getWorkspace(String name, String namespace) throws NotFoundException, ServerException {
-        requireNonNull(name, "Required non-null workspace name");
+        LOG.info("-----------------------1111111111111111111111----------------------");
+    	requireNonNull(name, "Required non-null workspace name");
         requireNonNull(namespace, "Required non-null workspace owner");
         WorkspaceImpl workspace = workspaceDao.get(name, namespace);
         runtimes.injectRuntime(workspace);
@@ -410,6 +412,7 @@ public class WorkspaceManager {
                                         @Nullable Boolean restore) throws NotFoundException,
                                                                           ServerException,
                                                                           ConflictException {
+    	LOG.info("-----------------------22222222222222222222222----------------------");
         requireNonNull(workspaceId, "Required non-null workspace id");
         final WorkspaceImpl workspace = workspaceDao.get(workspaceId);
         final String restoreAttr = workspace.getAttributes().get(AUTO_RESTORE_FROM_SNAPSHOT);
@@ -440,6 +443,7 @@ public class WorkspaceManager {
                                         boolean isTemporary) throws ServerException,
                                                                     NotFoundException,
                                                                     ConflictException {
+    	LOG.info("-------------------------------6666666666666666666666---------------------------------------");
         requireNonNull(config, "Required non-null configuration");
         requireNonNull(namespace, "Required non-null namespace");
         final WorkspaceImpl workspace = doCreateWorkspace(config,
@@ -476,7 +480,7 @@ public class WorkspaceManager {
                                                         ConflictException,
                                                         BadRequestException,
                                                         NotFoundException {
-
+    	LOG.info("------------------------------7777777777777777777777777-----------------------------------------");
         final WorkspaceImpl workspace = getWorkspace(workspaceId);
         if (RUNNING != workspace.getStatus()) {
             throw new ConflictException(format("Workspace '%s' is not running, new machine can't be started", workspaceId));
@@ -736,12 +740,13 @@ public class WorkspaceManager {
         }
     }
 
-    /** Asynchronously starts given workspace. */
+    /** Asynchronously starts given workspace. 异步启动给定工作区*/
     private void startAsync(WorkspaceImpl workspace,
                             String envName,
                             boolean recover) throws ConflictException,
                                                     NotFoundException,
                                                     ServerException {
+    	 LOG.info("----------------------------888888888888888888888----------------------------------------------");
         if (envName != null && !workspace.getConfig().getEnvironments().containsKey(envName)) {
             throw new NotFoundException(format("Workspace '%s/%s' doesn't contain environment '%s'",
                                                workspace.getNamespace(),
@@ -751,10 +756,10 @@ public class WorkspaceManager {
         workspace.getAttributes().put(UPDATED_ATTRIBUTE_NAME, Long.toString(currentTimeMillis()));
         workspaceDao.update(workspace);
         final String env = firstNonNull(envName, workspace.getConfig().getDefaultEnv());
-        LOG.info("QQQQQQQQQQQQQQQQQQQ");
+        LOG.info("20180202/env=="+env);
         runtimes.startAsync(workspace, env, recover)
                 .whenComplete((runtime, ex) -> {
-                	LOG.info("WWWWWWWWWWWWWW");
+                	LOG.info("----------------------------WWW----------------------------------------------");
                     if (ex == null) {
                         LOG.info("Workspace '{}/{}' with id '{}' started by user '{}'",
                                  workspace.getNamespace(),
@@ -930,23 +935,30 @@ public class WorkspaceManager {
         return workspaceDao.get(wsName, namespace);
     }
 
-    /** Adds runtime data (whole or status only) and extra attributes to each of the given workspaces. */
+    /** 将运行时数据（整体或状态）和额外的属性添加到每个给定的工作区中。
+     * Adds runtime data (whole or status only) and extra attributes to each of the given workspaces. 
+     */
     private void injectRuntimeAndAttributes(List<WorkspaceImpl> workspaces, boolean statusOnly) throws SnapshotException {
         if (statusOnly) {
             for (WorkspaceImpl workspace : workspaces) {
+            	LOG.info("-----------------------333333333333333333----------------------");
                 workspace.setStatus(runtimes.getStatus(workspace.getId()));
                 addExtraAttributes(workspace);
             }
         } else {
             for (WorkspaceImpl workspace : workspaces) {
+            	LOG.info("-----------------------44444444444444444----------------------");
                 runtimes.injectRuntime(workspace);
                 addExtraAttributes(workspace);
             }
         }
     }
 
-    /** Adds attributes that are not originally stored in workspace but should be published. */
+    /** 添加不存储在工作区中但应该发布的属性。
+     * Adds attributes that are not originally stored in workspace but should be published.
+     */
     private void addExtraAttributes(WorkspaceImpl workspace) throws SnapshotException {
+    	LOG.info("20180202/workspace==/"+workspace.toString());
         // snapshotted_at
         List<SnapshotImpl> snapshots = snapshotDao.findSnapshots(workspace.getId());
         if (!snapshots.isEmpty()) {

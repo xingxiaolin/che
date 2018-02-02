@@ -25,7 +25,7 @@ import org.eclipse.che.api.workspace.shared.dto.EnvironmentRecipeDto;
 import org.eclipse.che.api.workspace.shared.dto.ExtendedMachineDto;
 import org.eclipse.che.api.workspace.shared.dto.ProjectConfigDto;
 import org.eclipse.che.api.workspace.shared.dto.ProjectProblemDto;
-//import org.eclipse.che.api.workspace.shared.dto.GZProjectConfigDto;
+import org.eclipse.che.api.workspace.shared.dto.GZProjectConfigDto;
 import org.eclipse.che.api.workspace.shared.dto.ServerConf2Dto;
 import org.eclipse.che.api.workspace.shared.dto.SourceStorageDto;
 import org.eclipse.che.api.workspace.shared.dto.WorkspaceConfigDto;
@@ -142,16 +142,16 @@ public class StackLoaderTest {
                                                                           .withProblems(Collections.singletonList(projectProblem))
                                                                           .withSource(sourceStorageDto);
         //2018-01-01XXL  添加GZProject
-//        GZProjectConfigDto gzprojectConfigDto = newDto(GZProjectConfigDto.class)
-//        		.withName("project")
-//                .withPath("somePath")
-//                .withAttributes(projectMap)
-//                .withType("maven type")
-//                .withDescription("some project description")
-//                .withLinks(Collections.singletonList(link))
-//                .withMixins(Collections.singletonList("mixin time"))
-//                .withProblems(Collections.singletonList(projectProblem))
-//                .withSource(sourceStorageDto);
+        GZProjectConfigDto gzprojectConfigDto = newDto(GZProjectConfigDto.class)
+        		.withName("project")
+                .withPath("somePath")
+                .withAttributes(projectMap)
+                .withType("maven type")
+                .withDescription("some project description")
+                .withLinks(Collections.singletonList(link))
+                .withMixins(Collections.singletonList("mixin time"))
+                .withProblems(Collections.singletonList(projectProblem))
+                .withSource(sourceStorageDto);
 
         EnvironmentRecipeDto environmentRecipe = newDto(EnvironmentRecipeDto.class).withContent("some content")
                                                                                    .withContentType("some content type")
@@ -178,7 +178,7 @@ public class StackLoaderTest {
                                                                                 .withLinks(Collections.singletonList(link))
                                                                                 .withDefaultEnv("some Default Env name")
                                                                                 .withProjects(Collections.singletonList(projectConfigDto))
-//                                                                                .withGZProjects(Collections.singletonList(gzprojectConfigDto))
+                                                                                .withGZProjects(Collections.singletonList(gzprojectConfigDto))
                                                                                 .withEnvironments(singletonMap("name", environmentDto))
                                                                                 .withCommands(Collections.singletonList(commandDto));
 

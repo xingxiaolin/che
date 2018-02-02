@@ -12,6 +12,7 @@ package org.eclipse.che.api.project.server;
 
 import org.eclipse.che.api.core.ServerException;
 import org.eclipse.che.api.core.model.project.ProjectConfig;
+import org.eclipse.che.api.core.model.project.GZProjectConfig;
 import org.eclipse.che.api.core.model.project.SourceStorage;
 import org.eclipse.che.api.core.model.project.type.Attribute;
 import org.eclipse.che.api.project.server.importer.ProjectImporter;
@@ -22,6 +23,7 @@ import org.eclipse.che.api.project.shared.dto.ProjectImporterDescriptor;
 import org.eclipse.che.api.project.shared.dto.ProjectTypeDto;
 import org.eclipse.che.api.project.shared.dto.ValueDto;
 import org.eclipse.che.api.workspace.shared.dto.ProjectConfigDto;
+import org.eclipse.che.api.workspace.shared.dto.GZProjectConfigDto;
 import org.eclipse.che.api.workspace.shared.dto.ProjectProblemDto;
 import org.eclipse.che.api.workspace.shared.dto.SourceStorageDto;
 
@@ -145,5 +147,16 @@ public class DtoConverter {
 
     public static ProjectProblemDto asDto(RegisteredProject.Problem problem) {
         return newDto(ProjectProblemDto.class).withCode(problem.code).withMessage(problem.message);
+    }
+    
+    public static GZProjectConfigDto asDto(GZProjectConfig gzproject) {
+        return newDto(GZProjectConfigDto.class).withName(gzproject.getName())
+                                             .withPath(gzproject.getPath())
+                                             .withDescription(gzproject.getDescription())
+                                             .withSource(asDto(gzproject.getSource()))
+                                             .withAttributes(gzproject.getAttributes())
+                                             .withType(gzproject.getType())
+                                             .withMixins(gzproject.getMixins())
+                                             ;
     }
 }

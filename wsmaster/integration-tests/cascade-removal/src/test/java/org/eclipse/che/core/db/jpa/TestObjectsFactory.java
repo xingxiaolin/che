@@ -24,7 +24,7 @@ import org.eclipse.che.api.workspace.server.model.impl.EnvironmentImpl;
 import org.eclipse.che.api.workspace.server.model.impl.EnvironmentRecipeImpl;
 import org.eclipse.che.api.workspace.server.model.impl.ExtendedMachineImpl;
 import org.eclipse.che.api.workspace.server.model.impl.ProjectConfigImpl;
-//import org.eclipse.che.api.workspace.server.model.impl.GZProjectConfigImpl;
+import org.eclipse.che.api.workspace.server.model.impl.GZProjectConfigImpl;
 import org.eclipse.che.api.workspace.server.model.impl.ServerConf2Impl;
 import org.eclipse.che.api.workspace.server.model.impl.SourceStorageImpl;
 import org.eclipse.che.api.workspace.server.model.impl.WorkspaceConfigImpl;
@@ -80,8 +80,8 @@ public final class TestObjectsFactory {
                                               new CommandImpl(id + "cmd2", "mvn clean install", "maven")),
                                        asList(createProjectConfig(id + "-project1"),
                                               createProjectConfig(id + "-project2")),
-//                                       asList(createGZProjectConfig(id + "-gzproject1"),
-//                                               createGZProjectConfig(id + "-gzproject2")),
+                                       asList(createGZProjectConfig(id + "-gzproject1"),
+                                               createGZProjectConfig(id + "-gzproject2")),
                                        ImmutableMap.of(id + "env1", createEnv(),
                                                        id + "env2", createEnv()));
     }
@@ -103,22 +103,22 @@ public final class TestObjectsFactory {
         return project;
     }
     //2018-01-01XXL  添加GZProject
-//    public static GZProjectConfigImpl createGZProjectConfig(String name) {
-//        final GZProjectConfigImpl gzproject = new GZProjectConfigImpl();
-//        gzproject.setDescription(name + "-description");
-//        gzproject.setName(name);
-//        gzproject.setPath("/" + name);
-//        gzproject.setType(name + "type");
-//        gzproject.setSource(new SourceStorageImpl("source-type",
-//                                                "source-location",
-//                                                ImmutableMap.of("param1", "value",
-//                                                                "param2", "value")));
-//        gzproject.setMixins(asList("mixin1", "mixin2"));
-//        gzproject.getAttributes().put("attribute1", singletonList("value1"));
-//        gzproject.getAttributes().put("attribute2", singletonList("value2"));
-//        gzproject.getAttributes().put("attribute3", singletonList("value3"));
-//        return gzproject;
-//    }
+    public static GZProjectConfigImpl createGZProjectConfig(String name) {
+        final GZProjectConfigImpl gzproject = new GZProjectConfigImpl();
+        gzproject.setDescription(name + "-description");
+        gzproject.setName(name);
+        gzproject.setPath("/" + name);
+        gzproject.setType(name + "type");
+        gzproject.setSource(new SourceStorageImpl("source-type",
+                                                "source-location",
+                                                ImmutableMap.of("param1", "value",
+                                                                "param2", "value")));
+        gzproject.setMixins(asList("mixin1", "mixin2"));
+        gzproject.getAttributes().put("attribute1", singletonList("value1"));
+        gzproject.getAttributes().put("attribute2", singletonList("value2"));
+        gzproject.getAttributes().put("attribute3", singletonList("value3"));
+        return gzproject;
+    }
 
     public static EnvironmentImpl createEnv() {
         final EnvironmentRecipeImpl newRecipe = new EnvironmentRecipeImpl();

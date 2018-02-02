@@ -38,7 +38,7 @@ import java.util.Optional;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.stream.Collectors;
 
-/**
+/**存储在工作区代理中注册的项目的内部表示形式。
  * Stores internal representation of Projects registered in the Workspace Agent.
  *
  * @author gazarenkov
@@ -63,6 +63,7 @@ public class ProjectRegistry {
                            ProjectTypeRegistry projectTypeRegistry,
                            ProjectHandlerRegistry handlers,
                            EventService eventService) throws ServerException {
+    	LOG.info("AAAAAAAAAAAAAAAAAA------20180202");
         this.eventService = eventService;
         this.projects = new ConcurrentHashMap<>();
         this.workspaceHolder = workspaceHolder;
@@ -74,23 +75,18 @@ public class ProjectRegistry {
 
     @PostConstruct
     public void initProjects() throws ConflictException, NotFoundException, ServerException, ForbiddenException {
-
+    	LOG.info("BBBBBBBBBBBBBB------20180202");
         List<? extends ProjectConfig> projectConfigs = workspaceHolder.getProjects();
-
-        // take all the projects from ws's config
+        // take all the projects from ws's config从WS的配置中获取所有项目
         for (ProjectConfig projectConfig : projectConfigs) {
             final String path = projectConfig.getPath();
+            LOG.info("20180202/path==" +path);
             final VirtualFile vf = vfs.getRoot().getChild(Path.of(path));
             final FolderEntry projectFolder = ((vf == null) ? null : new FolderEntry(vf, this));
-
             putProject(projectConfig, projectFolder, false, false);
-
         }
-
         initUnconfiguredFolders();
-
         initialized = true;
-
         for (RegisteredProject project : projects.values()) {
             // only for projects with sources
             if(project.getBaseFolder() != null) {
@@ -104,6 +100,7 @@ public class ProjectRegistry {
      * @return all the registered projects
      */
     public List<RegisteredProject> getProjects() {
+    	LOG.info("CCCCCCCCCCCCCC------20180202");
         checkInitializationState();
 
         initUnconfiguredFolders();
@@ -117,6 +114,7 @@ public class ProjectRegistry {
      * @return project or null if not found
      */
     public RegisteredProject getProject(String projectPath) {
+    	LOG.info("DDDDDDDDDDDDDD------20180202");
         checkInitializationState();
 
         initUnconfiguredFolders();
@@ -130,6 +128,7 @@ public class ProjectRegistry {
      * @return list projects of pojects
      */
     public List<String> getProjects(String parentPath) {
+    	LOG.info("EEEEEEEEEEEEE------20180202");
         checkInitializationState();
 
         initUnconfiguredFolders();
@@ -148,6 +147,7 @@ public class ProjectRegistry {
      * @return the project owned this path.
      */
     public RegisteredProject getParentProject(String path) {
+    	LOG.info("FFFFFFFFFFFFFFF------20180202");
         checkInitializationState();
 
         // return this if a project
@@ -169,7 +169,7 @@ public class ProjectRegistry {
         return null;
     }
 
-    /**
+    /**创建已注册的项目并将其缓存。
      * Creates RegisteredProject and caches it.
      *
      * @param config
@@ -188,10 +188,9 @@ public class ProjectRegistry {
                                  FolderEntry folder,
                                  boolean updated,
                                  boolean detected) throws ServerException {
-
         final RegisteredProject project = new RegisteredProject(folder, config, updated, detected, this.projectTypeRegistry);
         projects.put(project.getPath(), project);
-
+        LOG.info("20180202/project=="+project.toString());
         return project;
     }
 
@@ -251,11 +250,10 @@ public class ProjectRegistry {
                                             boolean asMixin) throws ConflictException,
                                                                     NotFoundException,
                                                                     ServerException {
+    	LOG.info("GGGGGGGGGGGGG------20180202");
         final RegisteredProject project = getProject(projectPath);
         final NewProjectConfig conf;
         List<String> newMixins = new ArrayList<>();
-
-
         if (project == null) {
             if (asMixin) {
                 throw new ConflictException("Can not assign as mixin type '" + type +
@@ -358,8 +356,11 @@ public class ProjectRegistry {
         return (path.startsWith("/")) ? path : "/".concat(path);
     }
 
-    /** Try to initialize projects from unconfigured folders on root. */
+    /**尝试初始化项目从未配置在根文件夹 
+     * Try to initialize projects from unconfigured folders on root. 
+     * */
     private void initUnconfiguredFolders() {
+    	LOG.info("20180202&&&&&&&&&&&&&&&&&&");
         try {
             for (FolderEntry folder : root.getChildFolders()) {
                 if (!projects.containsKey(folder.getVirtualFile().getPath().toString())) {
@@ -371,7 +372,7 @@ public class ProjectRegistry {
         }
     }
 
-    /**
+    /**为传入项目的所有项目类型触发init处理程序。
      * Fires init handlers for all the project types of incoming project.
      *
      * @param project
@@ -385,9 +386,9 @@ public class ProjectRegistry {
                                                             ConflictException,
                                                             NotFoundException,
                                                             ServerException {
+    	LOG.info("HHHHHHHHHHHHH------20180202");
         // primary type
         fireInit(project, project.getType());
-
         // mixins
         for (String mixin : project.getMixins()) {
             fireInit(project, mixin);
@@ -409,4 +410,5 @@ public class ProjectRegistry {
             throw new IllegalStateException("Projects are not initialized yet");
         }
     }
+   
 }
