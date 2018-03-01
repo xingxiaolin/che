@@ -36,7 +36,7 @@ public abstract class WorkspaceProjectsSyncer {
      */
     public final void sync(ProjectRegistry projectRegistry,String type) throws ServerException {
     	if(!"gzproject".equals(type)){
-    		LOG.info("*********************************sync:普通*********************************"+type);
+    		LOG.info("*********************************sync:普通11*********************************"+type);
     		List<? extends ProjectConfig> remote = getProjects();
             // check on removed
             List <ProjectConfig> removed = new ArrayList<>();
@@ -76,7 +76,7 @@ public abstract class WorkspaceProjectsSyncer {
             	}            
             }
     	}else{
-    		LOG.info("*********************************sync:构造*********************************"+type);
+    		LOG.info("*********************************sync:构造22*********************************"+type);
     		 List<? extends GZProjectConfig> gzremote = getGZProjects();
     	        // check on removed
     	        List <GZProjectConfig> gzremoved = new ArrayList<>();
