@@ -16,7 +16,7 @@ import org.eclipse.che.api.core.rest.ServiceContext;
 import org.eclipse.che.api.core.rest.shared.dto.Link;
 import org.eclipse.che.api.project.shared.dto.ItemReference;
 import org.eclipse.che.api.workspace.shared.dto.ProjectConfigDto;
-
+import org.eclipse.che.api.workspace.shared.dto.GZProjectConfigDto;
 import javax.inject.Singleton;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.UriBuilder;
@@ -179,6 +179,59 @@ public class ProjectServiceLinksInjector {
 
         return projectConfig.withLinks(links);
     }
+    
+    
+    /**
+     * Adds links for working with a gzproject.
+     * Operations which are supported:
+     * <p>get tree</p>
+     * <p>get children</p>
+     * <p>update gzproject</p>
+     * <p>delete</p>
+     *
+     * @param gzprojectConfig
+     *         information about gzproject
+     * @param serviceContext
+     *         context of {@link ProjectService}
+     * @return node with injected gzproject's links
+     */
+    public GZProjectConfigDto injectProjectLinks(GZProjectConfigDto projectConfig, ServiceContext serviceContext) {
+        final UriBuilder uriBuilder = getUriBuilder(serviceContext);
+        final List<Link> links = new ArrayList<>();
+        final String relPath = projectConfig.getPath().substring(1);
+
+        links.add(createLink(PUT,
+                             tuneUrl(uriBuilder.clone()
+                                               .path(ProjectService.class)
+                                               .path(ProjectService.class, "updateProject")
+                                               .build(new String[]{relPath}, false)),
+                             APPLICATION_JSON,
+                             APPLICATION_JSON,
+                             LINK_REL_UPDATE_PROJECT));
+        links.add(createLink(GET,
+                             tuneUrl(uriBuilder.clone()
+                                               .path(ProjectService.class)
+                                               .path(ProjectService.class, "getChildren")
+                                               .build(new String[]{relPath}, false)),
+                             APPLICATION_JSON,
+                             LINK_REL_CHILDREN));
+        links.add(createLink(GET,
+                             tuneUrl(uriBuilder.clone()
+                                               .path(ProjectService.class)
+                                               .path(ProjectService.class, "getTree")
+                                               .build(new String[]{relPath}, false)),
+                             APPLICATION_JSON,
+                             LINK_REL_TREE));
+        links.add(createLink(DELETE,
+                             tuneUrl(uriBuilder.clone()
+                                               .path(ProjectService.class)
+                                               .path(ProjectService.class, "delete")
+                                               .build(new String[]{relPath}, false)),
+                             LINK_REL_DELETE));
+
+        return projectConfig.withLinks(links);
+    }
+    
 
     /** @return base URI of context of {@link ProjectService} */
     protected UriBuilder getUriBuilder(ServiceContext serviceContext) {

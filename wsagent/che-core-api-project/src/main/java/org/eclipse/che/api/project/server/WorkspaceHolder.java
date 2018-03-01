@@ -48,17 +48,13 @@ public class WorkspaceHolder extends WorkspaceProjectsSyncer {
     @Inject
     public WorkspaceHolder(@Named("che.api") String apiEndpoint,
                            HttpJsonRequestFactory httpJsonRequestFactory) throws ServerException {
-    	LOG.info("20180202/apiEndpoint==" +apiEndpoint);
+    	LOG.info("**************WorkspaceHolder---apiEndpoint==" +apiEndpoint);
         this.apiEndpoint = apiEndpoint;
         this.httpJsonRequestFactory = httpJsonRequestFactory;
-
         this.workspaceId = System.getenv("CHE_WORKSPACE_ID");
         this.userToken = System.getenv("USER_TOKEN");
-
         LOG.info("Workspace ID: " + workspaceId);
-        LOG.info("API Endpoint: " + apiEndpoint);
         LOG.info("User Token  : " + (userToken != null));
-
         // check connection
         try {
             workspaceDto();
@@ -71,13 +67,12 @@ public class WorkspaceHolder extends WorkspaceProjectsSyncer {
 
     @Override
     public List<? extends ProjectConfig> getProjects() throws ServerException {
-    	LOG.info("20180202!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!");
         return workspaceDto().getConfig().getProjects();
     }
 
     @Override
     public String getWorkspaceId() {
-    	LOG.info("20180202/workspaceId=="+workspaceId);
+    	LOG.info("*************workspaceId=="+workspaceId);
         return workspaceId;
     }
 
@@ -90,7 +85,7 @@ public class WorkspaceHolder extends WorkspaceProjectsSyncer {
      * @throws ServerException
      */
     protected void addProject(ProjectConfig project) throws ServerException {
-    	LOG.info("20180202@@@@@@@@@@@@@@@@@@@");
+    	LOG.info("*****************************写入数据库:type==="+project.getType());
         final UriBuilder builder = UriBuilder.fromUri(apiEndpoint).path(WorkspaceService.class)
                                              .path(WorkspaceService.class, "addProject");
         if(userToken != null)
@@ -112,8 +107,7 @@ public class WorkspaceHolder extends WorkspaceProjectsSyncer {
      * @throws ServerException
      */
     protected void updateProject(ProjectConfig project) throws ServerException {
-
-
+    	LOG.info("*****************************修改数据库:type==="+project.getType());
         final UriBuilder builder = UriBuilder.fromUri(apiEndpoint).path(WorkspaceService.class)
                                              .path(WorkspaceService.class, "updateProject");
         if(userToken != null)
@@ -127,9 +121,9 @@ public class WorkspaceHolder extends WorkspaceProjectsSyncer {
     }
 
     protected void removeProject(ProjectConfig project) throws ServerException {
-
+    	LOG.info("*****************************删除数据库:type==="+project.getType());
         final UriBuilder builder = UriBuilder.fromUri(apiEndpoint).path(WorkspaceService.class)
-                                             .path(WorkspaceService.class, "deleteProject");
+                                             .path(WorkspaceService.class,"deleteProject");
         if(userToken != null)
             builder.queryParam("token", userToken);
         final String href = builder.build(new String[]{workspaceId, project.getPath()}, false).toString();
@@ -145,7 +139,7 @@ public class WorkspaceHolder extends WorkspaceProjectsSyncer {
      * @throws ServerException
      */
     private WorkspaceDto workspaceDto() throws ServerException {
-    	LOG.info("20180202########################");
+//    	LOG.info("20180202########################");
         final UriBuilder builder = UriBuilder.fromUri(apiEndpoint).path(WorkspaceService.class)
                                              .path(WorkspaceService.class, "getByKey");
         if(userToken != null)
@@ -165,7 +159,7 @@ public class WorkspaceHolder extends WorkspaceProjectsSyncer {
      * @throws ServerException
      */
     protected void addGZProject(GZProjectConfig project) throws ServerException {
-    	LOG.info("20180202$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$add");
+    	LOG.info("*************************addGZProject**********************************");
         final UriBuilder builder = UriBuilder.fromUri(apiEndpoint).path(WorkspaceService.class)
                                              .path(WorkspaceService.class, "addGZProject");
         if(userToken != null)
@@ -184,7 +178,7 @@ public class WorkspaceHolder extends WorkspaceProjectsSyncer {
      * @throws ServerException
      */
     protected void updateGZProject(GZProjectConfig project) throws ServerException {
-    	LOG.info("20180202$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$update");
+    	LOG.info("*************************updateGZProject**********************************");
         final UriBuilder builder = UriBuilder.fromUri(apiEndpoint).path(WorkspaceService.class)
                                              .path(WorkspaceService.class, "updateGZProject");
         if(userToken != null)
@@ -204,7 +198,7 @@ public class WorkspaceHolder extends WorkspaceProjectsSyncer {
      * @throws ServerException
      */
     protected void removeGZProject(GZProjectConfig project) throws ServerException {
-    	LOG.info("20180202$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$remove");
+    	LOG.info("*************************removeGZProject**********************************");
         final UriBuilder builder = UriBuilder.fromUri(apiEndpoint).path(WorkspaceService.class)
                                              .path(WorkspaceService.class, "deleteGZProject");
         if(userToken != null)
@@ -219,7 +213,6 @@ public class WorkspaceHolder extends WorkspaceProjectsSyncer {
     
     @Override
     public List<? extends GZProjectConfig> getGZProjects() throws ServerException {
-    	LOG.info("20180202******************************888");
         return workspaceDto().getConfig().getGZProjects();
     }
 }

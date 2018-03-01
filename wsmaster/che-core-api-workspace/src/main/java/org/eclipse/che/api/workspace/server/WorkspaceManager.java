@@ -204,7 +204,7 @@ public class WorkspaceManager {
      *         when any server error occurs
      */
     public WorkspaceImpl getWorkspace(String key) throws NotFoundException, ServerException {
-    	LOG.info("20180202/key==/"+key);
+//    	LOG.info("20180202/key==/"+key);
         requireNonNull(key, "Required non-null workspace key");
         WorkspaceImpl workspace = getByKey(key);
         runtimes.injectRuntime(workspace);
@@ -412,7 +412,7 @@ public class WorkspaceManager {
                                         @Nullable Boolean restore) throws NotFoundException,
                                                                           ServerException,
                                                                           ConflictException {
-    	LOG.info("-----------------------22222222222222222222222----------------------");
+    	LOG.info("-----------------------startWorkspace----------------------");
         requireNonNull(workspaceId, "Required non-null workspace id");
         final WorkspaceImpl workspace = workspaceDao.get(workspaceId);
         final String restoreAttr = workspace.getAttributes().get(AUTO_RESTORE_FROM_SNAPSHOT);
@@ -759,7 +759,6 @@ public class WorkspaceManager {
         LOG.info("20180202/env=="+env);
         runtimes.startAsync(workspace, env, recover)
                 .whenComplete((runtime, ex) -> {
-                	LOG.info("----------------------------WWW----------------------------------------------");
                     if (ex == null) {
                         LOG.info("Workspace '{}/{}' with id '{}' started by user '{}'",
                                  workspace.getNamespace(),
@@ -940,17 +939,19 @@ public class WorkspaceManager {
      */
     private void injectRuntimeAndAttributes(List<WorkspaceImpl> workspaces, boolean statusOnly) throws SnapshotException {
         if (statusOnly) {
+        	LOG.info("&&&&&&&&&&&&&&&==20180222==&&&&&&&&&&&&&&&&&&&&&&&");
             for (WorkspaceImpl workspace : workspaces) {
-            	LOG.info("-----------------------333333333333333333----------------------");
                 workspace.setStatus(runtimes.getStatus(workspace.getId()));
                 addExtraAttributes(workspace);
             }
+//            LOG.info("&&&&&&&&&&&&&&&==20180222==&&&&&&&&&&&&&&&&&&&&&&&");
         } else {
+        	LOG.info("**********************************20180222**********************************************");
             for (WorkspaceImpl workspace : workspaces) {
-            	LOG.info("-----------------------44444444444444444----------------------");
                 runtimes.injectRuntime(workspace);
                 addExtraAttributes(workspace);
             }
+//            LOG.info("**********************************20180222**********************************************");
         }
     }
 
@@ -958,7 +959,8 @@ public class WorkspaceManager {
      * Adds attributes that are not originally stored in workspace but should be published.
      */
     private void addExtraAttributes(WorkspaceImpl workspace) throws SnapshotException {
-    	LOG.info("20180202/workspace==/"+workspace.toString());
+    	LOG.info("workspace==/"+workspace.toString());
+//    	LOG.info("-----------------------------------------20180222-----------------------------------------");
         // snapshotted_at
         List<SnapshotImpl> snapshots = snapshotDao.findSnapshots(workspace.getId());
         if (!snapshots.isEmpty()) {

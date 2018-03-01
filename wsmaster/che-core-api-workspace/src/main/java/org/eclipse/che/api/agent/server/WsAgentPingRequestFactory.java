@@ -50,9 +50,8 @@ public class WsAgentPingRequestFactory {
         this.wsAgentPingConnectionTimeoutMs = wsAgentPingConnectionTimeoutMs;
     }
 
-    /**
+    /**创建可请求的,检查工作区代理是否正在运行。
      * Creates request which can check if workspace agent is pinging.
-     *创建可请求的,检查工作区代理是否正在运行。
      * @param machine
      *         machine instance
      * @return instance of {@link HttpJsonRequest}
@@ -78,6 +77,7 @@ public class WsAgentPingRequestFactory {
         if (!wsAgentPingUrl.endsWith("/")) {
             wsAgentPingUrl = wsAgentPingUrl.concat("/");
         }
+        LOG.info("wsAgentPingUrl===/"+wsAgentPingUrl);
         return httpJsonRequestFactory.fromUrl(wsAgentPingUrl)
                                      .setMethod(HttpMethod.GET)
                                      .setTimeout(wsAgentPingConnectionTimeoutMs);

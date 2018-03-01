@@ -11,8 +11,8 @@
 package org.eclipse.che.api.project.server;
 
 import org.eclipse.che.api.core.ServerException;
-import org.eclipse.che.api.core.model.project.GZProjectConfig;
 import org.eclipse.che.api.core.model.project.ProjectConfig;
+import org.eclipse.che.api.core.model.project.GZProjectConfig;
 import org.eclipse.che.api.core.notification.EventService;
 import org.eclipse.che.api.project.server.handlers.ProjectHandlerRegistry;
 import org.eclipse.che.api.project.server.importer.ProjectImporterRegistry;
@@ -40,7 +40,6 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
-
 import static org.mockito.Mockito.mock;
 
 /**

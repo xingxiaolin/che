@@ -58,12 +58,10 @@ public class AgentRegistryImpl implements AgentRegistry {
     public AgentRegistryImpl(Set<Agent> agents) throws IllegalArgumentException {
         this.agents = new HashMap<>(agents.size());
         for (Agent agent : agents) {
-        	LOG.info("********************"+agent.getId() +"//"+agent.getName()+"//"+agent.getVersion());
+        	LOG.info("********************"+agent.getId() +"//"+agent.getName());
             AgentKeyImpl key = new AgentKeyImpl(agent);
             Agent registeredAgent = this.agents.put(key, agent);
-            LOG.info("111111111111111----20180101");
             if (registeredAgent != null) {
-            	LOG.info("2222222222222----20180101");
                 throw new IllegalArgumentException(format("Agent with key %s has been registered already.", key));
             }
         }

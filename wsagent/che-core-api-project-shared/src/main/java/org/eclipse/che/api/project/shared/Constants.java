@@ -20,6 +20,7 @@ public class Constants {
     public static final String VCS_PROVIDER_NAME              = "vcs.provider.name";
     // rels for known project links
     public static final String LINK_REL_GET_PROJECTS          = "get projects";
+    public static final String LINK_REL_GET_GZPROJECTS          = "get gzprojects";
     public static final String LINK_REL_CREATE_PROJECT        = "create project";
     public static final String LINK_REL_CREATE_BATCH_PROJECTS = "create batch of projects";
     public static final String LINK_REL_UPDATE_PROJECT        = "update project";

@@ -70,4 +70,14 @@ public class SpaceRootLocator implements IRootLocator{
 			String convertRootPath =  this.hostInfo + "/cuap/dmm-datamodel/rest/define/getModelXMLInfo";
 			return convertRootPath;
 		}
+		public String getModelDBInfo() {
+		String convertRootPath =  this.hostInfo + "/cuap/dmm-datamodel/rest/define/getModelDBInfo";
+		return convertRootPath;
+	}
+
+		public String getEventReqUrl() {
+			// TODO Auto-generated method stub
+			return this.hostInfo + "/cuap/dmm-datamodel/rest/define/getEventRestInfo";
+		}
+
 }

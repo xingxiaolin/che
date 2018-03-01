@@ -173,11 +173,10 @@ public class CheEnvironmentEngine {
      *         if environment is not running
      */
     public List<Instance> getMachines(String workspaceId) throws EnvironmentNotRunningException {
-    	LOG.info("20180202/workspaceId==/"+workspaceId);
+//    	LOG.info("20180202/workspaceId==/"+workspaceId);
         EnvironmentHolder environment;
         try (@SuppressWarnings("unused") Unlocker u = stripedLocks.readLock(workspaceId)) {
             environment = environments.get(workspaceId);
-            LOG.info("20180202/environment==/"+environment.toString());
             if (environment == null) {
                 throw new EnvironmentNotRunningException("Environment with ID '" + workspaceId + "' is not found");
             }

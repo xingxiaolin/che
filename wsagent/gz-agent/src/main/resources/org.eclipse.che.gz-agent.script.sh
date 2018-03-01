@@ -260,7 +260,8 @@ else
 
 fi
 
-
+#add gzproject type
+PROJECT_MACHINE_TYPE=GZMACHINE
 
 ###############################################
 ### ws-agent run command will be added here ###

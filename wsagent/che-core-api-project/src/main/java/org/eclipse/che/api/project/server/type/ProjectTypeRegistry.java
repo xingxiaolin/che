@@ -14,7 +14,6 @@ import org.eclipse.che.api.core.NotFoundException;
 import org.eclipse.che.api.core.model.project.type.Attribute;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
 import javax.inject.Inject;
 import javax.inject.Singleton;
 import java.util.Collection;
@@ -39,9 +38,11 @@ public class ProjectTypeRegistry {
     private static final Logger LOG = LoggerFactory.getLogger(ProjectTypeRegistry.class);
 
     public static final  ProjectTypeDef          BASE_TYPE                  = new BaseProjectType();
+    
     public static final  ChildToParentComparator CHILD_TO_PARENT_COMPARATOR = new ChildToParentComparator();
     private static final Pattern                 NAME_PATTERN               = Pattern.compile("[^a-zA-Z0-9-_.]");
-
+    
+    
     private final Map<String, ProjectTypeDef> projectTypes;
     private final Map<String, ProjectTypeDef> validatedData;
 
@@ -54,9 +55,7 @@ public class ProjectTypeRegistry {
     public ProjectTypeRegistry(Set<ProjectTypeDef> types) {
         projectTypes = new HashMap<>();
         validatedData = new HashMap<>();
-
         validate(types);
-
         for (ProjectTypeDef type : validatedData.values()) {
             try {
                 init(type);
@@ -85,10 +84,12 @@ public class ProjectTypeRegistry {
      * @return project type by id
      */
     public ProjectTypeDef getProjectType(String id) throws NotFoundException {
-        final ProjectTypeDef pt = projectTypes.get(id);
+    	LOG.info("type==/"+id);
+        final ProjectTypeDef pt = projectTypes.get(id);//从TYPES列表查询:新添加的gzproject没有被注册???
         if (pt == null) {
             throw new NotFoundException("Project Type not found: " + id);
         }
+        LOG.info("pt==/"+pt.toString());
         return pt;
     }
 
@@ -126,7 +127,7 @@ public class ProjectTypeRegistry {
         }
     }
 
-    /**
+    /**验证传入的项目类型定义集
      * Validates incoming set of Project Type definitions
      * and forms preliminary collection of validated data to be initialized
      *
@@ -134,11 +135,13 @@ public class ProjectTypeRegistry {
      */
     protected final void validate(Collection<? extends ProjectTypeDef> types) {
         Map<String, ProjectTypeDef> pass1 = new HashMap<>();
-
+        LOG.info("111XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX");
+        LOG.info("************************types==/"+types.toString());
         if (!types.contains(BASE_TYPE)) {
+        	LOG.info("**************BASE_TYPE.getId()====/"+BASE_TYPE.getId());
             pass1.put(BASE_TYPE.getId(), BASE_TYPE);
         }
-
+        LOG.info("222XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX");
         types.stream()
              .filter(this::isNameValid)
              .forEach(type -> pass1.put(type.getId(), type));
@@ -184,7 +187,7 @@ public class ProjectTypeRegistry {
         return valid;
     }
 
-    /**
+    /**如果项目类型定义验证已注册父类型姓名
      * Validates if Project Tye definition has  parent names which are already registered
      *
      * @param type
@@ -210,7 +213,7 @@ public class ProjectTypeRegistry {
         return contains;
     }
 
-    /**
+    /**验证并初始化具体的项目类型
      * validates and initializes concrete project type
      *
      * @param type
@@ -218,7 +221,7 @@ public class ProjectTypeRegistry {
      */
     protected final void init(ProjectTypeDef type) throws ProjectTypeConstraintException {
         initRecursively(type, type.getId());
-
+        LOG.info("type===//"+type.toString());
         if (!type.factoriesToOverride.isEmpty()) {
             overrideFactories(type);
         }
@@ -228,7 +231,7 @@ public class ProjectTypeRegistry {
         LOG.debug("Project Type registered: " + type.getId());
     }
 
-    /**
+    /**初始化所有的属性中定义的MyType及其祖先递归
      * initializes all the attributes defined in myType and its ancestors recursively
      *
      * @param myType
@@ -253,6 +256,7 @@ public class ProjectTypeRegistry {
                                                                  " is duplicated in its ancestor(s).");
                     }
                 }
+                LOG.info("mytype====/"+myType.getId()+"///parentTypeid=="+superTypeId);
                 myType.addAttributeDefinition(attr);
             }
             initRecursively(myType, superTypeId);

@@ -12,6 +12,7 @@ package org.eclipse.che.api.workspace.server.model.impl;
 
 import org.eclipse.che.api.core.model.project.GZProjectConfig;
 import org.eclipse.che.api.core.model.project.SourceStorage;
+//import org.eclipse.jetty.util.log.Log;
 import javax.persistence.CascadeType;
 import javax.persistence.CollectionTable;
 import javax.persistence.Column;
@@ -60,7 +61,7 @@ public class GZProjectConfigImpl implements GZProjectConfig {
     private String name;
 
     @Column(name = "type")
-    private String type;
+    private String type = "gzproject";
 
     @Column(name = "description", columnDefinition = "TEXT")
     private String description;
@@ -86,19 +87,21 @@ public class GZProjectConfigImpl implements GZProjectConfig {
 
     public GZProjectConfigImpl() {}
 
-    public GZProjectConfigImpl(GZProjectConfig gzprojectConfig) {
-        name = gzprojectConfig.getName();
-        path = gzprojectConfig.getPath();
-        description = gzprojectConfig.getDescription();
-        type = gzprojectConfig.getType();
-        mixins = new ArrayList<>(gzprojectConfig.getMixins());
-        attributes = gzprojectConfig.getAttributes()
+    /**
+     * 根据ProjectConfig构造
+     * @param config
+     */
+    public GZProjectConfigImpl(GZProjectConfig config) {
+        name = config.getName();
+        path = config.getPath();
+        description = config.getDescription();
+        type = config.getType();
+        mixins = new ArrayList<>(config.getMixins());
+        attributes = config.getAttributes()
                                   .entrySet()
                                   .stream()
                                   .collect(toMap(Map.Entry::getKey, e -> new ArrayList<>(e.getValue())));
-
-        SourceStorage sourceStorage = gzprojectConfig.getSource();
-
+        SourceStorage sourceStorage = config.getSource();
         if (sourceStorage != null) {
             source = new SourceStorageImpl(sourceStorage.getType(), sourceStorage.getLocation(), sourceStorage.getParameters());
         }
@@ -219,7 +222,6 @@ public class GZProjectConfigImpl implements GZProjectConfig {
                ", attributes=" + attributes +
                '}';
     }
-
     /**
      * Synchronizes instance attributes with db attributes,
      * should be called by internal components in needed places,

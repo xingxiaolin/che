@@ -11,8 +11,6 @@
 package org.eclipse.che.api.project.server;
 
 import org.eclipse.che.api.core.ServerException;
-import org.eclipse.che.api.core.model.project.ProjectConfig;
-import org.eclipse.che.api.core.model.project.GZProjectConfig;
 import org.eclipse.che.api.core.model.project.SourceStorage;
 import org.eclipse.che.api.core.model.project.type.Attribute;
 import org.eclipse.che.api.project.server.importer.ProjectImporter;
@@ -22,6 +20,8 @@ import org.eclipse.che.api.project.shared.dto.ItemReference;
 import org.eclipse.che.api.project.shared.dto.ProjectImporterDescriptor;
 import org.eclipse.che.api.project.shared.dto.ProjectTypeDto;
 import org.eclipse.che.api.project.shared.dto.ValueDto;
+import org.eclipse.che.api.core.model.project.ProjectConfig;
+import org.eclipse.che.api.core.model.project.GZProjectConfig;
 import org.eclipse.che.api.workspace.shared.dto.ProjectConfigDto;
 import org.eclipse.che.api.workspace.shared.dto.GZProjectConfigDto;
 import org.eclipse.che.api.workspace.shared.dto.ProjectProblemDto;

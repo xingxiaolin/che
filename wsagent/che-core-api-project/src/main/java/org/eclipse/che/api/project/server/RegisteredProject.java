@@ -22,17 +22,17 @@ import org.eclipse.che.api.project.server.type.ValueProvider;
 import org.eclipse.che.api.project.server.type.ValueStorageException;
 import org.eclipse.che.api.project.server.type.Variable;
 import org.eclipse.che.api.vfs.Path;
-
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
-
 import static java.lang.String.format;
 import static org.eclipse.che.api.core.ErrorCodes.ATTRIBUTE_NAME_PROBLEM;
 import static org.eclipse.che.api.core.ErrorCodes.NO_PROJECT_CONFIGURED_IN_WS;
 import static org.eclipse.che.api.core.ErrorCodes.NO_PROJECT_ON_FILE_SYSTEM;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * Internal Project implementation.
@@ -41,7 +41,7 @@ import static org.eclipse.che.api.core.ErrorCodes.NO_PROJECT_ON_FILE_SYSTEM;
  * @author gazarenkov
  */
 public class RegisteredProject implements ProjectConfig {
-
+	private static final Logger LOG = LoggerFactory.getLogger(RegisteredProject.class);
     private final List<Problem>      problems;
     private final Map<String, Value> attributes;
 
@@ -74,7 +74,6 @@ public class RegisteredProject implements ProjectConfig {
                       ProjectTypeRegistry projectTypeRegistry) throws ServerException {
         problems = new ArrayList<>();
         attributes = new HashMap<>();
-
         Path path;
         if (folder != null) {
             path = folder.getPath();
@@ -83,27 +82,24 @@ public class RegisteredProject implements ProjectConfig {
         } else {
             throw new ServerException("Invalid Project Configuration. Path undefined.");
         }
-
         this.folder = folder;
+        if(config != null){
+        	 LOG.info("*****************************RegisteredProject.config==//"+config.toString());
+        }
         this.config = config == null ? new NewProjectConfigImpl(path) : config;
         this.updated = updated;
         this.detected = detected;
-
         if (folder == null || folder.isFile()) {
             problems.add(new Problem(NO_PROJECT_ON_FILE_SYSTEM, "No project folder on file system " + this.config.getPath()));
         }
-
         if (config == null) {
             problems.add(new Problem(NO_PROJECT_CONFIGURED_IN_WS, "No project configured in workspace " + this.config.getPath()));
         }
-
-
+        LOG.info("*************************RegisteredProject.this.config==//"+this.config.toString());
         // 1. init project types
         this.types = new ProjectTypes(this.config.getPath(), this.config.getType(), this.config.getMixins(), projectTypeRegistry, problems);
-
         // 2. init transient (implicit, like git) project types.
         types.addTransient(folder);
-
         // 3. initialize attributes
         initAttributes();
     }
@@ -115,7 +111,7 @@ public class RegisteredProject implements ProjectConfig {
      */
     private void initAttributes() {
 
-        // we take only defined attributes, others ignored
+        // we take only defined attributes, others ignored我们只接受定义的属性，而忽略其他属性
         for (Map.Entry<String, Attribute> entry : types.getAttributeDefs().entrySet()) {
             final Attribute definition = entry.getValue();
             final String name = entry.getKey();

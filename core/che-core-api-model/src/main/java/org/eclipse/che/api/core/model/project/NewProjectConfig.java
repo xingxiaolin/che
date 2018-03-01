@@ -42,4 +42,6 @@ public interface NewProjectConfig extends ProjectConfig {
 
     /** Returns options for generator to create project */
     Map<String, String> getOptions();
+    
+    String toString();
 }

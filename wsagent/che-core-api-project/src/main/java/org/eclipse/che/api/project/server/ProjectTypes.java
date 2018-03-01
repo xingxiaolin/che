@@ -15,24 +15,24 @@ import org.eclipse.che.api.core.model.project.type.Attribute;
 import org.eclipse.che.api.project.server.RegisteredProject.Problem;
 import org.eclipse.che.api.project.server.type.ProjectTypeDef;
 import org.eclipse.che.api.project.server.type.ProjectTypeRegistry;
-
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
-
 import static com.google.common.collect.Lists.newArrayList;
 import static java.lang.String.format;
 import static org.eclipse.che.api.core.ErrorCodes.ATTRIBUTE_NAME_PROBLEM;
 import static org.eclipse.che.api.core.ErrorCodes.PROJECT_TYPE_IS_NOT_REGISTERED;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * @author gazarenkov
  */
 public class ProjectTypes {
-
+	private static final Logger LOG = LoggerFactory.getLogger(ProjectTypes.class);
     private final String                      projectPath;
     private final ProjectTypeRegistry         projectTypeRegistry;
     private       ProjectTypeDef              primary;
@@ -55,21 +55,25 @@ public class ProjectTypes {
         this.projectPath = projectPath;
 
         ProjectTypeDef tmpPrimary;
-        if (type == null) {
+        LOG.info("*****************************projectType.type===="+type);
+		if (type == null) {
             this.problems.add(new Problem(PROJECT_TYPE_IS_NOT_REGISTERED, "No primary type defined for " + projectPath + " Base Project Type assigned."));
             tmpPrimary = ProjectTypeRegistry.BASE_TYPE;
         } else {
             try {
+            	LOG.info("111qqqqqqqqqqqqqqqqqqqqqqqqqqq");
                 tmpPrimary = projectTypeRegistry.getProjectType(type);
             } catch (NotFoundException e) {
                 this.problems.add(new Problem(PROJECT_TYPE_IS_NOT_REGISTERED, "Primary type " + type + " defined for " + projectPath +
                                              " is not registered. Base Project Type assigned."));
                 tmpPrimary = ProjectTypeRegistry.BASE_TYPE;
+                LOG.info("111wwwwwwwwwwwwwwwwwwwww==//"+tmpPrimary.getId());
             }
-
+//            LOG.info("111rrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrr==//" +tmpPrimary.getId());
             if (!tmpPrimary.isPrimaryable()) {
                 this.problems.add(new Problem(PROJECT_TYPE_IS_NOT_REGISTERED, "Project type " + tmpPrimary.getId() + " is not allowable to be primary type. Base Project Type assigned."));
                 tmpPrimary = ProjectTypeRegistry.BASE_TYPE;
+                LOG.info("1111tttttttttttttttttttttttttttttttt==//"+tmpPrimary.getId());
             }
         }
 
@@ -208,4 +212,6 @@ public class ProjectTypes {
             }
         }
     }
+    
+   
 }

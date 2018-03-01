@@ -14,6 +14,7 @@ import com.google.common.collect.ImmutableMap;
 
 import org.eclipse.che.api.core.ServerException;
 import org.eclipse.che.api.core.model.project.ProjectConfig;
+import org.eclipse.che.api.core.model.project.GZProjectConfig;
 import org.eclipse.che.api.core.notification.EventService;
 import org.eclipse.che.api.debug.shared.model.Breakpoint;
 import org.eclipse.che.api.debug.shared.model.DebuggerInfo;
@@ -48,6 +49,7 @@ import org.eclipse.che.api.vfs.impl.file.LocalVirtualFileSystemProvider;
 import org.eclipse.che.api.vfs.search.impl.FSLuceneSearcherProvider;
 import org.eclipse.che.api.vfs.watcher.FileWatcherManager;
 import org.eclipse.che.api.workspace.shared.dto.ProjectConfigDto;
+import org.eclipse.che.api.core.model.project.ProjectConfig;
 import org.eclipse.che.plugin.java.server.projecttype.JavaProjectType;
 import org.eclipse.che.plugin.java.server.projecttype.JavaValueProviderFactory;
 import org.eclipse.core.resources.ResourcesPlugin;
@@ -347,5 +349,25 @@ public class JavaDebuggerTest {
 
         @Override
         protected void removeProject(ProjectConfig project) throws ServerException {}
+        
+        @Override
+        protected void addGZProject(GZProjectConfig project) throws ServerException {
+
+        }
+
+        @Override
+        protected void updateGZProject(GZProjectConfig project) throws ServerException {
+
+        }
+
+        @Override
+        protected void removeGZProject(GZProjectConfig project) throws ServerException {
+
+        }
+        @Override
+        public List<? extends GZProjectConfig> getGZProjects() throws ServerException {
+        	return null;
+        }
     }
+    
 }

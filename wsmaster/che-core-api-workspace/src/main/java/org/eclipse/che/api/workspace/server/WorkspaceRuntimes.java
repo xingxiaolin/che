@@ -268,7 +268,7 @@ public class WorkspaceRuntimes {
      *         if any error occurs while getting machines runtime information
      */
     public WorkspaceRuntimeImpl getRuntime(String workspaceId) throws NotFoundException, ServerException {
-    	LOG.info("************************************222222222222************************************************");
+//    	LOG.info("************************************222222222222************************************************");
         requireNonNull(workspaceId, "Required non-null workspace id");
         RuntimeState state;
         try (@SuppressWarnings("unused") Unlocker u = locks.readLock(workspaceId)) {
@@ -286,7 +286,6 @@ public class WorkspaceRuntimes {
      * the status of workspace runtime otherwise
      */
     public WorkspaceStatus getStatus(String workspaceId) {
-    	LOG.info("************************************33333333************************************************");
         requireNonNull(workspaceId, "Required non-null workspace id");
         try (@SuppressWarnings("unused") Unlocker u = locks.readLock(workspaceId)) {
             RuntimeState state = states.get(workspaceId);
@@ -339,7 +338,7 @@ public class WorkspaceRuntimes {
      *         the workspace to inject runtime into
      */
     public void injectRuntime(WorkspaceImpl workspace) {
-    	LOG.info("************************************555555555555************************************************");
+//    	LOG.info("************************************555555555555************************************************");
         requireNonNull(workspace, "Required non-null workspace");
         RuntimeState state = null;
         try (@SuppressWarnings("unused") Unlocker u = locks.readLock(workspace.getId())) {
@@ -734,7 +733,7 @@ public class WorkspaceRuntimes {
     }
 
     protected void launchAgents(Instance instance, List<String> agents) throws ServerException, AgentException {
-    	LOG.info("************************************9999************************************************");
+//    	LOG.info("************************************9999************************************************");
         for (AgentKey agentKey : agentSorter.sort(agents)) {
             if (!Thread.currentThread().isInterrupted()) {
                 LOG.info("Launching '{}' agent at workspace {}", agentKey.getId(), instance.getWorkspaceId());

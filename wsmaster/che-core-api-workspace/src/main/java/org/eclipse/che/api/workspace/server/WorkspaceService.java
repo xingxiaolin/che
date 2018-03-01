@@ -895,6 +895,7 @@ public class WorkspaceService extends Service {
                                                                        ForbiddenException {
         requiredNotNull(newProject, "New gzproject config");
         final WorkspaceImpl workspace = workspaceManager.getWorkspace(id);
+        newProject.setType("gzproject");
         workspace.getConfig().getGZProjects().add(new GZProjectConfigImpl(newProject));
         validator.validateConfig(workspace.getConfig());
         return linksInjector.injectLinks(asDto(workspaceManager.updateWorkspace(id, workspace)), getServiceContext());
@@ -932,6 +933,7 @@ public class WorkspaceService extends Service {
                                                id,
                                                normalizedPath));
         }
+        update.setType("gzproject");
         projects.add(new GZProjectConfigImpl(update));
         validator.validateConfig(workspace.getConfig());
         return linksInjector.injectLinks(asDto(workspaceManager.updateWorkspace(id, workspace)), getServiceContext());

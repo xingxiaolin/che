@@ -13,12 +13,10 @@ package org.eclipse.che.api.workspace.server.model.impl;
 import org.eclipse.che.api.core.model.machine.Machine;
 import org.eclipse.che.api.core.model.workspace.WorkspaceRuntime;
 import org.eclipse.che.api.machine.server.model.impl.MachineImpl;
-
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
 import java.util.Objects;
-
 import static java.util.stream.Collectors.toList;
 
 /**
@@ -27,7 +25,6 @@ import static java.util.stream.Collectors.toList;
  * @author Yevhenii Voevodin
  */
 public class WorkspaceRuntimeImpl implements WorkspaceRuntime {
-
     private final String activeEnv;
 
     private String            rootFolder;
@@ -42,7 +39,6 @@ public class WorkspaceRuntimeImpl implements WorkspaceRuntime {
                 if (machine.getConfig().isDev()) {
                     if (machine.getRuntime() != null) {
                         rootFolder = machine.getRuntime().projectsRoot();
-                        System.out.println("aaaaaa======/ "+rootFolder);
                     }
                     devMachine = new MachineImpl(machine);
                     this.machines.add(devMachine);

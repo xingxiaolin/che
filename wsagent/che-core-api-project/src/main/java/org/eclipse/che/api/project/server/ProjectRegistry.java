@@ -16,6 +16,8 @@ import org.eclipse.che.api.core.NotFoundException;
 import org.eclipse.che.api.core.ServerException;
 import org.eclipse.che.api.core.model.project.NewProjectConfig;
 import org.eclipse.che.api.core.model.project.ProjectConfig;
+import org.eclipse.che.api.core.model.project.NewGZProjectConfig;
+import org.eclipse.che.api.core.model.project.GZProjectConfig;
 import org.eclipse.che.api.core.notification.EventService;
 import org.eclipse.che.api.project.server.handlers.ProjectHandlerRegistry;
 import org.eclipse.che.api.project.server.handlers.ProjectInitHandler;
@@ -27,7 +29,6 @@ import org.eclipse.che.api.vfs.VirtualFileSystem;
 import org.eclipse.che.api.vfs.VirtualFileSystemProvider;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
 import javax.annotation.PostConstruct;
 import javax.inject.Inject;
 import javax.inject.Singleton;
@@ -48,6 +49,7 @@ public class ProjectRegistry {
     private static final Logger LOG = LoggerFactory.getLogger(ProjectRegistry.class);
 
     private final Map<String, RegisteredProject> projects;
+    private final Map<String, RegisteredGZProject> gzprojects;
     private final WorkspaceProjectsSyncer        workspaceHolder;
     private final VirtualFileSystem              vfs;
     private final ProjectTypeRegistry            projectTypeRegistry;
@@ -63,9 +65,10 @@ public class ProjectRegistry {
                            ProjectTypeRegistry projectTypeRegistry,
                            ProjectHandlerRegistry handlers,
                            EventService eventService) throws ServerException {
-    	LOG.info("AAAAAAAAAAAAAAAAAA------20180202");
+    	LOG.info("****************************ProjectRegistry************************************");
         this.eventService = eventService;
         this.projects = new ConcurrentHashMap<>();
+        this.gzprojects = new ConcurrentHashMap<>();
         this.workspaceHolder = workspaceHolder;
         this.vfs = vfsProvider.getVirtualFileSystem();
         this.projectTypeRegistry = projectTypeRegistry;
@@ -75,7 +78,7 @@ public class ProjectRegistry {
 
     @PostConstruct
     public void initProjects() throws ConflictException, NotFoundException, ServerException, ForbiddenException {
-    	LOG.info("BBBBBBBBBBBBBB------20180202");
+    	LOG.info("****************************initProjects************************************");
         List<? extends ProjectConfig> projectConfigs = workspaceHolder.getProjects();
         // take all the projects from ws's config从WS的配置中获取所有项目
         for (ProjectConfig projectConfig : projectConfigs) {
@@ -85,6 +88,16 @@ public class ProjectRegistry {
             final FolderEntry projectFolder = ((vf == null) ? null : new FolderEntry(vf, this));
             putProject(projectConfig, projectFolder, false, false);
         }
+        //========================20180224=============================//
+        List<? extends GZProjectConfig> gzprojectConfigs = workspaceHolder.getGZProjects();
+        // take all the projects from ws's config从WS的配置中获取所有项目
+        for (GZProjectConfig gzprojectConfig : gzprojectConfigs) {
+            final String path = gzprojectConfig.getPath();
+            LOG.info("20180224/path==" +path);
+            final VirtualFile vf = vfs.getRoot().getChild(Path.of(path));
+            final FolderEntry projectFolder = ((vf == null) ? null : new FolderEntry(vf, this));
+            putGZProject(gzprojectConfig, projectFolder, false, false);
+        }
         initUnconfiguredFolders();
         initialized = true;
         for (RegisteredProject project : projects.values()) {
@@ -93,14 +106,19 @@ public class ProjectRegistry {
                 fireInitHandlers(project);
             }
         }
+        for (RegisteredGZProject gzproject : gzprojects.values()) {
+            // only for gzprojects with sources
+            if(gzproject.getBaseFolder() != null) {
+                fireInitHandlers(gzproject);
+            }
+        }
     }
 
-
-    /**
+    /**返回所有已注册的项目
      * @return all the registered projects
      */
     public List<RegisteredProject> getProjects() {
-    	LOG.info("CCCCCCCCCCCCCC------20180202");
+//    	LOG.info("//------------------------------------------------------//");
         checkInitializationState();
 
         initUnconfiguredFolders();
@@ -114,7 +132,7 @@ public class ProjectRegistry {
      * @return project or null if not found
      */
     public RegisteredProject getProject(String projectPath) {
-    	LOG.info("DDDDDDDDDDDDDD------20180202");
+//    	LOG.info("DDDDDDDDDDDDDD------20180202");
         checkInitializationState();
 
         initUnconfiguredFolders();
@@ -128,7 +146,7 @@ public class ProjectRegistry {
      * @return list projects of pojects
      */
     public List<String> getProjects(String parentPath) {
-    	LOG.info("EEEEEEEEEEEEE------20180202");
+//    	LOG.info("EEEEEEEEEEEEE------20180202");
         checkInitializationState();
 
         initUnconfiguredFolders();
@@ -147,7 +165,7 @@ public class ProjectRegistry {
      * @return the project owned this path.
      */
     public RegisteredProject getParentProject(String path) {
-    	LOG.info("FFFFFFFFFFFFFFF------20180202");
+//    	LOG.info("FFFFFFFFFFFFFFF------20180202");
         checkInitializationState();
 
         // return this if a project
@@ -188,9 +206,13 @@ public class ProjectRegistry {
                                  FolderEntry folder,
                                  boolean updated,
                                  boolean detected) throws ServerException {
+    	if (config != null) {
+    		LOG.info("ProjectConfig.config==/"+config.toString());
+    	}
         final RegisteredProject project = new RegisteredProject(folder, config, updated, detected, this.projectTypeRegistry);
+        LOG.info("[name==" +project.getName() +"]//////////////[getType=="+project.getType()+"]");
         projects.put(project.getPath(), project);
-        LOG.info("20180202/project=="+project.toString());
+//        LOG.info("#####################################");
         return project;
     }
 
@@ -202,7 +224,6 @@ public class ProjectRegistry {
      * @throws ServerException
      */
     void removeProjects(String path) throws ServerException {
-
         List<RegisteredProject> removed = new ArrayList<>();
         Optional.ofNullable(projects.remove(path)).ifPresent(removed::add);
         getProjects(path).forEach(p -> Optional.ofNullable(projects.remove(p))
@@ -250,7 +271,7 @@ public class ProjectRegistry {
                                             boolean asMixin) throws ConflictException,
                                                                     NotFoundException,
                                                                     ServerException {
-    	LOG.info("GGGGGGGGGGGGG------20180202");
+//    	LOG.info("GGGGGGGGGGGGG------20180202");
         final RegisteredProject project = getProject(projectPath);
         final NewProjectConfig conf;
         List<String> newMixins = new ArrayList<>();
@@ -360,11 +381,33 @@ public class ProjectRegistry {
      * Try to initialize projects from unconfigured folders on root. 
      * */
     private void initUnconfiguredFolders() {
-    	LOG.info("20180202&&&&&&&&&&&&&&&&&&");
         try {
             for (FolderEntry folder : root.getChildFolders()) {
+            	LOG.info("**********************path==/"+folder.getVirtualFile().getPath().toString());
                 if (!projects.containsKey(folder.getVirtualFile().getPath().toString())) {
+                	LOG.info("pppppppppppppppppppppp");
                     putProject(null, folder, true, false);
+                }
+//                if (!gzprojects.containsKey(folder.getVirtualFile().getPath().toString())) {
+//                	LOG.info("pppppppppppppppppppppp");
+//                    putGZProject(null, folder, true, false);
+//                }
+            }
+        } catch (ServerException e) {
+            LOG.warn(e.getLocalizedMessage());
+        }
+    }
+    
+    /**尝试初始化项目从未配置在根文件夹 
+     * Try to initialize projects from unconfigured folders on root. 
+     * */
+    private void initGZUnconfiguredFolders() {
+        try {
+            for (FolderEntry folder : root.getChildFolders()) {
+            	LOG.info("**********************path==/"+folder.getVirtualFile().getPath().toString());
+               if(!gzprojects.containsKey(folder.getVirtualFile().getPath().toString())) {
+                	LOG.info("ggggggggggggggggggggggggggg");
+                    putGZProject(null, folder, true, false);
                 }
             }
         } catch (ServerException e) {
@@ -386,7 +429,7 @@ public class ProjectRegistry {
                                                             ConflictException,
                                                             NotFoundException,
                                                             ServerException {
-    	LOG.info("HHHHHHHHHHHHH------20180202");
+//    	LOG.info("HHHHHHHHHHHHH------20180202");
         // primary type
         fireInit(project, project.getType());
         // mixins
@@ -410,5 +453,126 @@ public class ProjectRegistry {
             throw new IllegalStateException("Projects are not initialized yet");
         }
     }
+    
+    //==========================20180224==========================//
+    /**创建已注册的项目并将其缓存。
+     * Creates RegisteredProject and caches it.
+     *
+     * @param config
+     *         project config
+     * @param folder
+     *         base folder of project
+     * @param updated
+     *         whether this configuration was updated
+     * @param detected
+     *         whether this is automatically detected or explicitly defined project
+     * @return project
+     * @throws ServerException
+     *         when path for project is undefined
+     */
+    RegisteredGZProject putGZProject(GZProjectConfig config,
+                                 FolderEntry folder,
+                                 boolean updated,
+                                 boolean detected) throws ServerException {
+        final RegisteredGZProject gzproject = new RegisteredGZProject(folder, config, updated, detected, this.projectTypeRegistry);
+        gzprojects.put(gzproject.getPath(), gzproject);
+        LOG.info("name==" +gzproject.getName() +";ProjectType=="+gzproject.getType());
+        return gzproject;
+    }
+    
+    /**为传入项目的所有项目类型触发init处理程序。
+     * Fires init handlers for all the project types of incoming project.
+     *
+     * @param project
+     *         the project
+     * @throws ForbiddenException
+     * @throws ConflictException
+     * @throws NotFoundException
+     * @throws ServerException
+     */
+    void fireInitHandlers(RegisteredGZProject project) throws ForbiddenException,
+                                                            ConflictException,
+                                                            NotFoundException,
+                                                            ServerException {
+        // primary type
+        fireInitGZ(project, project.getType());
+        // mixins
+        for (String mixin : project.getMixins()) {
+            fireInitGZ(project, mixin);
+        }
+    }
+    
+    void fireInitGZ(RegisteredGZProject project, String type) throws ForbiddenException,
+		    ConflictException,
+		    NotFoundException,
+		    ServerException {
+		ProjectInitHandler projectInitHandler = handlers.getProjectInitHandler(type);
+		if (projectInitHandler != null) {
+			projectInitHandler.onProjectInitialized(this, project.getBaseFolder());
+		}
+	}
+    
+    /**
+     * @return all the registered projects
+     */
+    public List<RegisteredGZProject> getGZProjects() {
+    	LOG.info("----------------------20180224-DD------------------------------------------------");
+        checkInitializationState();
+        initGZUnconfiguredFolders();
+        return new ArrayList<>(gzprojects.values());
+    }
+    
+    /**
+     * @param projectPath
+     *         project path
+     * @return project or null if not found
+     */
+    public RegisteredGZProject getGZProject(String projectPath) {
+    	LOG.info("----------------------20180224-EE------------------------------------------------");
+        checkInitializationState();
+        initUnconfiguredFolders();
+        return gzprojects.get(absolutizePath(projectPath));
+    }
+    
+    /**
+     * @param parentPath
+     *         parent path
+     * @return list projects of pojects
+     */
+    public List<String> getGZProjects(String parentPath) {
+    	LOG.info("----------------------20180224-FF------------------------------------------------");
+        checkInitializationState();
+        initUnconfiguredFolders();
+        final Path root = Path.of(absolutizePath(parentPath));
+        return gzprojects.keySet()
+                       .stream()
+                       .filter(key -> Path.of(key).isChild(root))
+                       .collect(Collectors.toList());
+    }
+
+    /**
+     * @param path
+     *         - path of child project
+     * @return the project owned this path.
+     */
+    public RegisteredGZProject getParentGZProject(String path) {
+    	LOG.info("----------------------20180224-GG------------------------------------------------");
+        checkInitializationState();
+        // return this if a project
+        if (getGZProject(path) != null) {
+            return getGZProject(path);
+        }
+        // otherwise try to find matched parent
+        Path test;
+        while ((test = Path.of(path).getParent()) != null) {
+            final RegisteredGZProject project = gzprojects.get(test.toString());
+            if (project != null) {
+                return project;
+            }
+            path = test.toString();
+        }
+        return null;
+    }
+
    
 }

@@ -15,7 +15,6 @@ import io.swagger.annotations.ApiOperation;
 import io.swagger.annotations.ApiParam;
 import io.swagger.annotations.ApiResponse;
 import io.swagger.annotations.ApiResponses;
-
 import org.apache.commons.fileupload.FileItem;
 import org.apache.tika.Tika;
 import org.eclipse.che.WorkspaceIdProvider;
@@ -45,6 +44,7 @@ import org.eclipse.che.api.vfs.search.SearchResultEntry;
 import org.eclipse.che.api.vfs.search.Searcher;
 import org.eclipse.che.api.workspace.shared.dto.NewProjectConfigDto;
 import org.eclipse.che.api.workspace.shared.dto.ProjectConfigDto;
+import org.eclipse.che.api.workspace.shared.dto.GZProjectConfigDto;
 import org.eclipse.che.api.workspace.shared.dto.SourceStorageDto;
 import org.eclipse.che.commons.env.EnvironmentContext;
 import org.eclipse.che.commons.lang.ws.rs.ExtMediaType;
@@ -87,6 +87,7 @@ import static org.eclipse.che.api.project.server.DtoConverter.asDto;
 import static org.eclipse.che.api.project.shared.Constants.LINK_REL_CREATE_BATCH_PROJECTS;
 import static org.eclipse.che.api.project.shared.Constants.LINK_REL_CREATE_PROJECT;
 import static org.eclipse.che.api.project.shared.Constants.LINK_REL_GET_PROJECTS;
+import static org.eclipse.che.api.project.shared.Constants.LINK_REL_GET_GZPROJECTS;
 import static org.eclipse.che.dto.server.DtoFactory.newDto;
 
 /**
@@ -137,6 +138,26 @@ public class ProjectService extends Service {
                              .map(p -> injectProjectLinks(asDto(p)))
                              .collect(Collectors.toList());
     }
+    
+    
+//    @GET
+//    @Produces(MediaType.APPLICATION_JSON)
+//    @ApiOperation(value = "Gets list of gzprojects in root folder",
+//                  response = GZProjectConfigDto.class,
+//                  responseContainer = "List")
+//    @ApiResponses({@ApiResponse(code = 200, message = "OK"),
+//                   @ApiResponse(code = 500, message = "Server error")})
+//    @GenerateLink(rel = LINK_REL_GET_GZPROJECTS)
+//    public List<GZProjectConfigDto> getGZProjects() throws IOException,
+//                                                       ServerException,
+//                                                       ConflictException,
+//                                                       ForbiddenException {
+//        return projectManager.getGZProjects()
+//                             .stream()
+//                             .map(p -> injectProjectLinks(asDto(p)))
+//                             .collect(Collectors.toList());
+//    }
+    
 
     @GET
     @Path("/{path:.*}")
@@ -181,23 +202,22 @@ public class ProjectService extends Service {
         }
         String pathToProject = projectConfig.getPath();
         String pathToParent = pathToProject.substring(0, pathToProject.lastIndexOf("/"));
-
+        String type = projectConfig.getType();
         if (!pathToParent.equals("/")) {
             VirtualFileEntry parentFileEntry = projectManager.getProjectsRoot().getChild(pathToParent);
             if (parentFileEntry == null) {
                 throw new NotFoundException("The parent folder with path " + pathToParent + " does not exist.");
             }
         }
-
-        final RegisteredProject project = projectManager.createProject(projectConfig, options);
-        final ProjectConfigDto configDto = asDto(project);
-
-        eventService.publish(new ProjectCreatedEvent(workspace, project.getPath()));
-
-        // TODO this throws NPE
-        //logProjectCreatedEvent(configDto.getName(), configDto.getProjectType());
-
-        return injectProjectLinks(configDto);
+//        if("gzproject".equalsIgnoreCase(type)){
+//        }else{
+        	final RegisteredProject project = projectManager.createProject(projectConfig, options);
+        	 final ProjectConfigDto configDto = asDto(project);
+             eventService.publish(new ProjectCreatedEvent(workspace, project.getPath()));
+             //logProjectCreatedEvent(configDto.getName(), configDto.getProjectType());
+             return injectProjectLinks(configDto);
+//        }
+       
     }
 
     @POST
@@ -1069,6 +1089,10 @@ public class ProjectService extends Service {
     }
 
     private ProjectConfigDto injectProjectLinks(ProjectConfigDto projectConfig) {
+        return projectServiceLinksInjector.injectProjectLinks(projectConfig, getServiceContext());
+    }
+    
+    private GZProjectConfigDto injectProjectLinks(GZProjectConfigDto projectConfig) {
         return projectServiceLinksInjector.injectProjectLinks(projectConfig, getServiceContext());
     }
 }

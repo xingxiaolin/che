@@ -64,6 +64,7 @@ public class GZAgentLauncher implements AgentLauncher {
                            @Named("che.workspace.agent.dev.max_start_time_ms") long wsAgentMaxStartTimeMs,
                            @Named("che.workspace.agent.dev.ping_delay_ms") long wsAgentPingDelayMs,
                            @Named("che.workspace.agent.dev.ping_timeout_error_msg") String pingTimedOutErrorMessage) {
+    	LOG.info("**************************GZAgentLauncher****************************");
         this.machineProcessManagerProvider = machineProcessManagerProvider;
         this.wsAgentPingRequestFactory = wsAgentPingRequestFactory;
         this.wsAgentMaxStartTimeMs = wsAgentMaxStartTimeMs;
@@ -84,15 +85,14 @@ public class GZAgentLauncher implements AgentLauncher {
 
     @Override
     public void launch(Instance machine, Agent agent) throws ServerException {
+    	LOG.info("*************************launch*****************************");
         final HttpJsonRequest wsAgentPingRequest;
         try {
             wsAgentPingRequest = createPingRequest(machine);
         } catch (ServerException e) {
             throw new MachineException(e.getServiceError());
         }
-
         String script = agent.getScript() + "\n" + firstNonNull(wsAgentRunCommand, DEFAULT_WS_AGENT_RUN_COMMAND);
-
         final String wsAgentPingUrl = wsAgentPingRequest.getUrl();
         try {
             // for server side type of command mean nothing
@@ -136,12 +136,13 @@ public class GZAgentLauncher implements AgentLauncher {
         return String.format(WS_AGENT_PROCESS_OUTPUT_CHANNEL, workspaceId);
     }
 
-    // forms the ping request based on information about the machine.
+    // forms the ping request based on information about the machine.根据机器的信息形成ping请求。
     protected HttpJsonRequest createPingRequest(Instance machine) throws ServerException {
         return wsAgentPingRequestFactory.createRequest(machine);
     }
 
     private boolean pingWsAgent(HttpJsonRequest wsAgentPingRequest) throws ServerException {
+    	LOG.info("****************************pingWsAgent**************************");
         try {
             final HttpJsonResponse pingResponse = wsAgentPingRequest.request();
             if (pingResponse.getResponseCode() == HttpURLConnection.HTTP_OK) {

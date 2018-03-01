@@ -175,4 +175,17 @@ public class NewProjectConfigImpl implements NewProjectConfig {
     public Map<String, String> getOptions() {
         return options != null ? options : newHashMap();
     }
+    
+    @Override
+    public String toString() {
+        return "NewProjectConfigImpl{" +
+               ", path='" + path + '\'' +
+               ", name='" + name + '\'' +
+               ", type='" + type + '\'' +
+               ", description='" + description + '\'' +
+               ", source=" + origin +
+               ", mixins=" + mixins +
+               ", attributes=" + attributes +
+               '}';
+    }
 }

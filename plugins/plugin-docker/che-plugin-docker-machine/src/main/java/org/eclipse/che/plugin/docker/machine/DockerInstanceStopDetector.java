@@ -37,7 +37,7 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
 
-/**
+/**跟踪事件的检测容器的泊坞容器停止或失败。
  * Track docker containers events to detect containers stop or failure.
  *
  * @author Alexander Garagatyi
