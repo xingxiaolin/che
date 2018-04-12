@@ -16,11 +16,11 @@
     <parent>
         <artifactId>che-plugin-gwt-parent</artifactId>
         <groupId>org.eclipse.che.plugin</groupId>
-<<<<<<< HEAD
+
         <version>6.4.0-SNAPSHOT</version>
-=======
-        <version>6.3.1-SNAPSHOT</version>
->>>>>>> 26e26cbcd2dc9d9928ca956dff3043c08e56f491
+
+        
+
     </parent>
     <artifactId>che-plugin-gwt-ext-gwt</artifactId>
     <packaging>gwt-lib</packaging>
