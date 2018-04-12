@@ -15,6 +15,7 @@ import com.google.inject.name.Named;
 import java.net.URL;
 import java.nio.file.Paths;
 import org.eclipse.che.commons.lang.NameGenerator;
+import org.eclipse.che.selenium.core.TestGroup;
 import org.eclipse.che.selenium.core.client.TestProjectServiceClient;
 import org.eclipse.che.selenium.core.client.TestUserPreferencesServiceClient;
 import org.eclipse.che.selenium.core.constant.TestGitConstants;
@@ -34,6 +35,7 @@ import org.testng.annotations.BeforeClass;
 import org.testng.annotations.Test;
 
 /** @author aleksandr shmaraev */
+@Test(groups = TestGroup.GITHUB)
 public class CommitFilesByMultiSelectTest {
   private static final String PROJECT_NAME = NameGenerator.generate("CommitByMultiSelect_", 4);
   private static final String PATH_FOR_EXPAND_FIRST_MODULE =
@@ -82,11 +84,11 @@ public class CommitFilesByMultiSelectTest {
   @Inject private Ide ide;
   @Inject private TestUser productUser;
 
-  @Inject
+  @Inject(optional = true)
   @Named("github.username")
   private String gitHubUsername;
 
-  @Inject
+  @Inject(optional = true)
   @Named("github.password")
   private String gitHubPassword;
 
@@ -117,7 +119,7 @@ public class CommitFilesByMultiSelectTest {
   public void commitFilesByMultiSelect() {
     projectExplorer.waitProjectExplorer();
     projectExplorer.waitItem(PROJECT_NAME);
-    projectExplorer.selectItem(PROJECT_NAME);
+    projectExplorer.waitAndSelectItem(PROJECT_NAME);
     menu.runCommand(
         TestMenuCommandsConstants.Git.GIT, TestMenuCommandsConstants.Git.INITIALIZE_REPOSITORY);
     askDialog.confirmAndWaitClosed();
@@ -132,7 +134,7 @@ public class CommitFilesByMultiSelectTest {
     git.clickOnCancelBtnCommitForm();
 
     // perform init commit
-    projectExplorer.selectItem(PROJECT_NAME);
+    projectExplorer.waitAndSelectItem(PROJECT_NAME);
     menu.runCommand(TestMenuCommandsConstants.Git.GIT, TestMenuCommandsConstants.Git.COMMIT);
     git.waitAndRunCommit("init");
     loader.waitOnClosed();
@@ -148,7 +150,7 @@ public class CommitFilesByMultiSelectTest {
     // Edit GreetingController.java
     git.closeGitInfoPanel();
     projectExplorer.expandPathInProjectExplorerAndOpenFile(
-        PATH_FOR_EXPAND_SECOND_MODULE, 1, "AppController.java");
+        PATH_FOR_EXPAND_SECOND_MODULE, "AppController.java");
     loader.waitOnClosed();
     editor.setCursorToLine(16);
     editor.typeTextIntoEditor("//" + CHANGE_CONTENT);
@@ -173,7 +175,8 @@ public class CommitFilesByMultiSelectTest {
     git.waitGitStatusBarWithMess(STATUS_MESSAGE_BEFORE_COMMIT);
 
     // Perform the commit selected files
-    projectExplorer.selectItem(PROJECT_NAME + "/my-lib/src/test/java/hello/SayHelloTest.java");
+    projectExplorer.waitAndSelectItem(
+        PROJECT_NAME + "/my-lib/src/test/java/hello/SayHelloTest.java");
     git.closeGitInfoPanel();
     projectExplorer.selectMultiFilesByCtrlKeys(
         PROJECT_NAME + "/my-webapp/src/main/java/helloworld/AppController.java");
@@ -198,7 +201,7 @@ public class CommitFilesByMultiSelectTest {
     git.closeGitCompareForm();
     git.waitHistoryFormToOpen();
     git.closeGitHistoryForm();
-    projectExplorer.selectItem(PROJECT_NAME);
+    projectExplorer.waitAndSelectItem(PROJECT_NAME);
     menu.runCommand(TestMenuCommandsConstants.Git.GIT, TestMenuCommandsConstants.Git.SHOW_HISTORY);
     git.waitHistoryFormToOpen();
     git.clickOnHistoryRowInСommitsList(0);
@@ -214,7 +217,7 @@ public class CommitFilesByMultiSelectTest {
     git.closeGitHistoryForm();
 
     // Add the 'file.css' and 'file.html' to index
-    projectExplorer.selectItem(PROJECT_NAME);
+    projectExplorer.waitAndSelectItem(PROJECT_NAME);
     menu.runCommand(TestMenuCommandsConstants.Git.GIT, TestMenuCommandsConstants.Git.ADD_TO_INDEX);
     loader.waitOnClosed();
     git.closeGitInfoPanel();
@@ -239,7 +242,7 @@ public class CommitFilesByMultiSelectTest {
     git.closeGitInfoPanel();
 
     // Perform the commit and add selected files
-    projectExplorer.selectItem(PROJECT_NAME + "/my-webapp/src/file.xml");
+    projectExplorer.waitAndSelectItem(PROJECT_NAME + "/my-webapp/src/file.xml");
     projectExplorer.selectMultiFilesByCtrlKeys(PROJECT_NAME + "/my-webapp/src/file.js");
     projectExplorer.selectMultiFilesByCtrlKeys(
         PROJECT_NAME + "/my-lib/src/test/java/hello/file.css");
@@ -253,7 +256,7 @@ public class CommitFilesByMultiSelectTest {
 
     // Check the git history
     projectExplorer.waitProjectExplorer();
-    projectExplorer.selectItem(PROJECT_NAME);
+    projectExplorer.waitAndSelectItem(PROJECT_NAME);
     menu.runCommand(TestMenuCommandsConstants.Git.GIT, TestMenuCommandsConstants.Git.SHOW_HISTORY);
     git.waitHistoryFormToOpen();
     git.waitCommitInHistoryForm(COMMIT_MESSAGE_2);

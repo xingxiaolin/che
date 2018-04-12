@@ -19,6 +19,9 @@ import {CheRemote} from '../../../../../components/api/remote/che-remote.factory
  * @author Florent Benoit
  */
 export class ExportWorkspaceDialogController {
+
+  static $inject = ['$q', '$filter', 'lodash', 'cheRemote', 'cheNotification', '$mdDialog', '$log', '$window', '$scope'];
+
   private $q: ng.IQService;
   private $filter: ng.IFilterService;
   private cheNotification: CheNotification;
@@ -26,7 +29,7 @@ export class ExportWorkspaceDialogController {
   private $mdDialog: ng.material.IDialogService;
   private cheRemote: CheRemote;
   private $window: ng.IWindowService;
-  private lodash: _.LoDashStatic;
+  private lodash: any;
 
   private editorOptions: any;
   private destination: string;
@@ -40,14 +43,18 @@ export class ExportWorkspaceDialogController {
   private workspaceDetails: any;
   private exportInCloudSteps: string;
 
-
   /**
    * Default constructor that is using resource
-   * @ngInject for Dependency injection
    */
-  constructor($q: ng.IQService, $filter: ng.IFilterService, lodash: _.LoDashStatic, cheRemote: CheRemote,
-              cheNotification: CheNotification, $mdDialog: ng.material.IDialogService, $log: ng.ILogService,
-              $window: ng.IWindowService, $scope: ng.IScope) {
+  constructor($q: ng.IQService,
+              $filter: ng.IFilterService,
+              lodash: any,
+              cheRemote: CheRemote,
+              cheNotification: CheNotification,
+              $mdDialog: ng.material.IDialogService,
+              $log: ng.ILogService,
+              $window: ng.IWindowService,
+              $scope: ng.IScope) {
     this.$q = $q;
     this.$filter = $filter;
     this.lodash = lodash;
@@ -72,7 +79,7 @@ export class ExportWorkspaceDialogController {
     this.copyOfConfig = this.getCopyOfConfig();
     this.exportConfigContent = this.$filter('json')(angular.fromJson(this.copyOfConfig), 2);
 
-    $scope.selectedIndex = this.destination === 'file' ? 0 : 1;
+    ($scope as any).selectedIndex = this.destination === 'file' ? 0 : 1;
   }
 
   /**
@@ -101,7 +108,7 @@ export class ExportWorkspaceDialogController {
   removeLinks(object: any) {
     delete object.links;
 
-    return this.lodash.forEach(object, (value) => {
+    return this.lodash.forEach(object, (value: any) => {
       if (angular.isObject(value)) {
         return this.removeLinks(value);
       } else {

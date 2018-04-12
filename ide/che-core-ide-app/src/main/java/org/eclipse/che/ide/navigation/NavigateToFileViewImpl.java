@@ -10,8 +10,6 @@
  */
 package org.eclipse.che.ide.navigation;
 
-import static com.google.gwt.event.dom.client.KeyCodes.KEY_BACKSPACE;
-import static com.google.gwt.event.dom.client.KeyCodes.KEY_DELETE;
 import static com.google.gwt.event.dom.client.KeyCodes.KEY_DOWN;
 import static com.google.gwt.event.dom.client.KeyCodes.KEY_ENTER;
 import static com.google.gwt.event.dom.client.KeyCodes.KEY_ESCAPE;
@@ -19,6 +17,7 @@ import static com.google.gwt.event.dom.client.KeyCodes.KEY_PAGEDOWN;
 import static com.google.gwt.event.dom.client.KeyCodes.KEY_PAGEUP;
 import static com.google.gwt.event.dom.client.KeyCodes.KEY_UP;
 
+import com.google.common.base.Strings;
 import com.google.gwt.dom.client.Style;
 import com.google.gwt.event.dom.client.KeyDownEvent;
 import com.google.gwt.event.shared.HandlerRegistration;
@@ -38,6 +37,7 @@ import com.google.inject.Singleton;
 import elemental.dom.Element;
 import elemental.html.TableCellElement;
 import elemental.html.TableElement;
+import java.util.Collections;
 import java.util.List;
 import org.eclipse.che.api.project.shared.dto.SearchResultDto;
 import org.eclipse.che.ide.CoreLocalizationConstant;
@@ -88,6 +88,8 @@ public class NavigateToFileViewImpl extends PopupPanel implements NavigateToFile
   @UiField Styles style;
 
   private HandlerRegistration resizeHandler;
+
+  private String previosFileName;
 
   @Inject
   public NavigateToFileViewImpl(
@@ -213,6 +215,9 @@ public class NavigateToFileViewImpl extends PopupPanel implements NavigateToFile
     // Create and show list of items
     final TableElement itemHolder = Elements.createTableElement();
     suggestionsContainer.getElement().appendChild(((com.google.gwt.dom.client.Element) itemHolder));
+    if (list != null) {
+      list.asWidget().removeFromParent();
+    }
     list =
         SimpleList.create(
             suggestionsContainer.getElement().cast(),
@@ -338,12 +343,12 @@ public class NavigateToFileViewImpl extends PopupPanel implements NavigateToFile
           @Override
           public void run() {
             String fileName = NavigateToFileViewImpl.this.fileName.getText();
-            // Skip handling non letter characters.
-            if (nativeKeyCode == KEY_BACKSPACE
-                || nativeKeyCode == KEY_DELETE
-                || fileName
-                    .toLowerCase()
-                    .contains(String.valueOf((char) nativeKeyCode).toLowerCase())) {
+            if (Strings.isNullOrEmpty(fileName)) {
+              showItems(Collections.emptyList());
+              return;
+            }
+            if (!fileName.equalsIgnoreCase(previosFileName)) {
+              previosFileName = fileName;
               delegate.onFileNameChanged(fileName);
             }
           }

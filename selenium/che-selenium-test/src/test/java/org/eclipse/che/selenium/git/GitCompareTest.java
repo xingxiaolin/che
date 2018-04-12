@@ -10,12 +10,10 @@
  */
 package org.eclipse.che.selenium.git;
 
-import static org.testng.Assert.fail;
-
 import com.google.inject.Inject;
 import com.google.inject.name.Named;
 import org.eclipse.che.commons.lang.NameGenerator;
-import org.eclipse.che.selenium.core.client.TestGitHubKeyUploader;
+import org.eclipse.che.selenium.core.TestGroup;
 import org.eclipse.che.selenium.core.client.TestUserPreferencesServiceClient;
 import org.eclipse.che.selenium.core.constant.TestGitConstants;
 import org.eclipse.che.selenium.core.constant.TestMenuCommandsConstants;
@@ -31,11 +29,11 @@ import org.eclipse.che.selenium.pageobject.ProjectExplorer;
 import org.eclipse.che.selenium.pageobject.WarningDialog;
 import org.eclipse.che.selenium.pageobject.Wizard;
 import org.eclipse.che.selenium.pageobject.git.Git;
-import org.openqa.selenium.WebDriverException;
 import org.testng.annotations.BeforeClass;
 import org.testng.annotations.Test;
 
 /** @author Aleksandr Shmaraev */
+@Test(groups = TestGroup.GITHUB)
 public class GitCompareTest {
   private static final String PROJECT_NAME = NameGenerator.generate("GitCompare_", 4);
   private static final String LEFT_COMPARE_ST = "Line 2 : Column 1";
@@ -49,7 +47,7 @@ public class GitCompareTest {
   @Inject private Ide ide;
   @Inject private TestUser productUser;
 
-  @Inject
+  @Inject(optional = true)
   @Named("github.username")
   private String gitHubUsername;
 
@@ -62,11 +60,9 @@ public class GitCompareTest {
   @Inject private AskDialog askDialog;
   @Inject private WarningDialog warningDialog;
   @Inject private TestUserPreferencesServiceClient testUserPreferencesServiceClient;
-  @Inject private TestGitHubKeyUploader testGitHubKeyUploader;
 
   @BeforeClass
   public void prepare() throws Exception {
-    testGitHubKeyUploader.updateGithubKey();
     testUserPreferencesServiceClient.addGitCommitter(gitHubUsername, productUser.getEmail());
 
     ide.open(ws);
@@ -95,7 +91,7 @@ public class GitCompareTest {
     editor.waitTextIntoEditor("// <<< checking compare content >>>");
 
     // check the 'git compare' with the latest repository version
-    projectExplorer.selectItem(PROJECT_NAME);
+    projectExplorer.waitAndSelectItem(PROJECT_NAME);
     menu.runCommand(
         TestMenuCommandsConstants.Git.GIT,
         TestMenuCommandsConstants.Git.Compare.COMPARE_TOP,
@@ -111,7 +107,7 @@ public class GitCompareTest {
     git.closeGroupGitCompareForm();
 
     // check git compare after adding and deleting java class
-    projectExplorer.selectItem(PROJECT_NAME + "/src/main/java/com/codenvy/example/spring");
+    projectExplorer.waitAndSelectItem(PROJECT_NAME + "/src/main/java/com/codenvy/example/spring");
     menu.runCommand(
         TestMenuCommandsConstants.Project.PROJECT,
         TestMenuCommandsConstants.Project.New.NEW,
@@ -122,12 +118,12 @@ public class GitCompareTest {
     askForValueDialog.clickOkBtnNewJavaClass();
     askForValueDialog.waitNewJavaClassClose();
     projectExplorer.waitItem(PROJECT_NAME + "/src/main/java/com/codenvy/example/spring/A.java");
-    projectExplorer.selectItem(PROJECT_NAME);
+    projectExplorer.waitAndSelectItem(PROJECT_NAME);
     menu.runCommand(TestMenuCommandsConstants.Git.GIT, TestMenuCommandsConstants.Git.ADD_TO_INDEX);
     git.waitAddToIndexFormToOpen();
     git.confirmAddToIndexForm();
     git.waitGitStatusBarWithMess(TestGitConstants.GIT_ADD_TO_INDEX_SUCCESS);
-    projectExplorer.selectItem(PROJECT_NAME);
+    projectExplorer.waitAndSelectItem(PROJECT_NAME);
     menu.runCommand(
         TestMenuCommandsConstants.Git.GIT,
         TestMenuCommandsConstants.Git.Compare.COMPARE_TOP,
@@ -136,13 +132,13 @@ public class GitCompareTest {
     git.waitGroupGitCompareIsOpen();
     git.waitExpTextInGroupGitCompare(TEXT_GROUP);
     git.closeGroupGitCompareForm();
-    projectExplorer.selectItem(
+    projectExplorer.waitAndSelectItem(
         PROJECT_NAME + "/src/main/java/com/codenvy/example/spring/HelloWorld.java");
     menu.runCommand(TestMenuCommandsConstants.Edit.EDIT, TestMenuCommandsConstants.Edit.DELETE);
     loader.waitOnClosed();
     acceptDialogWithText("Delete file \"HelloWorld.java\"?");
     loader.waitOnClosed();
-    projectExplorer.selectItem(PROJECT_NAME);
+    projectExplorer.waitAndSelectItem(PROJECT_NAME);
     menu.runCommand(
         TestMenuCommandsConstants.Git.GIT,
         TestMenuCommandsConstants.Git.Compare.COMPARE_TOP,
@@ -168,14 +164,14 @@ public class GitCompareTest {
     editor.waitTextIntoEditor("//***che***codenvy***");
 
     // check the 'git compare' after commit
-    projectExplorer.selectItem(PROJECT_NAME);
+    projectExplorer.waitAndSelectItem(PROJECT_NAME);
     menu.runCommand(TestMenuCommandsConstants.Git.GIT, TestMenuCommandsConstants.Git.ADD_TO_INDEX);
     git.waitGitStatusBarWithMess(TestGitConstants.GIT_ADD_TO_INDEX_SUCCESS);
     menu.runCommand(TestMenuCommandsConstants.Git.GIT, TestMenuCommandsConstants.Git.COMMIT);
     git.waitAndRunCommit("Update Java class");
     git.waitGitStatusBarWithMess(TestGitConstants.COMMIT_MESSAGE_SUCCESS);
     loader.waitOnClosed();
-    projectExplorer.selectItem(
+    projectExplorer.waitAndSelectItem(
         PROJECT_NAME + "/src/main/java/com/codenvy/example/spring/GreetingController.java");
     menu.runCommand(
         TestMenuCommandsConstants.Git.GIT,
@@ -194,7 +190,7 @@ public class GitCompareTest {
         TestMenuCommandsConstants.Git.Compare.COMPARE_WITH_BRANCH);
     git.waitGitCompareBranchFormIsOpen();
     git.selectBranchIntoGitCompareBranchForm("newbranch");
-    clickOnCompareBranchFormButton();
+    git.clickOnCompareBranchFormButton();
     loader.waitOnClosed();
     git.waitGitCompareFormIsOpen();
     git.waitExpTextIntoCompareLeftEditor("// <<< checking compare content >>>");
@@ -209,7 +205,7 @@ public class GitCompareTest {
         TestMenuCommandsConstants.Git.Compare.COMPARE_WITH_BRANCH);
     git.waitGitCompareBranchFormIsOpen();
     git.selectBranchIntoGitCompareBranchForm("origin/master");
-    clickOnCompareBranchFormButton();
+    git.clickOnCompareBranchFormButton();
     loader.waitOnClosed();
     git.waitGitCompareFormIsOpen();
     git.waitExpTextIntoCompareLeftEditor("// <<< checking compare content >>>");
@@ -218,7 +214,7 @@ public class GitCompareTest {
 
     // check the 'git compare' for revision
     projectExplorer.waitProjectExplorer();
-    projectExplorer.selectItem(
+    projectExplorer.waitAndSelectItem(
         PROJECT_NAME + "/src/main/java/com/codenvy/example/spring/GreetingController.java");
     menu.runCommand(
         TestMenuCommandsConstants.Git.GIT,
@@ -242,7 +238,7 @@ public class GitCompareTest {
   }
 
   private void createBranch() {
-    projectExplorer.selectItem(PROJECT_NAME);
+    projectExplorer.waitAndSelectItem(PROJECT_NAME);
     menu.runCommand(TestMenuCommandsConstants.Git.GIT, TestMenuCommandsConstants.Git.BRANCHES);
     git.waitBranchInTheList("master");
     git.waitDisappearBranchName("newbranch");
@@ -258,14 +254,5 @@ public class GitCompareTest {
     askDialog.containsText(expectedText);
     askDialog.clickOkBtn();
     loader.waitOnClosed();
-  }
-
-  private void clickOnCompareBranchFormButton() {
-    try {
-      git.clickOnCompareBranchFormButton();
-    } catch (WebDriverException ex) {
-      // remove try-catch block after issue has been resolved
-      fail("Known issue https://github.com/eclipse/che/issues/7887", ex);
-    }
   }
 }

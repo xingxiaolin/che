@@ -23,8 +23,11 @@ interface IServerListItem extends IEnvironmentManagerMachineServer {
  * @author Oleksii Kurinnyi
  */
 export class ListServersController {
+
+  static $inject = ['$mdDialog', 'lodash', 'confirmDialogService'];
+
   $mdDialog: ng.material.IDialogService;
-  lodash: _.LoDashStatic;
+  lodash: any;
 
   isNoSelected: boolean = true;
   isBulkChecked: boolean = false;
@@ -44,9 +47,10 @@ export class ListServersController {
 
   /**
    * Default constructor that is using resource
-   * @ngInject for Dependency injection
    */
-  constructor($mdDialog: ng.material.IDialogService, lodash: _.LoDashStatic, confirmDialogService: ConfirmDialogService) {
+  constructor($mdDialog: ng.material.IDialogService,
+              lodash: any,
+              confirmDialogService: ConfirmDialogService) {
     this.$mdDialog = $mdDialog;
     this.lodash = lodash;
     this.confirmDialogService = confirmDialogService;

@@ -19,6 +19,8 @@ import {CheUIElementsInjectorService} from '../../components/service/injector/ch
  * @author Florent Benoit
  */
 class IdeSvc {
+  static $inject = ['$location', '$log', '$mdDialog', '$q', '$rootScope', '$sce', '$timeout', 'cheAPI', 'cheWorkspace', 'lodash', 'proxySettings', 'routeHistory', 'userDashboardConfig', 'cheUIElementsInjectorService'];
+
   $location: ng.ILocationService;
   $log: ng.ILogService;
   $mdDialog: ng.material.IDialogService;
@@ -42,7 +44,6 @@ class IdeSvc {
 
   /**
    * Default constructor that is using resource
-   * @ngInject for Dependency injection
    */
   constructor($location: ng.ILocationService, $log: ng.ILogService, $mdDialog: ng.material.IDialogService,
               $q: ng.IQService, $rootScope: ng.IRootScopeService, $sce: ng.ISCEService, $timeout: ng.ITimeoutService,
@@ -140,11 +141,11 @@ class IdeSvc {
     let inDevMode = this.userDashboardConfig.developmentMode;
     let randVal = Math.floor((Math.random() * 1000000) + 1);
     let appendUrl = '?uid=' + randVal;
-
     let workspace = this.cheWorkspace.getWorkspaceById(workspaceId);
     this.openedWorkspace = workspace;
 
-    let ideUrlLink = workspace.links.ide;
+    let workspaceLoaderUrl = this.cheWorkspace.getWorkspaceLoaderUrl(workspace.namespace, workspace.config.name);
+    let ideUrlLink = workspaceLoaderUrl || workspace.links.ide;
 
     if (this.ideAction != null) {
       appendUrl = appendUrl + '&action=' + this.ideAction;

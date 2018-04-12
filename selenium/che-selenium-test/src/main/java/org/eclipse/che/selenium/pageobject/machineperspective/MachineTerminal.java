@@ -11,6 +11,7 @@
 package org.eclipse.che.selenium.pageobject.machineperspective;
 
 import static java.lang.String.format;
+import static org.eclipse.che.selenium.core.constant.TestCommandsConstants.CUSTOM;
 import static org.eclipse.che.selenium.core.constant.TestTimeoutsConstants.LOADER_TIMEOUT_SEC;
 import static org.eclipse.che.selenium.core.constant.TestTimeoutsConstants.REDRAW_UI_ELEMENTS_TIMEOUT_SEC;
 import static org.openqa.selenium.support.ui.ExpectedConditions.elementToBeClickable;
@@ -22,8 +23,12 @@ import com.google.inject.Inject;
 import com.google.inject.Singleton;
 import org.eclipse.che.selenium.core.SeleniumWebDriver;
 import org.eclipse.che.selenium.core.action.ActionsFactory;
+import org.eclipse.che.selenium.core.client.TestCommandServiceClient;
 import org.eclipse.che.selenium.core.utils.WaitUtils;
+import org.eclipse.che.selenium.core.workspace.TestWorkspace;
+import org.eclipse.che.selenium.pageobject.Consoles;
 import org.eclipse.che.selenium.pageobject.Loader;
+import org.eclipse.che.selenium.pageobject.intelligent.CommandsPalette;
 import org.openqa.selenium.By;
 import org.openqa.selenium.Keys;
 import org.openqa.selenium.WebDriver;
@@ -32,20 +37,33 @@ import org.openqa.selenium.support.FindBy;
 import org.openqa.selenium.support.PageFactory;
 import org.openqa.selenium.support.ui.ExpectedCondition;
 import org.openqa.selenium.support.ui.WebDriverWait;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 @Singleton
 public class MachineTerminal {
-
+  private static final Logger LOG = LoggerFactory.getLogger(MachineTerminal.class);
   private final SeleniumWebDriver seleniumWebDriver;
   private final Loader loader;
   private final ActionsFactory actionsFactory;
+  private final CommandsPalette commandsPalette;
+  private final TestCommandServiceClient commandServiceClient;
+  private final Consoles consoles;
 
   @Inject
   public MachineTerminal(
-      SeleniumWebDriver seleniumWebDriver, Loader loader, ActionsFactory actionsFactory) {
+      SeleniumWebDriver seleniumWebDriver,
+      Loader loader,
+      ActionsFactory actionsFactory,
+      CommandsPalette commandsPalette,
+      TestCommandServiceClient commandServiceClient,
+      Consoles consoles) {
     this.seleniumWebDriver = seleniumWebDriver;
     this.loader = loader;
     this.actionsFactory = actionsFactory;
+    this.commandsPalette = commandsPalette;
+    this.commandServiceClient = commandServiceClient;
+    this.consoles = consoles;
     PageFactory.initElements(seleniumWebDriver, this);
   }
 
@@ -298,5 +316,26 @@ public class MachineTerminal {
     return terminalNumber == 1
         ? format(Locators.TERMINAL_TAB_XPATH, "")
         : format(Locators.TERMINAL_TAB_XPATH, "-" + terminalNumber);
+  }
+
+  // TODO should be removed after fixing: https://github.com/eclipse/che/issues/8105
+  // this auxiliary method for investigate problem that was described in the issue:
+  // https://github.com/eclipse/che/issues/8105
+  public void logApplicationInfo(String projectName, TestWorkspace ws) {
+    try {
+      String getApplicationInfoCommand = format("ps -up $(pgrep -f \"%s\" | head -1)", projectName);
+      String getApplicationInfoCommandName = "getApplicationInfo";
+
+      commandServiceClient.createCommand(
+          getApplicationInfoCommand, getApplicationInfoCommandName, CUSTOM, ws.getId());
+      seleniumWebDriver.navigate().refresh();
+      commandsPalette.openCommandPalette();
+      commandsPalette.startCommandByDoubleClick(getApplicationInfoCommandName);
+
+      String applicationInfo = consoles.getVisibleTextFromCommandConsole();
+      LOG.warn("@@@ Web application info: {}", applicationInfo);
+    } catch (Exception ex) {
+      LOG.error("@@@ Cannot catch the info about application.", ex);
+    }
   }
 }

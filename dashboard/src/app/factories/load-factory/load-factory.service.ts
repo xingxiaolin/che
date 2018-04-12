@@ -21,7 +21,6 @@ export class LoadFactoryService {
 
   /**
    * Default constructor that is using resource
-   * @ngInject for Dependency injection
    */
   constructor () {
     this.loadFactoryInProgress = false;
@@ -90,7 +89,7 @@ export class LoadFactoryService {
    * Reset the loading progress.
    */
   resetLoadProgress(): void {
-    this.loadingSteps.forEach((step) => {
+    this.loadingSteps.forEach((step: any) => {
       step.logs = '';
     step.hasError = false;
   });

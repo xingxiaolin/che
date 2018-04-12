@@ -16,6 +16,9 @@ import {WorkspaceStatus} from '../../../../../../components/api/workspace/che-wo
 import {CheWorkspaceAgent} from '../../../../../../components/api/che-workspace-agent';
 
 export class ProjectRepositoryController {
+
+  static $inject = ['$route', 'cheAPI', 'lodash'];
+
   private cheAPI: CheAPI;
   private lodash: any;
 
@@ -27,7 +30,6 @@ export class ProjectRepositoryController {
 
   /**
    * Controller for the project local repository and remote repositories details
-   * @ngInject for Dependency injection
    * @author Oleksii Orel
    */
   constructor($route: ng.route.IRouteService,
@@ -70,7 +72,7 @@ export class ProjectRepositoryController {
     }
 
     if (projectDetails.mixins.indexOf(subversionMixinId) !== -1) {
-      //update remote svn url
+      // update remote svn url
       if (!this.wsagent.getSvn().getRemoteUrlByKey(projectDetails.workspaceId, projectDetails.path)) {
         const promise = this.wsagent.getSvn().fetchRemoteUrl(projectDetails.workspaceId, projectDetails.path);
 
@@ -83,7 +85,7 @@ export class ProjectRepositoryController {
     }
 
     if (projectDetails.mixins.indexOf(gitMixinId) !== -1) {
-      //update git local url
+      // update git local url
       if (!this.wsagent.getGit().getLocalUrlByKey(projectDetails.path)) {
         const promise = this.wsagent.getGit().fetchLocalUrl(projectDetails.path);
 
@@ -94,7 +96,7 @@ export class ProjectRepositoryController {
         this.localGitRepository = this.wsagent.getGit().getLocalUrlByKey(projectDetails.path);
       }
 
-      //update git remote urls
+      // update git remote urls
       if (!this.wsagent.getGit().getRemoteUrlArrayByKey(projectDetails.path)) {
         const promise = this.wsagent.getGit().fetchRemoteUrlArray(projectDetails.path);
 

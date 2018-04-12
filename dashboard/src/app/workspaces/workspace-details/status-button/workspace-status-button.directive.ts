@@ -12,6 +12,7 @@
 import {CheWorkspace, WorkspaceStatus} from '../../../../components/api/workspace/che-workspace.factory';
 
 interface IWorkspaceStatusButtonScope extends ng.IScope {
+  buttonDisabled: boolean;
   isDisabled: boolean;
   showStopButton: boolean;
   workspaceStatus: string;
@@ -42,12 +43,16 @@ const STOPPING = WorkspaceStatus[WorkspaceStatus.STOPPING];
 
 
 export class CheWorkspaceStatusButton {
+
+  static $inject = ['cheWorkspace'];
+
   restrict = 'E';
   templateUrl = 'app/workspaces/workspace-details/status-button/workspace-status-button.html';
 
   // scope values
   scope = {
     workspaceStatus: '=',
+    buttonDisabled: '=',
     onRunWorkspace: '&',
     onStopWorkspace: '&'
   };
@@ -56,7 +61,6 @@ export class CheWorkspaceStatusButton {
 
   /**
    * Default constructor that is using resource
-   * @ngInject for Dependency injection
    */
   constructor(cheWorkspace: CheWorkspace) {
     this.cheWorkspace = cheWorkspace;

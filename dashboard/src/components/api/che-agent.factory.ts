@@ -20,6 +20,9 @@ interface IAgentsResource<T> extends ng.resource.IResourceClass<T> {
  * @author Ilya Buziuk
  */
 export class CheAgent {
+
+  static $inject = ['$resource', '$q'];
+
   private $resource: ng.resource.IResourceService;
   private $q: ng.IQService;
   private agentsMap: Map<string, che.IAgent> = new Map();
@@ -28,7 +31,6 @@ export class CheAgent {
 
   /**
    * Default constructor that is using resource
-   * @ngInject for Dependency injection
    */
   constructor($resource: ng.resource.IResourceService, $q: ng.IQService) {
     this.$resource = $resource;
@@ -55,12 +57,12 @@ export class CheAgent {
       // reset global list
       this.agents.length = 0;
 
-      agents.forEach((agent: che.IAgent[]) => {
+      agents.forEach((agent: che.IAgent) => {
         this.agents.push(agent);
       });
       defer.resolve(this.agents);
     }, (error: any) => {
-      if (error.status != 304) {
+      if (error.status !== 304) {
         defer.reject(error);
       } else {
         defer.resolve(this.agents);

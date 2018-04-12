@@ -14,25 +14,26 @@ import static org.eclipse.che.selenium.core.constant.TestStacksConstants.JAVA;
 import static org.eclipse.che.selenium.core.constant.TestTimeoutsConstants.ELEMENT_TIMEOUT_SEC;
 import static org.eclipse.che.selenium.pageobject.ProjectExplorer.FolderTypes.PROJECT_FOLDER;
 import static org.eclipse.che.selenium.pageobject.dashboard.ProjectSourcePage.Sources.GITHUB;
-import static org.testng.Assert.fail;
 import static org.testng.AssertJUnit.assertTrue;
 
 import com.google.inject.Inject;
 import com.google.inject.name.Named;
 import org.eclipse.che.commons.lang.NameGenerator;
 import org.eclipse.che.selenium.core.SeleniumWebDriver;
+import org.eclipse.che.selenium.core.TestGroup;
 import org.eclipse.che.selenium.core.client.TestWorkspaceServiceClient;
 import org.eclipse.che.selenium.core.user.TestUser;
+import org.eclipse.che.selenium.pageobject.Ide;
 import org.eclipse.che.selenium.pageobject.ProjectExplorer;
-import org.eclipse.che.selenium.pageobject.dashboard.CreateWorkspace;
 import org.eclipse.che.selenium.pageobject.dashboard.Dashboard;
+import org.eclipse.che.selenium.pageobject.dashboard.NewWorkspace;
 import org.eclipse.che.selenium.pageobject.dashboard.ProjectSourcePage;
 import org.eclipse.che.selenium.pageobject.dashboard.workspaces.Workspaces;
-import org.openqa.selenium.TimeoutException;
 import org.testng.annotations.AfterClass;
 import org.testng.annotations.BeforeClass;
 import org.testng.annotations.Test;
 
+@Test(groups = TestGroup.GITHUB)
 public class ImportProjectFromGitHubTest {
   private static final String WORKSPACE = NameGenerator.generate("ImtMvnPrjGitHub", 4);
   private static final String GITHUB_PROJECT_NAME = "AngularJS";
@@ -40,19 +41,20 @@ public class ImportProjectFromGitHubTest {
   private String projectName;
   private String ideWin;
 
-  @Inject
+  @Inject(optional = true)
   @Named("github.username")
   private String gitHubUsername;
 
-  @Inject
+  @Inject(optional = true)
   @Named("github.password")
   private String gitHubPassword;
 
+  @Inject private Ide ide;
   @Inject private Dashboard dashboard;
   @Inject private Workspaces workspaces;
   @Inject private TestUser defaultTestUser;
   @Inject private ProjectExplorer projectExplorer;
-  @Inject private CreateWorkspace createWorkspace;
+  @Inject private NewWorkspace newWorkspace;
   @Inject private ProjectSourcePage projectSourcePage;
   @Inject private SeleniumWebDriver seleniumWebDriver;
   @Inject private TestWorkspaceServiceClient workspaceServiceClient;
@@ -75,10 +77,10 @@ public class ImportProjectFromGitHubTest {
 
     dashboard.waitDashboardToolbarTitle();
     dashboard.selectWorkspacesItemOnDashboard();
-    workspaces.clickOnNewWorkspaceBtn();
-    createWorkspace.waitToolbar();
-    createWorkspace.selectStack(JAVA.getId());
-    createWorkspace.typeWorkspaceName(WORKSPACE);
+    workspaces.clickOnAddWorkspaceBtn();
+    newWorkspace.waitToolbar();
+    newWorkspace.selectStack(JAVA.getId());
+    newWorkspace.typeWorkspaceName(WORKSPACE);
 
     projectSourcePage.clickOnAddOrImportProjectButton();
     projectSourcePage.selectSourceTab(GITHUB);
@@ -90,26 +92,20 @@ public class ImportProjectFromGitHubTest {
     assertTrue(projectSourcePage.isGithubProjectsListDisplayed());
     projectSourcePage.selectProjectFromList(GITHUB_PROJECT_NAME);
     projectSourcePage.clickOnAddProjectButton();
-    createWorkspace.clickOnCreateWorkspaceButton();
+    newWorkspace.clickOnCreateButtonAndOpenInIDE();
 
     seleniumWebDriver.switchFromDashboardIframeToIde(ELEMENT_TIMEOUT_SEC);
 
-    projectExplorer.waitProjectExplorer();
+    ide.waitOpenedWorkspaceIsReadyToUse();
     projectExplorer.waitItem(projectName);
-    projectExplorer.waitFolderDefinedTypeOfFolderByPath(projectName, PROJECT_FOLDER);
+    projectExplorer.waitDefinedTypeOfFolder(projectName, PROJECT_FOLDER);
   }
 
   private void connectGithubAccount() {
     projectSourcePage.clickOnConnectGithubAccountButton();
     seleniumWebDriver.switchToNoneCurrentWindow(ideWin);
 
-    try {
-      projectSourcePage.waitAuthorizationPageOpened();
-    } catch (TimeoutException ex) {
-      // Remove try-catch block after issue has been resolved
-      fail("Known issue https://github.com/eclipse/che/issues/8250");
-    }
-
+    projectSourcePage.waitAuthorizationPageOpened();
     projectSourcePage.typeLogin(gitHubUsername);
     projectSourcePage.typePassword(gitHubPassword);
     projectSourcePage.clickOnSignInButton();

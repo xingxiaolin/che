@@ -11,6 +11,9 @@
 package org.eclipse.che.selenium.miscellaneous;
 
 import static java.lang.String.valueOf;
+import static org.eclipse.che.selenium.pageobject.PanelSelector.PanelTypes.LEFT_BOTTOM;
+import static org.openqa.selenium.Keys.PAGE_DOWN;
+import static org.openqa.selenium.Keys.PAGE_UP;
 import static org.testng.Assert.fail;
 
 import com.google.inject.Inject;
@@ -21,10 +24,12 @@ import org.eclipse.che.selenium.core.client.TestProjectServiceClient;
 import org.eclipse.che.selenium.core.constant.TestBuildConstants;
 import org.eclipse.che.selenium.core.constant.TestTimeoutsConstants;
 import org.eclipse.che.selenium.core.project.ProjectTemplates;
+import org.eclipse.che.selenium.core.utils.WaitUtils;
 import org.eclipse.che.selenium.core.workspace.TestWorkspace;
 import org.eclipse.che.selenium.pageobject.Consoles;
 import org.eclipse.che.selenium.pageobject.Ide;
 import org.eclipse.che.selenium.pageobject.Loader;
+import org.eclipse.che.selenium.pageobject.PanelSelector;
 import org.eclipse.che.selenium.pageobject.ProjectExplorer;
 import org.eclipse.che.selenium.pageobject.machineperspective.MachineTerminal;
 import org.openqa.selenium.Keys;
@@ -40,7 +45,7 @@ import org.testng.annotations.Test;
  * @author Alexander Andrienko
  */
 public class WorkingWithTerminalTest {
-  private static final String PROJECT_NAME = NameGenerator.generate("SpringWebApp", 4);
+  private static final String PROJECT_NAME = NameGenerator.generate("project", 4);
   private static final Logger LOG = LoggerFactory.getLogger(WorkingWithTerminalTest.class);
 
   private static final String[] CHECK_MC_OPENING = {
@@ -54,7 +59,7 @@ public class WorkingWithTerminalTest {
   private static final String WAR_NAME = "qa-spring-sample-1.0-SNAPSHOT.war";
 
   private static final String BASH_SCRIPT =
-      "for i in `seq 1 10`; do sleep 5; echo \"test=$i\"; done";
+      "for i in `seq 1 10`; do sleep 3; echo \"test=$i\"; done";
 
   private static final String MC_HELP_DIALOG =
       "This is the main help screen for GNU Midnight Commander.";
@@ -68,6 +73,7 @@ public class WorkingWithTerminalTest {
   @Inject private MachineTerminal terminal;
   @Inject private Consoles consoles;
   @Inject private TestProjectServiceClient testProjectServiceClient;
+  @Inject private PanelSelector panelSelector;
 
   @BeforeClass
   public void setUp() throws Exception {
@@ -78,13 +84,14 @@ public class WorkingWithTerminalTest {
         PROJECT_NAME,
         ProjectTemplates.MAVEN_SPRING);
     ide.open(workspace);
+    ide.waitOpenedWorkspaceIsReadyToUse();
   }
 
   @BeforeMethod
   private void prepareNewTerminal() {
     try {
-      projectExplorer.waitProjectExplorer();
-      loader.waitOnClosed();
+      panelSelector.selectPanelTypeFromPanelSelector(LEFT_BOTTOM);
+
       projectExplorer.waitItem(PROJECT_NAME);
 
       if (terminal.terminalIsPresent()) {
@@ -92,7 +99,9 @@ public class WorkingWithTerminalTest {
         terminal.waitTerminalIsNotPresent(1);
       }
 
-      consoles.openNewTerminalIntoProcesses();
+      consoles.clickOnPlusMenuButton();
+      consoles.clickOnTerminalItemInContextMenu();
+
       terminal.selectTerminalTab();
       terminal.waitTerminalConsole();
       terminal.waitTerminalIsNotEmpty();
@@ -167,10 +176,18 @@ public class WorkingWithTerminalTest {
       fail("Known issue https://github.com/eclipse/che-lib/issues/57", ex);
     }
 
+    // check scrolling by the END and HOME buttons
     terminal.moveDownListTerminal(".dockerenv");
     terminal.waitExpectedTextIntoTerminal(".dockerenv");
-    terminal.movePageUpListTerminal("projects");
     terminal.moveUpListTerminal("bin");
+    terminal.waitExpectedTextIntoTerminal("bin");
+
+    // check scrolling by the Page Up and the Page Down buttons
+    terminal.typeIntoTerminal(PAGE_DOWN.toString());
+    terminal.typeIntoTerminal(PAGE_DOWN.toString());
+    terminal.waitExpectedTextIntoTerminal(".dockerenv");
+    terminal.typeIntoTerminal(PAGE_UP.toString());
+    terminal.typeIntoTerminal(PAGE_UP.toString());
     terminal.waitExpectedTextIntoTerminal("bin");
   }
 
@@ -194,8 +211,14 @@ public class WorkingWithTerminalTest {
 
     // check resize of the terminal
     for (String partOfContent : CHECK_MC_OPENING) {
-      terminal.waitExpectedTextIntoTerminal(partOfContent);
+      try {
+        terminal.waitExpectedTextIntoTerminal(partOfContent);
+      } catch (TimeoutException ex) {
+        // remove try-catch block after issue has been resolved
+        fail("Known issue https://github.com/eclipse/che-lib/issues/57");
+      }
     }
+
     terminal.waitExpectedTextIntoTerminal(".dockerenv");
     consoles.clickOnMaximizePanelIcon();
     loader.waitOnClosed();
@@ -258,9 +281,15 @@ public class WorkingWithTerminalTest {
     // cancel script
     terminal.typeIntoTerminal(Keys.CONTROL + "c");
 
-    // wait 1 sec. If process was really stopped we should not get text "test=2"
-    Thread.sleep(1000);
-    terminal.waitExpectedTextNotPresentTerminal("test=2");
+    // wait 3 sec. If process was really stopped we should not get text "test=2"
+    WaitUtils.sleepQuietly(3);
+
+    try {
+      terminal.waitExpectedTextNotPresentTerminal("test=2");
+    } catch (TimeoutException ex) {
+      // remove try-catch block after issue has been resolved
+      fail("Known issue https://github.com/eclipse/che/issues/8390");
+    }
   }
 
   @Test(priority = 7)

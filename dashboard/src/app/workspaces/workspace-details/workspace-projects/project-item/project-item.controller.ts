@@ -18,6 +18,9 @@ import {CheWorkspace} from '../../../../../components/api/workspace/che-workspac
  * @author Florent Benoit
  */
 export class ProjectItemCtrl {
+
+  static $inject = ['$location', 'cheWorkspace'];
+
   private $location: ng.ILocationService;
   private cheWorkspace: CheWorkspace;
 
@@ -26,7 +29,6 @@ export class ProjectItemCtrl {
 
   /**
    * Default constructor that is using resource
-   * @ngInject for Dependency injection
    */
   constructor($location: ng.ILocationService,
               cheWorkspace: CheWorkspace) {
@@ -35,7 +37,7 @@ export class ProjectItemCtrl {
   }
 
   redirectToProjectDetails(): void {
-    this.$location.path('/workspace/' + this.workspace.namespace + '/' + this.workspace.config.name + '/' + this.project.name);
+    this.$location.path('/project/' + this.workspace.namespace + '/' + this.workspace.config.name + '/' + this.project.name).search({});
   }
 
 }

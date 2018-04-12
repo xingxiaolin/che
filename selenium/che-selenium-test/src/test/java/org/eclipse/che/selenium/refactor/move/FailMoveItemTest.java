@@ -10,7 +10,7 @@
  */
 package org.eclipse.che.selenium.refactor.move;
 
-import static org.eclipse.che.selenium.pageobject.CodenvyEditor.MarkersType.ERROR_MARKER;
+import static org.eclipse.che.selenium.pageobject.CodenvyEditor.MarkerLocator.ERROR;
 
 import com.google.common.base.Joiner;
 import com.google.inject.Inject;
@@ -27,6 +27,7 @@ import org.eclipse.che.selenium.pageobject.Ide;
 import org.eclipse.che.selenium.pageobject.Loader;
 import org.eclipse.che.selenium.pageobject.ProjectExplorer;
 import org.eclipse.che.selenium.pageobject.Refactor;
+import org.eclipse.che.selenium.pageobject.machineperspective.MachineTerminal;
 import org.testng.annotations.AfterMethod;
 import org.testng.annotations.BeforeClass;
 import org.testng.annotations.Test;
@@ -42,6 +43,7 @@ public class FailMoveItemTest {
   @Inject private TestWorkspace workspace;
   @Inject private Ide ide;
   @Inject private ProjectExplorer projectExplorer;
+  @Inject private MachineTerminal terminal;
   @Inject private Loader loader;
   @Inject private CodenvyEditor editor;
   @Inject private Refactor refactor;
@@ -56,6 +58,8 @@ public class FailMoveItemTest {
         PROJECT_NAME,
         ProjectTemplates.MAVEN_SPRING);
     ide.open(workspace);
+    projectExplorer.waitProjectExplorer();
+    terminal.waitTerminalTab();
     projectExplorer.waitVisibleItem(PROJECT_NAME);
     projectExplorer.quickExpandWithJavaScript();
     loader.waitOnClosed();
@@ -75,7 +79,7 @@ public class FailMoveItemTest {
     projectExplorer.openItemByPath(pathToPackageInChePrefix + "/r/A17.java");
     editor.waitActive();
     editor.waitTextIntoEditor(contentFromInA);
-    projectExplorer.selectItem(pathToPackageInChePrefix + "/r/A17.java");
+    projectExplorer.waitAndSelectItem(pathToPackageInChePrefix + "/r/A17.java");
     projectExplorer.launchRefactorMoveByKeyboard();
     refactor.waitMoveItemFormIsOpen();
     refactor.clickOnExpandIconTree(PROJECT_NAME);
@@ -86,7 +90,7 @@ public class FailMoveItemTest {
     refactor.waitMoveItemFormIsClosed();
     editor.waitTextIntoEditor(contentFromOutA);
     editor.clickOnSelectedElementInEditor("r.A17");
-    editor.waitMarkerInPosition(ERROR_MARKER, 14);
+    editor.waitMarkerInPosition(ERROR, 14);
     projectExplorer.waitDisappearItemByPath(pathToPackageInChePrefix + "/r/A17.java");
     editor.closeFileByNameWithSaving("A17");
   }

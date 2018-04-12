@@ -15,9 +15,11 @@ import static org.testng.Assert.fail;
 import com.google.inject.Inject;
 import java.net.URL;
 import java.nio.file.Paths;
+import org.eclipse.che.api.core.rest.HttpJsonRequestFactory;
 import org.eclipse.che.selenium.core.client.TestProjectServiceClient;
 import org.eclipse.che.selenium.core.constant.TestMenuCommandsConstants;
 import org.eclipse.che.selenium.core.project.ProjectTemplates;
+import org.eclipse.che.selenium.core.provider.TestApiEndpointUrlProvider;
 import org.eclipse.che.selenium.core.workspace.TestWorkspace;
 import org.eclipse.che.selenium.pageobject.AskForValueDialog;
 import org.eclipse.che.selenium.pageobject.CodenvyEditor;
@@ -33,7 +35,6 @@ import org.testng.annotations.Test;
  * @author Andrey Chizhikov
  */
 public class CreateNewPackagesWithHelpCreationJavaClassTest {
-
   private static final String PROJECT_NAME =
       CreateNewPackagesWithHelpCreationJavaClassTest.class.getSimpleName();
   private static final String NEW_PACKAGE_NAME1 = "tu";
@@ -48,6 +49,8 @@ public class CreateNewPackagesWithHelpCreationJavaClassTest {
   @Inject private Menu menu;
   @Inject private AskForValueDialog askForValueDialog;
   @Inject private TestProjectServiceClient testProjectServiceClient;
+  @Inject private HttpJsonRequestFactory httpJsonRequestFactory;
+  @Inject private TestApiEndpointUrlProvider testApiEndpointUrlProvider;
 
   @BeforeClass
   public void setUp() throws Exception {
@@ -63,8 +66,8 @@ public class CreateNewPackagesWithHelpCreationJavaClassTest {
   @Test
   public void createNewPackageFromContextMenuTest() throws Exception {
     projectExplorer.waitItem(PROJECT_NAME);
-    projectExplorer.quickExpandWithJavaScript();
-    projectExplorer.selectItem(PROJECT_NAME + "/src/main/java");
+    projectExplorer.expandPathInProjectExplorer(PROJECT_NAME + "/src/main/java");
+    projectExplorer.waitAndSelectItem(PROJECT_NAME + "/src/main/java");
     menu.runCommand(
         TestMenuCommandsConstants.Project.PROJECT,
         TestMenuCommandsConstants.Project.New.NEW,
@@ -78,7 +81,7 @@ public class CreateNewPackagesWithHelpCreationJavaClassTest {
 
     projectExplorer.waitItem(PROJECT_NAME + "/src/main/java/tu/TestClass1.java");
 
-    projectExplorer.selectItem(PROJECT_NAME + "/src/main/java");
+    projectExplorer.waitAndSelectItem(PROJECT_NAME + "/src/main/java");
     menu.runCommand(
         TestMenuCommandsConstants.Project.PROJECT,
         TestMenuCommandsConstants.Project.New.NEW,
@@ -92,7 +95,7 @@ public class CreateNewPackagesWithHelpCreationJavaClassTest {
     projectExplorer.waitItem(PROJECT_NAME + "/src/main/java/test/ua");
 
     try {
-      projectExplorer.waitItemInVisibleArea("TestClass2.java");
+      projectExplorer.waitVisibilityByName("TestClass2.java");
     } catch (TimeoutException ex) {
       // remove try-catch block after issue has been resolved
       fail("Known issue https://github.com/eclipse/che/issues/8122");

@@ -48,7 +48,7 @@ public class DockerBootstrapper extends AbstractBootstrapper {
   private final String machineName;
   private final RuntimeIdentity runtimeIdentity;
   private final DockerMachine dockerMachine;
-  private final List<Installer> installers;
+  private final List<? extends Installer> installers;
   private final int serverCheckPeriodSeconds;
   private final int installerTimeoutSeconds;
 
@@ -57,20 +57,14 @@ public class DockerBootstrapper extends AbstractBootstrapper {
       @Assisted String machineName,
       @Assisted RuntimeIdentity runtimeIdentity,
       @Assisted DockerMachine dockerMachine,
-      @Assisted List<Installer> installers,
+      @Assisted List<? extends Installer> installers,
       EventService eventService,
       @Named("che.infra.docker.master_websocket_endpoint") String cheWebsocketEndpoint,
       @Named("che.infra.docker.bootstrapper.timeout_min") int bootstrappingTimeoutMinutes,
       @Named("che.infra.docker.bootstrapper.installer_timeout_sec") int installerTimeoutSeconds,
       @Named("che.infra.docker.bootstrapper.server_check_period_sec")
           int serverCheckPeriodSeconds) {
-    super(
-        machineName,
-        runtimeIdentity,
-        bootstrappingTimeoutMinutes,
-        cheWebsocketEndpoint,
-        cheWebsocketEndpoint,
-        eventService);
+    super(machineName, runtimeIdentity, cheWebsocketEndpoint, cheWebsocketEndpoint, eventService);
     this.machineName = machineName;
     this.runtimeIdentity = runtimeIdentity;
     this.dockerMachine = dockerMachine;
@@ -92,10 +86,11 @@ public class DockerBootstrapper extends AbstractBootstrapper {
             + machineName
             + " -runtime-id "
             + String.format(
-                "%s:%s:%s",
+                "%s:%s:%s:%s",
                 runtimeIdentity.getWorkspaceId(),
                 runtimeIdentity.getEnvName(),
-                runtimeIdentity.getOwner())
+                runtimeIdentity.getOwnerName(),
+                runtimeIdentity.getOwnerId())
             + " -push-endpoint "
             + installerWebsocketEndpoint
             + " -push-logs-endpoint "

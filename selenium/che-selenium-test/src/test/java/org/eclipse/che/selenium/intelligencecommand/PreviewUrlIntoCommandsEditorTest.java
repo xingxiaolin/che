@@ -13,7 +13,7 @@ package org.eclipse.che.selenium.intelligencecommand;
 import static org.eclipse.che.selenium.core.constant.TestIntelligentCommandsConstants.CommandsDefaultNames.MAVEN_NAME;
 import static org.eclipse.che.selenium.core.constant.TestIntelligentCommandsConstants.CommandsGoals.COMMON_GOAL;
 import static org.eclipse.che.selenium.core.constant.TestIntelligentCommandsConstants.CommandsTypes.MAVEN_TYPE;
-import static org.eclipse.che.selenium.pageobject.intelligent.CommandsEditor.CommandsEditorType.PREVIEW_URL_EDITOR;
+import static org.eclipse.che.selenium.pageobject.intelligent.CommandsEditor.CommandsEditorLocator.PREVIEW_URL_EDITOR;
 
 import com.google.inject.Inject;
 import java.net.URL;
@@ -64,7 +64,7 @@ public class PreviewUrlIntoCommandsEditorTest {
   }
 
   @Test
-  public void checkSavePreviewUrlIntoCommand() throws InterruptedException {
+  public void checkSavePreviewUrlIntoCommand() {
     projectExplorer.waitProjectExplorer();
     projectExplorer.waitItem(PROJ_NAME);
     String currentWindow = seleniumWebDriver.getWindowHandle();

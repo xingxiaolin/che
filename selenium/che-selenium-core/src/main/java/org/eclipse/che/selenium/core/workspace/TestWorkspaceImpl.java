@@ -23,6 +23,7 @@ import org.eclipse.che.selenium.core.client.TestWorkspaceServiceClient;
 import org.eclipse.che.selenium.core.user.TestUser;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.testng.Assert;
 
 /** @author Anatolii Bazko */
 public class TestWorkspaceImpl implements TestWorkspace {
@@ -69,12 +70,14 @@ public class TestWorkspaceImpl implements TestWorkspace {
                 try {
                   workspaceServiceClient.delete(name, owner.getName());
                 } catch (Exception e1) {
-                  throw new IllegalStateException(
-                      format("Failed to remove workspace name='%s' when start is failed.", name),
-                      e);
+                  LOG.error("Failed to remove workspace name='{}' when start is failed.", name);
                 }
 
-                throw new IllegalStateException(errorMessage, e);
+                if (e instanceof IllegalStateException) {
+                  Assert.fail("Known issue https://github.com/eclipse/che/issues/8856", e);
+                } else {
+                  throw new IllegalStateException(errorMessage, e);
+                }
               }
             });
   }

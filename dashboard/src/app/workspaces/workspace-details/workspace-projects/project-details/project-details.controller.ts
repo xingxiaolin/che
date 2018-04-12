@@ -20,6 +20,9 @@ import {CheProject} from '../../../../../components/api/che-project';
  * @author Oleksii Orel
  */
 export class ProjectDetailsController {
+
+  static $inject = ['$scope', '$log', '$route', '$location', '$timeout', 'cheAPI', 'confirmDialogService', 'cheNotification', 'lodash'];
+
   private $log: ng.ILogService;
   private cheNotification: CheNotification;
   private cheAPI: CheAPI;
@@ -42,7 +45,6 @@ export class ProjectDetailsController {
 
   /**
    * Default constructor that is using resource injection
-   * @ngInject for Dependency injection
    */
   constructor($scope: ng.IScope,
               $log: ng.ILogService,
@@ -231,7 +233,7 @@ export class ProjectDetailsController {
        this.cheAPI.getWorkspace().fetchWorkspaceDetails(this.workspace.namespace + ':' + this.workspace.config.name).finally(() => {
          this.$location.path('/workspace/' + this.workspace.namespace + '/' + this.workspace.config.name).search({tab: 'Projects'});
        });
-      }, (error) => {
+      }, (error: any) => {
         this.$log.log('error', error);
       });
     });
@@ -243,7 +245,9 @@ export class ProjectDetailsController {
    */
   getWorkspaceProjects(): Array<che.IProject> {
     let projects = this.cheAPI.getWorkspace().getWorkspaceProjects()[this.workspace.id];
-    let _projects = this.lodash.filter(projects, (project) => { return project.name !== this.projectName});
+    let _projects = this.lodash.filter(projects, (project: che.IProject) => {
+      return project.name !== this.projectName;
+    });
     return _projects;
   }
 

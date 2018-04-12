@@ -23,6 +23,7 @@ import java.util.Map;
 import java.util.Set;
 import java.util.stream.Collectors;
 import org.eclipse.lsp4j.jsonrpc.messages.Either;
+import org.eclipse.lsp4j.jsonrpc.messages.Either3;
 
 /**
  * This class generates property conversion code from json properties to dto fields.
@@ -70,6 +71,8 @@ public class FromJsonGenerator extends ConversionGenerator {
       generateListConversion(indent, out, varName, valueAccess, paramType);
     } else if (Map.class.isAssignableFrom(getRawClass(paramType))) {
       generateMapConversion(indent, out, varName, valueAccess, paramType);
+    } else if (Either3.class.isAssignableFrom(getRawClass(paramType))) {
+      generateEither3Conversion(indent, out, varName, valueAccess, paramType);
     } else if (Either.class.isAssignableFrom(getRawClass(paramType))) {
       generateEitherConversion(indent, out, varName, valueAccess, paramType);
     } else {
@@ -84,16 +87,27 @@ public class FromJsonGenerator extends ConversionGenerator {
   }
 
   private void generateMapConversion(
-      String indent, PrintWriter out, String varName, String jsonValName, Type paramType) {
+      String indent, PrintWriter out, String varName, String jsonValName, Type inputParamType) {
+    Type paramType = inputParamType;
+    if (!(paramType instanceof ParameterizedType)) {
+      paramType = ((Class<?>) paramType).getGenericSuperclass();
+    }
     ParameterizedType genericType = (ParameterizedType) paramType;
     Type containedType = genericType.getActualTypeArguments()[1];
     String objectName = varName + "o";
     String containedName = objectName + "X";
+    String typeName = inputParamType.getTypeName();
+    String instantiateTypeName = typeName;
+    if (getRawClass(inputParamType).isInterface()) {
+      if (inputParamType instanceof ParameterizedType) {
+        instantiateTypeName = String.format("HashMap<String, %1$s>", containedType.getTypeName());
+      } else {
+        throw new RuntimeException(
+            "Unsupported Map Conversion. Generator needs to be updated for new LSP4J construct");
+      }
+    }
     out.println(
-        indent
-            + String.format(
-                "HashMap<String, %1$s> %2$s= new HashMap<String, %3$s>();",
-                containedType.getTypeName(), varName, containedType.getTypeName()));
+        indent + String.format("%1$s %2$s= new %3$s();", typeName, varName, instantiateTypeName));
     out.println(
         indent
             + String.format(
@@ -155,6 +169,50 @@ public class FromJsonGenerator extends ConversionGenerator {
       return "JsonDecision.STRING";
     }
     return "JsonDecision.OBJECT";
+  }
+
+  private void generateEither3Conversion(
+      String indent, PrintWriter out, String varName, String valueAccess, Type paramType) {
+    String innerName = varName + "e";
+
+    out.println(indent + String.format("%1$s %2$s;", paramType.getTypeName(), varName));
+    String firstDecisions = getJsonDecisions(EitherUtil.getFirstDisjointType(paramType));
+    String secondDecisions = getJsonDecisions(EitherUtil.getSecondDisjointType(paramType));
+    out.println(
+        indent
+            + String.format("if (EitherUtil.matches(%1$s, %2$s)) {", valueAccess, firstDecisions));
+
+    generateFromJson(
+        indent + INDENT, out, innerName, valueAccess, EitherUtil.getFirstDisjointType(paramType));
+
+    out.println(
+        indent + INDENT + String.format("%1$s= Either3.forFirst(%2$s);", varName, innerName));
+    out.println(
+        indent
+            + String.format(
+                "} else if (EitherUtil.matches(%1$s, %2$s)) {", valueAccess, secondDecisions));
+
+    generateFromJson(
+        indent + INDENT, out, innerName, valueAccess, EitherUtil.getSecondDisjointType(paramType));
+
+    out.println(
+        indent + INDENT + String.format("%1$s= Either3.forSecond(%2$s);", varName, innerName));
+    out.println(indent + "} else  {");
+
+    generateFromJson(
+        indent + INDENT, out, innerName, valueAccess, EitherUtil.getThirdDisjointType(paramType));
+    out.println(
+        indent + INDENT + String.format("%1$s= Either3.forThird(%2$s);", varName, innerName));
+    out.println(indent + "}");
+  }
+
+  private String getJsonDecisions(Type firstDisjointType) {
+    String decisionNames =
+        EitherUtil.getAllDisjoinTypes(firstDisjointType)
+            .stream()
+            .map(t -> getJsonDecision(getRawClass(t)))
+            .collect(Collectors.joining(","));
+    return String.format("new JsonDecision[] { %1$s }", decisionNames);
   }
 
   private void generateEitherConversion(
@@ -220,6 +278,8 @@ public class FromJsonGenerator extends ConversionGenerator {
   private Object primitiveCast(Class<? extends Number> t) {
     if (t == Integer.class) {
       return "int";
+    } else if (t == Number.class) {
+      return "Number";
     } else {
       return t.getSimpleName().toLowerCase();
     }

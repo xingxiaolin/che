@@ -49,6 +49,8 @@ public class ServersCheckerTest {
   private static final String MACHINE_NAME = "mach1";
   private static final String MACHINE_TOKEN = "machineToken";
   private static final String WORKSPACE_ID = "ws123";
+  private static final String USER_ID = "0000-0000-0007";
+  private static final int SERVER_PING_SUCCESS_THRESHOLD = 1;
 
   @Mock private Consumer<String> readinessHandler;
   @Mock private MachineTokenProvider machineTokenProvider;
@@ -64,19 +66,27 @@ public class ServersCheckerTest {
     servers = new HashMap<>();
     servers.putAll(
         ImmutableMap.of(
-            "wsagent/http", new ServerImpl().withUrl("http://localhost"),
-            "exec-agent/http", new ServerImpl().withUrl("http://localhost"),
-            "terminal", new ServerImpl().withUrl("http://localhost")));
+            "wsagent/http", new ServerImpl().withUrl("http://localhost/api"),
+            "exec-agent/http", new ServerImpl().withUrl("http://localhost/exec-agent/process"),
+            "terminal", new ServerImpl().withUrl("http://localhost/terminal/pty")));
 
     compFuture = new CompletableFuture<>();
 
     when(connectionChecker.getReportCompFuture()).thenReturn(compFuture);
 
     when(runtimeIdentity.getWorkspaceId()).thenReturn(WORKSPACE_ID);
+    when(runtimeIdentity.getOwnerId()).thenReturn(USER_ID);
 
-    checker = spy(new ServersChecker(runtimeIdentity, MACHINE_NAME, servers, machineTokenProvider));
+    checker =
+        spy(
+            new ServersChecker(
+                runtimeIdentity,
+                MACHINE_NAME,
+                servers,
+                machineTokenProvider,
+                SERVER_PING_SUCCESS_THRESHOLD));
     when(checker.doCreateChecker(any(URL.class), anyString())).thenReturn(connectionChecker);
-    when(machineTokenProvider.getToken(anyString())).thenReturn(MACHINE_TOKEN);
+    when(machineTokenProvider.getToken(anyString(), anyString())).thenReturn(MACHINE_TOKEN);
   }
 
   @AfterMethod(timeOut = 1000)
@@ -95,7 +105,7 @@ public class ServersCheckerTest {
     checker.startAsync(readinessHandler);
     connectionChecker.getReportCompFuture().complete("wsagent/http");
 
-    verify(machineTokenProvider).getToken(WORKSPACE_ID);
+    verify(machineTokenProvider).getToken(USER_ID, WORKSPACE_ID);
     ArgumentCaptor<URL> urlCaptor = ArgumentCaptor.forClass(URL.class);
     verify(checker).doCreateChecker(urlCaptor.capture(), eq("wsagent/http"));
     URL urlToCheck = urlCaptor.getValue();

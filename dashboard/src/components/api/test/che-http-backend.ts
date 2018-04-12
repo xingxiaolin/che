@@ -16,6 +16,8 @@ import {CheAPIBuilder} from '../builder/che-api-builder.factory';
  * @author Florent Benoit
  */
 export class CheHttpBackend {
+  static $inject = ['$httpBackend', 'cheAPIBuilder'];
+
   private $httpBackend: ng.IHttpBackendService;
   private projectsPerWorkspace: Map<string, any>;
   private workspaces: Map<string, any>;
@@ -91,6 +93,7 @@ export class CheHttpBackend {
     this.$httpBackend.when('GET', '/api/').respond(200, {rootResources: []});
 
     this.$httpBackend.when('GET', '/api/keycloak/settings').respond(404);
+    this.$httpBackend.when('GET', '/workspace-loader/').respond(404);
 
     // add the remote call
     let workspaceReturn = [];

@@ -11,12 +11,9 @@
 package org.eclipse.che.selenium.dashboard;
 
 import static org.eclipse.che.selenium.core.constant.TestStacksConstants.JAVA_MYSQL;
-import static org.eclipse.che.selenium.core.constant.TestTimeoutsConstants.PREPARING_WS_TIMEOUT_SEC;
-import static org.eclipse.che.selenium.pageobject.dashboard.workspaces.WorkspaceDetails.StateWorkspace.RUNNING;
 import static org.eclipse.che.selenium.pageobject.dashboard.workspaces.WorkspaceDetails.StateWorkspace.STOPPED;
 import static org.eclipse.che.selenium.pageobject.dashboard.workspaces.WorkspaceDetails.TabNames.ENV_VARIABLES;
 import static org.eclipse.che.selenium.pageobject.dashboard.workspaces.WorkspaceDetails.TabNames.MACHINES;
-import static org.eclipse.che.selenium.pageobject.dashboard.workspaces.WorkspaceDetails.TabNames.OVERVIEW;
 import static org.testng.Assert.assertTrue;
 
 import com.google.common.collect.ImmutableMap;
@@ -28,10 +25,11 @@ import org.eclipse.che.selenium.core.client.TestWorkspaceServiceClient;
 import org.eclipse.che.selenium.core.user.TestUser;
 import org.eclipse.che.selenium.core.utils.WaitUtils;
 import org.eclipse.che.selenium.pageobject.Consoles;
+import org.eclipse.che.selenium.pageobject.Ide;
 import org.eclipse.che.selenium.pageobject.Loader;
 import org.eclipse.che.selenium.pageobject.ProjectExplorer;
-import org.eclipse.che.selenium.pageobject.dashboard.CreateWorkspace;
 import org.eclipse.che.selenium.pageobject.dashboard.Dashboard;
+import org.eclipse.che.selenium.pageobject.dashboard.NewWorkspace;
 import org.eclipse.che.selenium.pageobject.dashboard.workspaces.WorkspaceDetails;
 import org.eclipse.che.selenium.pageobject.dashboard.workspaces.WorkspaceEnvVariables;
 import org.eclipse.che.selenium.pageobject.dashboard.workspaces.WorkspaceMachines;
@@ -55,7 +53,7 @@ public class WorkspaceDetailsComposeTest {
   @Inject private TestUser testUser;
   @Inject private ProjectExplorer projectExplorer;
   @Inject private Loader loader;
-  @Inject private CreateWorkspace createWorkspace;
+  @Inject private NewWorkspace newWorkspace;
   @Inject private Dashboard dashboard;
   @Inject private WorkspaceDetails workspaceDetails;
   @Inject private SeleniumWebDriver seleniumWebDriver;
@@ -65,6 +63,7 @@ public class WorkspaceDetailsComposeTest {
   @Inject private WorkspaceMachines workspaceMachines;
   @Inject private WorkspaceEnvVariables workspaceEnvVariables;
   @Inject private MachineTerminal terminal;
+  @Inject private Ide ide;
 
   @BeforeClass
   public void setUp() throws Exception {
@@ -153,9 +152,8 @@ public class WorkspaceDetailsComposeTest {
     // check that created machine exists in the Process Console tree
     workspaceDetails.clickOpenInIdeWsBtn();
     seleniumWebDriver.switchFromDashboardIframeToIde();
-    projectExplorer.waitProjectExplorer();
 
-    terminal.waitTerminalTab(PREPARING_WS_TIMEOUT_SEC);
+    ide.waitOpenedWorkspaceIsReadyToUse();
     consoles.waitProcessInProcessConsoleTree("machine");
     consoles.waitTabNameProcessIsPresent("machine");
   }
@@ -172,26 +170,14 @@ public class WorkspaceDetailsComposeTest {
     dashboard.waitDashboardToolbarTitle();
     dashboard.selectWorkspacesItemOnDashboard();
     dashboard.waitToolbarTitleName("Workspaces");
-    workspaces.clickOnNewWorkspaceBtn();
-    createWorkspace.waitToolbar();
+    workspaces.clickOnAddWorkspaceBtn();
+    newWorkspace.waitToolbar();
     loader.waitOnClosed();
-    createWorkspace.selectStack(JAVA_MYSQL.getId());
-    createWorkspace.typeWorkspaceName(WORKSPACE);
-    createWorkspace.clickOnCreateWorkspaceButton();
+    newWorkspace.selectStack(JAVA_MYSQL.getId());
+    newWorkspace.typeWorkspaceName(WORKSPACE);
+    newWorkspace.clickOnCreateButtonAndEditWorkspace();
 
-    seleniumWebDriver.switchFromDashboardIframeToIde(60);
-    projectExplorer.waitProjectExplorer();
-    terminal.waitTerminalTab(PREPARING_WS_TIMEOUT_SEC);
-
-    dashboard.open();
-    dashboard.waitDashboardToolbarTitle();
-    dashboard.selectWorkspacesItemOnDashboard();
-    dashboard.waitToolbarTitleName("Workspaces");
-    workspaces.selectWorkspaceItemName(WORKSPACE);
-    workspaces.waitToolbarTitleName(WORKSPACE);
-    workspaceDetails.selectTabInWorkspaceMenu(OVERVIEW);
-    workspaceDetails.checkStateOfWorkspace(RUNNING);
-    workspaceDetails.clickOnStopWorkspace();
+    workspaceDetails.waitToolbarTitleName(WORKSPACE);
     workspaceDetails.checkStateOfWorkspace(STOPPED);
   }
 

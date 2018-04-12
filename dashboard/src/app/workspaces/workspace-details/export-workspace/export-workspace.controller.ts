@@ -18,15 +18,21 @@
  */
 export class ExportWorkspaceController {
 
+  static $inject = ['$mdDialog'];
+
+  $mdDialog: ng.material.IDialogService;
+
+  workspaceId: string;
+  workspaceDetails: che.IWorkspace;
+
   /**
    * Default constructor that is using resource
-   * @ngInject for Dependency injection
    */
-  constructor($mdDialog) {
+  constructor($mdDialog: ng.material.IDialogService) {
     this.$mdDialog = $mdDialog;
   }
 
-  showExport($event, destination) {
+  showExport($event: MouseEvent, destination: string) {
     this.$mdDialog.show({
       targetEvent: $event,
       controller: 'ExportWorkspaceDialogController',

@@ -18,6 +18,9 @@ import {CheNotification} from '../../../components/notification/che-notification
  * @author Florent Benoit
  */
 export class CreateFactoryCtrl {
+
+  static $inject = ['$location', 'cheAPI', '$log', 'cheNotification', '$scope', '$filter', 'lodash', '$document'];
+
   private gitLocation: string;
   private $location: ng.ILocationService;
   private $log: ng.ILogService;
@@ -41,9 +44,15 @@ export class CreateFactoryCtrl {
 
   /**
    * Default constructor that is using resource injection
-   * @ngInject for Dependency injection
    */
-  constructor($location: ng.ILocationService, cheAPI: CheAPI, $log: ng.ILogService, cheNotification: CheNotification, $scope: ng.IScope, $filter: ng.IFilterService, lodash: any, $document: ng.IDocumentService) {
+  constructor($location: ng.ILocationService,
+              cheAPI: CheAPI,
+              $log: ng.ILogService,
+              cheNotification: CheNotification,
+              $scope: ng.IScope,
+              $filter: ng.IFilterService,
+              lodash: any,
+              $document: ng.IDocumentService) {
     this.$location = $location;
     this.cheAPI = cheAPI;
     this.$log = $log;

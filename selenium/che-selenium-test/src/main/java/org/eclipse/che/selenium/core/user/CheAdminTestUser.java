@@ -23,10 +23,12 @@ public class CheAdminTestUser implements AdminTestUser {
   @Inject
   public CheAdminTestUser(
       TestUserFactory userFactory,
+      @Named("che.admin.name") String name,
       @Named("che.admin.email") String email,
-      @Named("che.admin.password") String password)
+      @Named("che.admin.password") String password,
+      @Named("che.admin.offline_token") String offlineToken)
       throws Exception {
-    this.delegate = userFactory.create(email, password);
+    this.delegate = userFactory.create(name, email, password, offlineToken);
   }
 
   @Override
@@ -55,5 +57,10 @@ public class CheAdminTestUser implements AdminTestUser {
   }
 
   @Override
-  public void delete() {}
+  public String getOfflineToken() {
+    return delegate.getOfflineToken();
+  }
+
+  @Override
+  public void cleanUp() {}
 }

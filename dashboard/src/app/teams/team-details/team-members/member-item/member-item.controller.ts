@@ -16,6 +16,9 @@
  * @author Ann Shumilova
  */
 export class MemberItemController {
+
+  static $inject = ['$mdDialog', 'cheTeam', 'lodash', 'confirmDialogService'];
+
   /**
    * Team API interaction.
    */
@@ -52,7 +55,6 @@ export class MemberItemController {
 
   /**
    * Default constructor that is using resource injection
-   * @ngInject for Dependency injection
    */
   constructor($mdDialog: angular.material.IDialogService, cheTeam: che.api.ICheTeam, lodash: any, confirmDialogService: any) {
     this.$mdDialog = $mdDialog;
@@ -98,7 +100,7 @@ export class MemberItemController {
 
     let roles = this.cheTeam.getRolesFromActions(this.member.permissions.actions);
     let titles = [];
-    let processedActions = []
+    let processedActions = [];
     roles.forEach((role: any) => {
       titles.push(role.title);
       processedActions = processedActions.concat(role.actions);

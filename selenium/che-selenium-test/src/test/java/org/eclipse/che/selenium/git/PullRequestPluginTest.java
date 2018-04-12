@@ -25,6 +25,7 @@ import java.util.Collections;
 import java.util.Date;
 import java.util.List;
 import org.eclipse.che.selenium.core.SeleniumWebDriver;
+import org.eclipse.che.selenium.core.TestGroup;
 import org.eclipse.che.selenium.core.client.TestGitHubServiceClient;
 import org.eclipse.che.selenium.core.client.TestUserPreferencesServiceClient;
 import org.eclipse.che.selenium.core.client.TestWorkspaceServiceClient;
@@ -52,6 +53,7 @@ import org.testng.annotations.Test;
  * @author Andrey Chizhikov
  * @author Aleksandr Shmaraiev
  */
+@Test(groups = TestGroup.GITHUB)
 public class PullRequestPluginTest {
   private static final String FIRST_PROJECT_NAME = "pull-request-plugin-test";
   private static final String SECOND_PROJECT_NAME = "second-project-for-switching";
@@ -72,11 +74,11 @@ public class PullRequestPluginTest {
   @Inject private Ide ide;
   @Inject private TestUser productUser;
 
-  @Inject
+  @Inject(optional = true)
   @Named("github.username")
   private String gitHubUsername;
 
-  @Inject
+  @Inject(optional = true)
   @Named("github.password")
   private String gitHubPassword;
 
@@ -141,7 +143,7 @@ public class PullRequestPluginTest {
     importWidget.waitAndTypeImporterAsGitInfo(secondProjectUrl, SECOND_PROJECT_NAME);
     configureTypeOfProject();
     explorer.waitItem(FIRST_PROJECT_NAME);
-    explorer.selectItem(FIRST_PROJECT_NAME);
+    explorer.waitAndSelectItem(FIRST_PROJECT_NAME);
     loader.waitOnClosed();
 
     // switch between project
@@ -149,7 +151,7 @@ public class PullRequestPluginTest {
     pullRequestPanel.waitRepoUrl(firstProjectUrl);
     pullRequestPanel.waitBranchName(MAIN_BRANCH);
     pullRequestPanel.waitProjectName(FIRST_PROJECT_NAME);
-    explorer.selectItem(SECOND_PROJECT_NAME);
+    explorer.waitAndSelectItem(SECOND_PROJECT_NAME);
     pullRequestPanel.waitRepoUrl(secondProjectUrl);
     pullRequestPanel.waitBranchName(MAIN_BRANCH);
     pullRequestPanel.waitProjectName(SECOND_PROJECT_NAME);
@@ -158,7 +160,7 @@ public class PullRequestPluginTest {
   @Test(priority = 1)
   public void createPullRequest() {
     explorer.waitItem(FIRST_PROJECT_NAME);
-    explorer.selectItem(FIRST_PROJECT_NAME);
+    explorer.waitAndSelectItem(FIRST_PROJECT_NAME);
     explorer.openItemByPath(FIRST_PROJECT_NAME);
     explorer.openItemByPath(FIRST_PROJECT_NAME + "/README.md");
 
@@ -221,7 +223,7 @@ public class PullRequestPluginTest {
     explorer.waitProjectExplorer();
     explorer.waitItem(FIRST_PROJECT_NAME);
     explorer.waitItem(SECOND_PROJECT_NAME);
-    explorer.selectItem(FIRST_PROJECT_NAME);
+    explorer.waitAndSelectItem(FIRST_PROJECT_NAME);
     explorer.openItemByPath(FIRST_PROJECT_NAME);
     explorer.openItemByPath(FIRST_PROJECT_NAME + "/README.md");
     editor.waitActive();

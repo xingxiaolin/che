@@ -12,6 +12,7 @@ package org.eclipse.che.api.project.server.impl;
 
 import static org.eclipse.che.api.fs.server.WsPathUtils.ROOT;
 
+import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
@@ -25,6 +26,7 @@ import org.eclipse.che.api.core.ServerException;
 import org.eclipse.che.api.core.model.workspace.config.ProjectConfig;
 import org.eclipse.che.api.fs.server.FsManager;
 import org.eclipse.che.api.project.server.handlers.ProjectInitHandler;
+import org.eclipse.che.api.search.server.excludes.HiddenItemPathMatcher;
 
 @Singleton
 public class OnWorkspaceStartProjectInitializer {
@@ -33,17 +35,20 @@ public class OnWorkspaceStartProjectInitializer {
   private final ProjectSynchronizer projectSynchronizer;
   private final ProjectConfigRegistry projectConfigRegistry;
   private final ProjectHandlerRegistry projectHandlerRegistry;
+  private final HiddenItemPathMatcher hiddenItemPathMatcher;
 
   @Inject
   public OnWorkspaceStartProjectInitializer(
       FsManager fsManager,
       ProjectSynchronizer projectSynchronizer,
       ProjectConfigRegistry projectConfigRegistry,
-      ProjectHandlerRegistry projectHandlerRegistry) {
+      ProjectHandlerRegistry projectHandlerRegistry,
+      HiddenItemPathMatcher hiddenItemPathMatcher) {
     this.fsManager = fsManager;
     this.projectSynchronizer = projectSynchronizer;
     this.projectConfigRegistry = projectConfigRegistry;
     this.projectHandlerRegistry = projectHandlerRegistry;
+    this.hiddenItemPathMatcher = hiddenItemPathMatcher;
   }
 
   @PostConstruct
@@ -60,12 +65,12 @@ public class OnWorkspaceStartProjectInitializer {
     }
   }
 
-  private void initializeNotRegisteredProjects() throws ServerException {
-    for (String wsPath : fsManager.getDirWsPaths(ROOT)) {
-      if (!projectConfigRegistry.isRegistered(wsPath)) {
-        projectConfigRegistry.put(wsPath, true, true);
-      }
-    }
+  private void initializeNotRegisteredProjects() {
+    fsManager
+        .getDirWsPaths(ROOT)
+        .stream()
+        .filter(wsPath -> !hiddenItemPathMatcher.matches(Paths.get(wsPath)))
+        .forEach(wsPath -> projectConfigRegistry.putIfAbsent(wsPath, true, true));
   }
 
   private void firePostInitializationHandlers()

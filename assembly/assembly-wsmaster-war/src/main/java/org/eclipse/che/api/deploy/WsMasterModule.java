@@ -12,6 +12,7 @@ package org.eclipse.che.api.deploy;
 
 import static com.google.inject.matcher.Matchers.subclassesOf;
 import static org.eclipse.che.inject.Matchers.names;
+import static org.eclipse.che.multiuser.api.permission.server.SystemDomain.SYSTEM_DOMAIN_ACTIONS;
 
 import com.google.inject.AbstractModule;
 import com.google.inject.TypeLiteral;
@@ -71,13 +72,17 @@ import org.eclipse.che.multiuser.keycloak.server.deploy.KeycloakModule;
 import org.eclipse.che.multiuser.machine.authentication.server.MachineAuthModule;
 import org.eclipse.che.multiuser.organization.api.OrganizationApiModule;
 import org.eclipse.che.multiuser.organization.api.OrganizationJpaModule;
+import org.eclipse.che.multiuser.permission.user.UserServicePermissionsFilter;
 import org.eclipse.che.multiuser.resource.api.ResourceModule;
 import org.eclipse.che.plugin.github.factory.resolver.GithubFactoryParametersResolver;
 import org.eclipse.che.security.PBKDF2PasswordEncryptor;
 import org.eclipse.che.security.PasswordEncryptor;
 import org.eclipse.che.workspace.infrastructure.docker.DockerInfraModule;
 import org.eclipse.che.workspace.infrastructure.docker.local.LocalDockerModule;
+import org.eclipse.che.workspace.infrastructure.kubernetes.KubernetesInfraModule;
+import org.eclipse.che.workspace.infrastructure.kubernetes.KubernetesInfrastructure;
 import org.eclipse.che.workspace.infrastructure.openshift.OpenShiftInfraModule;
+import org.eclipse.che.workspace.infrastructure.openshift.OpenShiftInfrastructure;
 import org.eclipse.persistence.config.PersistenceUnitProperties;
 import org.flywaydb.core.internal.util.PlaceholderReplacer;
 
@@ -133,6 +138,7 @@ public class WsMasterModule extends AbstractModule {
     bind(org.eclipse.che.api.workspace.server.WorkspaceService.class);
     install(new FactoryModuleBuilder().build(ServersCheckerFactory.class));
     install(new FactoryModuleBuilder().build(ExecAgentClientFactory.class));
+    bind(org.eclipse.che.api.logger.LoggerService.class);
 
     Multibinder<InternalEnvironmentProvisioner> internalEnvironmentProvisioners =
         Multibinder.newSetBinder(binder(), InternalEnvironmentProvisioner.class);
@@ -154,7 +160,6 @@ public class WsMasterModule extends AbstractModule {
     envVarProviders.addBinding().to(WorkspaceMavenServerJavaOptsEnvVariableProvider.class);
 
     bind(org.eclipse.che.api.workspace.server.bootstrap.InstallerService.class);
-    bind(org.eclipse.che.api.workspace.server.event.WorkspaceMessenger.class).asEagerSingleton();
     bind(org.eclipse.che.api.workspace.server.event.WorkspaceJsonRpcMessenger.class)
         .asEagerSingleton();
     bind(org.eclipse.che.everrest.EverrestDownloadFileResponseFilter.class);
@@ -230,8 +235,10 @@ public class WsMasterModule extends AbstractModule {
             .properties(persistenceProperties));
 
     String infrastructure = System.getenv("CHE_INFRASTRUCTURE_ACTIVE");
-    if ("openshift".equals(infrastructure)) {
+    if (OpenShiftInfrastructure.NAME.equals(infrastructure)) {
       install(new OpenShiftInfraModule());
+    } else if (KubernetesInfrastructure.NAME.equals(infrastructure)) {
+      install(new KubernetesInfraModule());
     } else {
       install(new LocalDockerModule());
       install(new DockerInfraModule());
@@ -274,13 +281,22 @@ public class WsMasterModule extends AbstractModule {
 
     // Permission filters
     bind(org.eclipse.che.multiuser.permission.system.SystemServicePermissionsFilter.class);
+
+    Multibinder<String> binder =
+        Multibinder.newSetBinder(binder(), String.class, Names.named(SYSTEM_DOMAIN_ACTIONS));
+    binder.addBinding().toInstance(UserServicePermissionsFilter.MANAGE_USERS_ACTION);
     bind(org.eclipse.che.multiuser.permission.user.UserProfileServicePermissionsFilter.class);
     bind(org.eclipse.che.multiuser.permission.user.UserServicePermissionsFilter.class);
+    bind(org.eclipse.che.multiuser.permission.logger.LoggerServicePermissionsFilter.class);
+
     bind(org.eclipse.che.multiuser.permission.factory.FactoryPermissionsFilter.class);
+    bind(
+        org.eclipse.che.multiuser.permission.installer.InstallerRegistryServicePermissionsFilter
+            .class);
     bind(org.eclipse.che.plugin.activity.ActivityPermissionsFilter.class);
     bind(AdminPermissionInitializer.class).asEagerSingleton();
     bind(
-        org.eclipse.che.multiuser.permission.resource.filters.ResourceUsageServicePermissionsFilter
+        org.eclipse.che.multiuser.permission.resource.filters.ResourceServicePermissionsFilter
             .class);
     bind(
         org.eclipse.che.multiuser.permission.resource.filters

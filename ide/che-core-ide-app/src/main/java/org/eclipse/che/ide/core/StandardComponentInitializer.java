@@ -20,6 +20,7 @@ import static org.eclipse.che.ide.actions.EditorActions.SPLIT_HORIZONTALLY;
 import static org.eclipse.che.ide.actions.EditorActions.SPLIT_VERTICALLY;
 import static org.eclipse.che.ide.api.action.IdeActions.GROUP_ASSISTANT;
 import static org.eclipse.che.ide.api.action.IdeActions.GROUP_CENTER_TOOLBAR;
+import static org.eclipse.che.ide.api.action.IdeActions.GROUP_COMMAND_EXPLORER_CONTEXT_MENU;
 import static org.eclipse.che.ide.api.action.IdeActions.GROUP_CONSOLES_TREE_CONTEXT_MENU;
 import static org.eclipse.che.ide.api.action.IdeActions.GROUP_EDIT;
 import static org.eclipse.che.ide.api.action.IdeActions.GROUP_EDITOR_CONTEXT_MENU;
@@ -71,6 +72,7 @@ import org.eclipse.che.ide.actions.HotKeysListAction;
 import org.eclipse.che.ide.actions.ImportProjectAction;
 import org.eclipse.che.ide.actions.LinkWithEditorAction;
 import org.eclipse.che.ide.actions.NavigateToFileAction;
+import org.eclipse.che.ide.actions.NewXmlFileAction;
 import org.eclipse.che.ide.actions.OpenFileAction;
 import org.eclipse.che.ide.actions.ProjectConfigurationAction;
 import org.eclipse.che.ide.actions.RedoAction;
@@ -116,6 +118,8 @@ import org.eclipse.che.ide.api.keybinding.KeyBindingAgent;
 import org.eclipse.che.ide.api.keybinding.KeyBuilder;
 import org.eclipse.che.ide.api.parts.Perspective;
 import org.eclipse.che.ide.api.parts.PerspectiveManager;
+import org.eclipse.che.ide.command.actions.MoveCommandAction;
+import org.eclipse.che.ide.command.actions.RenameCommandAction;
 import org.eclipse.che.ide.command.editor.CommandEditorProvider;
 import org.eclipse.che.ide.command.palette.ShowCommandsPaletteAction;
 import org.eclipse.che.ide.devmode.DevModeOffAction;
@@ -142,9 +146,11 @@ import org.eclipse.che.ide.part.explorer.project.synchronize.ProjectConfigSynchr
 import org.eclipse.che.ide.processes.NewTerminalAction;
 import org.eclipse.che.ide.processes.actions.CloseConsoleAction;
 import org.eclipse.che.ide.processes.actions.DisplayMachineOutputAction;
+import org.eclipse.che.ide.processes.actions.PreviewSSHAction;
 import org.eclipse.che.ide.processes.actions.ReRunProcessAction;
 import org.eclipse.che.ide.processes.actions.StopProcessAction;
 import org.eclipse.che.ide.processes.loading.ShowWorkspaceStatusAction;
+import org.eclipse.che.ide.processes.runtime.ShowRuntimeInfoAction;
 import org.eclipse.che.ide.resources.action.CopyResourceAction;
 import org.eclipse.che.ide.resources.action.CutResourceAction;
 import org.eclipse.che.ide.resources.action.PasteResourceAction;
@@ -156,8 +162,8 @@ import org.eclipse.che.ide.ui.toolbar.MainToolbar;
 import org.eclipse.che.ide.ui.toolbar.ToolbarPresenter;
 import org.eclipse.che.ide.util.browser.UserAgent;
 import org.eclipse.che.ide.util.input.KeyCodeMap;
+import org.eclipse.che.ide.workspace.StartWorkspaceAction;
 import org.eclipse.che.ide.workspace.StopWorkspaceAction;
-import org.eclipse.che.ide.xml.NewXmlFileAction;
 import org.vectomatic.dom.svg.ui.SVGImage;
 import org.vectomatic.dom.svg.ui.SVGResource;
 
@@ -345,9 +351,13 @@ public class StandardComponentInitializer {
 
   @Inject private SoftWrapAction softWrapAction;
 
+  @Inject private StartWorkspaceAction startWorkspaceAction;
+
   @Inject private StopWorkspaceAction stopWorkspaceAction;
 
   @Inject private ShowWorkspaceStatusAction showWorkspaceStatusAction;
+
+  @Inject private ShowRuntimeInfoAction showRuntimeInfoAction;
 
   @Inject private RunCommandAction runCommandAction;
 
@@ -360,6 +370,8 @@ public class StandardComponentInitializer {
   @Inject private CloseConsoleAction closeConsoleAction;
 
   @Inject private DisplayMachineOutputAction displayMachineOutputAction;
+
+  @Inject private PreviewSSHAction previewSSHAction;
 
   @Inject private ShowConsoleTreeAction showConsoleTreeAction;
 
@@ -386,6 +398,10 @@ public class StandardComponentInitializer {
   @Inject private EditorDisplayingModeAction editorDisplayingModeAction;
 
   @Inject private TerminalDisplayingModeAction terminalDisplayingModeAction;
+
+  @Inject private RenameCommandAction renameCommandAction;
+
+  @Inject private MoveCommandAction moveCommandAction;
 
   @Inject
   @Named("XMLFileType")
@@ -513,6 +529,7 @@ public class StandardComponentInitializer {
     workspaceGroup.add(downloadWsAction);
 
     workspaceGroup.addSeparator();
+    workspaceGroup.add(startWorkspaceAction);
     workspaceGroup.add(stopWorkspaceAction);
     workspaceGroup.add(showWorkspaceStatusAction);
 
@@ -530,10 +547,10 @@ public class StandardComponentInitializer {
     newGroup.addSeparator();
 
     actionManager.registerAction(NEW_FILE, newFileAction);
-    newGroup.addAction(newFileAction);
+    newGroup.addAction(newFileAction, Constraints.FIRST);
 
     actionManager.registerAction("newFolder", newFolderAction);
-    newGroup.addAction(newFolderAction);
+    newGroup.addAction(newFolderAction, new Constraints(AFTER, NEW_FILE));
 
     newGroup.addSeparator();
 
@@ -684,6 +701,7 @@ public class StandardComponentInitializer {
     helpGroup.addSeparator();
 
     // Processes panel actions
+    actionManager.registerAction("startWorkspace", startWorkspaceAction);
     actionManager.registerAction("stopWorkspace", stopWorkspaceAction);
     actionManager.registerAction("showWorkspaceStatus", showWorkspaceStatusAction);
     actionManager.registerAction("runCommand", runCommandAction);
@@ -781,15 +799,22 @@ public class StandardComponentInitializer {
         (DefaultActionGroup) actionManager.getAction(GROUP_RIGHT_TOOLBAR);
     toolbarPresenter.bindRightGroup(rightToolbarGroup);
 
+    actionManager.registerAction("showServers", showRuntimeInfoAction);
+
     // Consoles tree context menu group
     DefaultActionGroup consolesTreeContextMenu =
         (DefaultActionGroup) actionManager.getAction(GROUP_CONSOLES_TREE_CONTEXT_MENU);
+    consolesTreeContextMenu.add(showRuntimeInfoAction);
+    consolesTreeContextMenu.add(newTerminalAction);
     consolesTreeContextMenu.add(reRunProcessAction);
     consolesTreeContextMenu.add(stopProcessAction);
     consolesTreeContextMenu.add(closeConsoleAction);
 
-    actionManager.registerAction(DisplayMachineOutputAction.ID, displayMachineOutputAction);
+    actionManager.registerAction("displayMachineOutput", displayMachineOutputAction);
     consolesTreeContextMenu.add(displayMachineOutputAction);
+
+    actionManager.registerAction("previewSSH", previewSSHAction);
+    consolesTreeContextMenu.add(previewSSHAction);
 
     // Editor context menu group
     DefaultActionGroup editorTabContextMenu =
@@ -837,6 +862,14 @@ public class StandardComponentInitializer {
 
     editorContextMenuGroup.addSeparator();
     editorContextMenuGroup.add(revealResourceAction);
+
+    DefaultActionGroup commandExplorerMenuGroup = new DefaultActionGroup(actionManager);
+    actionManager.registerAction(GROUP_COMMAND_EXPLORER_CONTEXT_MENU, commandExplorerMenuGroup);
+
+    actionManager.registerAction("renameCommand", renameCommandAction);
+    commandExplorerMenuGroup.add(renameCommandAction);
+    actionManager.registerAction("moveCommand", moveCommandAction);
+    commandExplorerMenuGroup.add(moveCommandAction);
 
     // Define hot-keys
     keyBinding

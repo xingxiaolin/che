@@ -17,6 +17,7 @@ import static org.eclipse.che.selenium.core.constant.TestMenuCommandsConstants.E
 import static org.eclipse.che.selenium.core.constant.TestMenuCommandsConstants.Workspace.CREATE_PROJECT;
 import static org.eclipse.che.selenium.core.constant.TestMenuCommandsConstants.Workspace.WORKSPACE;
 import static org.eclipse.che.selenium.core.constant.TestTimeoutsConstants.LOAD_PAGE_TIMEOUT_SEC;
+import static org.eclipse.che.selenium.core.project.ProjectTemplates.MAVEN_SPRING;
 import static org.eclipse.che.selenium.pageobject.Wizard.SamplesName.WEB_JAVA_PETCLINIC;
 import static org.openqa.selenium.Keys.ARROW_DOWN;
 import static org.openqa.selenium.Keys.ARROW_RIGHT;
@@ -30,7 +31,6 @@ import java.net.URL;
 import java.nio.file.Paths;
 import org.eclipse.che.commons.lang.NameGenerator;
 import org.eclipse.che.selenium.core.client.TestProjectServiceClient;
-import org.eclipse.che.selenium.core.project.ProjectTemplates;
 import org.eclipse.che.selenium.core.utils.WaitUtils;
 import org.eclipse.che.selenium.core.workspace.TestWorkspace;
 import org.eclipse.che.selenium.pageobject.CodenvyEditor;
@@ -74,17 +74,16 @@ public class FindTextFeatureTest {
   public void setUp() throws Exception {
     URL resource = getClass().getResource("/projects/java-multimodule");
     testProjectServiceClient.importProject(
-        workspace.getId(),
-        Paths.get(resource.toURI()),
-        PROJECT_NAME,
-        ProjectTemplates.MAVEN_SPRING);
+        workspace.getId(), Paths.get(resource.toURI()), PROJECT_NAME, MAVEN_SPRING);
+
     ide.open(workspace);
+    ide.waitOpenedWorkspaceIsReadyToUse();
   }
 
   @Test
   public void checkFindTextForm() {
     projectExplorer.waitProjectExplorer();
-    projectExplorer.selectItem(PROJECT_NAME);
+    projectExplorer.waitAndSelectItem(PROJECT_NAME);
 
     // Open the Find Text form from menu
     menu.runCommand(EDIT, FIND);
@@ -120,7 +119,7 @@ public class FindTextFeatureTest {
     String fileNameCreatedFromTerminal = "readme.con";
 
     projectExplorer.waitProjectExplorer();
-    projectExplorer.selectItem(PROJECT_NAME);
+    projectExplorer.waitAndSelectItem(PROJECT_NAME);
 
     //  Check that the Processes tab is opened
     if (!consoles.processesMainAreaIsOpen()) {
@@ -157,7 +156,7 @@ public class FindTextFeatureTest {
     WaitUtils.sleepQuietly(LOAD_PAGE_TIMEOUT_SEC);
 
     // Check that created from API file found by "Feature" text
-    projectExplorer.selectItem(PROJECT_NAME);
+    projectExplorer.waitAndSelectItem(PROJECT_NAME);
     menu.runCommand(EDIT, FIND);
     findTextPage.waitFindTextMainFormIsOpen();
     findTextPage.typeTextIntoFindField("Feature");
@@ -198,7 +197,7 @@ public class FindTextFeatureTest {
         format("/%s/my-lib/src/main/java/hello/SayHello.java", PROJECT_NAME);
 
     projectExplorer.waitProjectExplorer();
-    projectExplorer.selectItem(PROJECT_NAME);
+    projectExplorer.waitAndSelectItem(PROJECT_NAME);
 
     // Check that no occurrences found
     menu.runCommand(EDIT, FIND);
@@ -220,7 +219,7 @@ public class FindTextFeatureTest {
     findTextPage.waitFindInfoPanelIsClosed();
 
     // Find files with 'String' text. Open 'guess_num.jsp' file and check cursor position
-    projectExplorer.selectItem(PROJECT_NAME);
+    projectExplorer.waitAndSelectItem(PROJECT_NAME);
     findTextPage.launchFindFormByKeyboard();
     findTextPage.waitFindTextMainFormIsOpen();
     findTextPage.typeTextIntoFindField("String");
@@ -289,7 +288,7 @@ public class FindTextFeatureTest {
             PROJECT_NAME);
 
     projectExplorer.waitProjectExplorer();
-    projectExplorer.selectItem(PROJECT_NAME);
+    projectExplorer.waitAndSelectItem(PROJECT_NAME);
 
     // Find text with whole world feature is disabled
     findTextPage.launchFindFormByKeyboard();
@@ -303,7 +302,7 @@ public class FindTextFeatureTest {
     findTextPage.waitExpectedTextInFindInfoPanel(asList(expectedText.split("\n")));
 
     // Find text with whole world feature is enabled
-    projectExplorer.selectItem(PROJECT_NAME);
+    projectExplorer.waitAndSelectItem(PROJECT_NAME);
     menu.runCommand(EDIT, FIND);
     findTextPage.waitFindTextMainFormIsOpen();
     findTextPage.typeTextIntoFindField("uess");
@@ -335,9 +334,9 @@ public class FindTextFeatureTest {
             PROJECT_NAME);
 
     projectExplorer.waitProjectExplorer();
-    projectExplorer.selectItem(PROJECT_NAME);
+    projectExplorer.waitAndSelectItem(PROJECT_NAME);
     projectExplorer.quickExpandWithJavaScript();
-    projectExplorer.selectItem(path1);
+    projectExplorer.waitAndSelectItem(path1);
 
     menu.runCommand(EDIT, FIND);
     findTextPage.waitFindTextMainFormIsOpen();
@@ -348,7 +347,7 @@ public class FindTextFeatureTest {
     findTextPage.clickOnSearchButtonMainForm();
     findTextPage.waitExpectedTextInFindInfoPanel(asList(expectedText1.split("\n")));
 
-    projectExplorer.selectItem(PROJECT_NAME);
+    projectExplorer.waitAndSelectItem(PROJECT_NAME);
     findTextPage.launchFindFormByKeyboard();
     findTextPage.waitFindTextMainFormIsOpen();
     findTextPage.typeTextIntoFindField("hello");
@@ -387,7 +386,7 @@ public class FindTextFeatureTest {
             PROJECT_NAME);
 
     projectExplorer.waitProjectExplorer();
-    projectExplorer.selectItem(PROJECT_NAME);
+    projectExplorer.waitAndSelectItem(PROJECT_NAME);
 
     // Find text with '*.java' file mask
     menu.runCommand(EDIT, FIND);
@@ -403,7 +402,7 @@ public class FindTextFeatureTest {
     findTextPage.waitExpectedTextIsNotPresentInFindInfoPanel(expectedText2);
 
     // Find text with '*.jsp' file mask
-    projectExplorer.selectItem(PROJECT_NAME);
+    projectExplorer.waitAndSelectItem(PROJECT_NAME);
     findTextPage.launchFindFormByKeyboard();
     findTextPage.waitFindTextMainFormIsOpen();
     findTextPage.typeTextIntoFindField("String");
@@ -428,7 +427,7 @@ public class FindTextFeatureTest {
     wizard.selectProjectAndCreate(WEB_JAVA_PETCLINIC, "web-java-petclinic");
     notificationsPopupPanel.waitProgressPopupPanelClose();
     projectExplorer.waitItem("web-java-petclinic");
-    projectExplorer.selectItem("web-java-petclinic");
+    projectExplorer.waitAndSelectItem("web-java-petclinic");
 
     findTextPage.launchFindFormByKeyboard();
     findTextPage.waitFindTextMainFormIsOpen();

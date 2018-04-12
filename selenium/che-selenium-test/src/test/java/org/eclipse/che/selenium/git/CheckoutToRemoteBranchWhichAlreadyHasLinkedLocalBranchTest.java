@@ -12,6 +12,7 @@ package org.eclipse.che.selenium.git;
 
 import com.google.inject.Inject;
 import com.google.inject.name.Named;
+import org.eclipse.che.selenium.core.TestGroup;
 import org.eclipse.che.selenium.core.client.TestGitHubKeyUploader;
 import org.eclipse.che.selenium.core.constant.TestMenuCommandsConstants;
 import org.eclipse.che.selenium.core.user.TestUser;
@@ -27,6 +28,7 @@ import org.testng.annotations.BeforeClass;
 import org.testng.annotations.Test;
 
 /** @author Aleksandr Shmaraev */
+@Test(groups = TestGroup.GITHUB)
 public class CheckoutToRemoteBranchWhichAlreadyHasLinkedLocalBranchTest {
   private static final String PROJECT_NAME = "testRepo";
   private static final String MASTER_BRANCH = "master";
@@ -37,11 +39,11 @@ public class CheckoutToRemoteBranchWhichAlreadyHasLinkedLocalBranchTest {
   @Inject private Ide ide;
   @Inject private TestUser productUser;
 
-  @Inject
+  @Inject(optional = true)
   @Named("github.username")
   private String gitHubUsername;
 
-  @Inject
+  @Inject(optional = true)
   @Named("github.password")
   private String gitHubPassword;
 
@@ -65,7 +67,7 @@ public class CheckoutToRemoteBranchWhichAlreadyHasLinkedLocalBranchTest {
     projectExplorer.waitProjectExplorer();
     String repoUrl = "https://github.com/" + gitHubUsername + "/gitPullTest.git";
     git.importJavaApp(repoUrl, PROJECT_NAME, Wizard.TypeProject.MAVEN);
-    projectExplorer.selectItem(PROJECT_NAME);
+    projectExplorer.waitAndSelectItem(PROJECT_NAME);
 
     // Open branches form
     menu.runCommand(TestMenuCommandsConstants.Git.GIT, TestMenuCommandsConstants.Git.BRANCHES);

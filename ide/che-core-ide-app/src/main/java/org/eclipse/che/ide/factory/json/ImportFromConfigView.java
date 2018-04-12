@@ -19,7 +19,7 @@ import com.google.gwt.user.client.ui.IsWidget;
  */
 public interface ImportFromConfigView extends IsWidget {
 
-  public interface ActionDelegate {
+  interface ActionDelegate {
     /**
      * Performs any actions appropriate in response to the user having pressed the Cancel button.
      */
@@ -30,7 +30,7 @@ public interface ImportFromConfigView extends IsWidget {
      */
     void onImportClicked();
 
-    /** Performs any actions appropriate in response to error reading file */
+    /** Performs any actions appropriate in response to error reading file. */
     void onErrorReadingFile(String errorMessage);
   }
 

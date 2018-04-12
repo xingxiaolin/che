@@ -13,10 +13,10 @@ package org.eclipse.che.selenium.intelligencecommand;
 import static org.eclipse.che.selenium.core.constant.TestIntelligentCommandsConstants.CommandsDefaultNames.JAVA_NAME;
 import static org.eclipse.che.selenium.core.constant.TestIntelligentCommandsConstants.CommandsGoals.RUN_GOAL;
 import static org.eclipse.che.selenium.core.constant.TestIntelligentCommandsConstants.CommandsTypes.JAVA_TYPE;
-import static org.eclipse.che.selenium.pageobject.intelligent.CommandsEditor.CommandsEditorType.COMMAND_LINE_EDITOR;
-import static org.eclipse.che.selenium.pageobject.intelligent.CommandsEditor.CommandsEditorType.PREVIEW_URL_EDITOR;
-import static org.eclipse.che.selenium.pageobject.intelligent.CommandsEditor.CommandsMacrosLinkType.EDITOR_MACROS_LINK;
-import static org.eclipse.che.selenium.pageobject.intelligent.CommandsEditor.CommandsMacrosLinkType.PREVIEW_MACROS_LINK;
+import static org.eclipse.che.selenium.pageobject.intelligent.CommandsEditor.CommandsEditorLocator.COMMAND_LINE_EDITOR;
+import static org.eclipse.che.selenium.pageobject.intelligent.CommandsEditor.CommandsEditorLocator.PREVIEW_URL_EDITOR;
+import static org.eclipse.che.selenium.pageobject.intelligent.CommandsEditor.CommandsMacrosLinkLocator.EDITOR_MACROS_LINK;
+import static org.eclipse.che.selenium.pageobject.intelligent.CommandsEditor.CommandsMacrosLinkLocator.PREVIEW_MACROS_LINK;
 
 import com.google.inject.Inject;
 import java.net.URL;
@@ -32,6 +32,7 @@ import org.eclipse.che.selenium.pageobject.ProjectExplorer;
 import org.eclipse.che.selenium.pageobject.intelligent.CommandsEditor;
 import org.eclipse.che.selenium.pageobject.intelligent.CommandsExplorer;
 import org.openqa.selenium.Keys;
+import org.openqa.selenium.TimeoutException;
 import org.testng.annotations.BeforeClass;
 import org.testng.annotations.Test;
 
@@ -39,6 +40,7 @@ import org.testng.annotations.Test;
 public class MacrosCommandsEditorTest {
   private static final String PROJ_NAME = NameGenerator.generate("MacrosCommandsEditorTest-", 4);
   private static final String PATH_TO_FILE = PROJ_NAME + "/src/Main.java";
+  private static final String PATH_TO_ROOT_FOLDER = "/projects/" + PROJ_NAME;
 
   @Inject private TestWorkspace ws;
   @Inject private Ide ide;
@@ -65,16 +67,16 @@ public class MacrosCommandsEditorTest {
     projectExplorer.waitItem(PATH_TO_FILE);
     projectExplorer.openItemByPath(PATH_TO_FILE);
     createNewJavaCommand();
-    commandsEditor.selectMacrosLinkInCommandsEditor(EDITOR_MACROS_LINK);
+    commandsEditor.selectMacroLinkInCommandsEditor(EDITOR_MACROS_LINK);
     commandsEditor.cancelFormInEditorByEscape();
-    commandsEditor.waitCommandsMacrosIsClosed();
+    commandsEditor.waitCommandMacrosIsClosed();
     commandsEditor.setFocusIntoTypeCommandsEditor(COMMAND_LINE_EDITOR);
     commandsEditor.setCursorToLine(1);
     commandsEditor.typeTextIntoEditor(Keys.ENTER.toString());
     commandsEditor.typeTextIntoEditor(Keys.ARROW_UP.toString());
     commandsEditor.waitActive();
     commandsEditor.typeTextIntoEditor("echo ");
-    commandsEditor.selectMacrosLinkInCommandsEditor(EDITOR_MACROS_LINK);
+    commandsEditor.selectMacroLinkInCommandsEditor(EDITOR_MACROS_LINK);
     commandsEditor.typeTextIntoSearchMacroField("rel");
     commandsEditor.waitTextIntoSearchMacroField("rel");
     String[] macrosItems = {
@@ -95,15 +97,13 @@ public class MacrosCommandsEditorTest {
     commandsEditor.selectLineAndDelete();
     commandsEditor.waitActive();
     commandsEditor.typeTextIntoEditor("echo ");
-    commandsEditor.selectMacrosLinkInCommandsEditor(EDITOR_MACROS_LINK);
+    commandsEditor.selectMacroLinkInCommandsEditor(EDITOR_MACROS_LINK);
     commandsEditor.selectMacroCommand("${current.class.fqn}");
     commandsEditor.typeTextIntoEditor(Keys.ARROW_DOWN.toString());
     commandsEditor.typeTextIntoEditor(Keys.SPACE.toString());
-    commandsEditor.waitMacroCommandIsSelected("${current.project.path}");
     commandsEditor.enterMacroCommandByDoubleClick("${current.project.path}");
     commandsEditor.waitTextIntoEditor("echo ${current.project.path}");
-    commandsEditor.clickOnRunButton();
-    consoles.waitExpectedTextIntoConsole("/projects/" + PROJ_NAME);
+    runCommandWithCheckResult();
   }
 
   @Test(priority = 2)
@@ -112,7 +112,7 @@ public class MacrosCommandsEditorTest {
     commandsEditor.setFocusIntoTypeCommandsEditor(PREVIEW_URL_EDITOR);
     commandsEditor.setCursorToLine(1);
     commandsEditor.waitActive();
-    commandsEditor.selectMacrosLinkInCommandsEditor(PREVIEW_MACROS_LINK);
+    commandsEditor.selectMacroLinkInCommandsEditor(PREVIEW_MACROS_LINK);
     commandsEditor.typeTextIntoSearchMacroField("server.");
     commandsEditor.waitTextIntoSearchMacroField("server.");
     String[] macrosItems = {
@@ -137,11 +137,10 @@ public class MacrosCommandsEditorTest {
     commandsEditor.setCursorToLine(1);
     commandsEditor.selectLineAndDelete();
     commandsEditor.waitActive();
-    commandsEditor.selectMacrosLinkInCommandsEditor(PREVIEW_MACROS_LINK);
+    commandsEditor.selectMacroLinkInCommandsEditor(PREVIEW_MACROS_LINK);
     commandsEditor.selectMacroCommand("${server.wsagent/http}");
     commandsEditor.typeTextIntoEditor(Keys.ARROW_UP.toString());
     commandsEditor.typeTextIntoEditor(Keys.SPACE.toString());
-    commandsEditor.waitMacroCommandIsSelected("${server.wsagent/http}");
     commandsEditor.enterMacroCommandByDoubleClick("${server.wsagent/http}");
     commandsEditor.waitTextIntoEditor("${server.wsagent/http}");
     commandsEditor.clickOnRunButton();
@@ -157,5 +156,19 @@ public class MacrosCommandsEditorTest {
     loader.waitOnClosed();
     commandsExplorer.waitCommandInExplorerByName(JAVA_NAME);
     commandsEditor.waitTabIsPresent(JAVA_NAME);
+  }
+
+  /**
+   * in very rare cases on the OCP platform we have a situation when after command start, the macros
+   * output is not displayed
+   */
+  private void runCommandWithCheckResult() {
+    commandsEditor.clickOnRunButton();
+    try {
+      consoles.waitExpectedTextIntoConsole(PATH_TO_ROOT_FOLDER);
+    } catch (TimeoutException ex) {
+      commandsEditor.clickOnRunButton();
+      consoles.waitExpectedTextIntoConsole(PATH_TO_ROOT_FOLDER);
+    }
   }
 }

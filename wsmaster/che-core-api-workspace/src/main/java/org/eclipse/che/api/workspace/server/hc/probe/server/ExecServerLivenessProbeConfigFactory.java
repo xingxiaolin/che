@@ -15,6 +15,7 @@ import java.net.URL;
 import org.eclipse.che.api.core.model.workspace.runtime.Server;
 import org.eclipse.che.api.workspace.server.hc.probe.HttpProbeConfig;
 import org.eclipse.che.api.workspace.server.spi.InternalInfrastructureException;
+import org.eclipse.che.commons.env.EnvironmentContext;
 
 /**
  * Produces {@link HttpProbeConfig} for exec agent liveness probes.
@@ -22,19 +23,30 @@ import org.eclipse.che.api.workspace.server.spi.InternalInfrastructureException;
  * @author Alexander Garagatyi
  */
 public class ExecServerLivenessProbeConfigFactory implements HttpProbeConfigFactory {
+  private final int successThreshold;
+
+  public ExecServerLivenessProbeConfigFactory(int successThreshold) {
+    this.successThreshold = successThreshold;
+  }
 
   @Override
   public HttpProbeConfig get(String workspaceId, Server server)
       throws InternalInfrastructureException {
+    return get(EnvironmentContext.getCurrent().getSubject().getUserId(), workspaceId, server);
+  }
+
+  @Override
+  public HttpProbeConfig get(String userId, String workspaceId, Server server)
+      throws InternalInfrastructureException {
     try {
       URL url = new URL(server.getUrl());
       return new HttpProbeConfig(
-          url.getPort() == -1 ? 80 : url.getPort(),
+          url.getPort() == -1 ? url.getDefaultPort() : url.getPort(),
           url.getHost(),
           url.getProtocol(),
-          "/liveness",
+          url.getPath().replaceFirst("/process$", "/liveness"),
           null,
-          1,
+          successThreshold,
           3,
           120,
           10,

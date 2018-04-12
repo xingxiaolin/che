@@ -16,7 +16,7 @@
     <parent>
         <artifactId>che-plugin-pullrequest-parent</artifactId>
         <groupId>org.eclipse.che.plugin</groupId>
-        <version>6.0.0-M5-SNAPSHOT</version>
+        <version>6.3.1-SNAPSHOT</version>
     </parent>
     <artifactId>che-plugin-pullrequest-ide</artifactId>
     <packaging>gwt-lib</packaging>
@@ -28,6 +28,10 @@
         <dependency>
             <groupId>com.google.guava</groupId>
             <artifactId>guava</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>com.google.gwt</groupId>
+            <artifactId>gwt-elemental</artifactId>
         </dependency>
         <dependency>
             <groupId>com.google.gwt</groupId>

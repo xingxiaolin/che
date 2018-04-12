@@ -14,12 +14,6 @@ import com.google.inject.Inject;
 import java.io.IOException;
 import java.net.URL;
 import java.nio.file.Paths;
-import org.eclipse.che.api.core.BadRequestException;
-import org.eclipse.che.api.core.ConflictException;
-import org.eclipse.che.api.core.ForbiddenException;
-import org.eclipse.che.api.core.NotFoundException;
-import org.eclipse.che.api.core.ServerException;
-import org.eclipse.che.api.core.UnauthorizedException;
 import org.eclipse.che.selenium.core.client.TestProjectServiceClient;
 import org.eclipse.che.selenium.core.project.ProjectTemplates;
 import org.eclipse.che.selenium.core.workspace.TestWorkspace;
@@ -29,6 +23,8 @@ import org.eclipse.che.selenium.pageobject.Loader;
 import org.eclipse.che.selenium.pageobject.NotificationsPopupPanel;
 import org.eclipse.che.selenium.pageobject.ProjectExplorer;
 import org.openqa.selenium.Keys;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.testng.annotations.BeforeClass;
 import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;
@@ -38,11 +34,11 @@ public class AutocompleteProposalJavaDocTest {
   private static final String PROJECT = "multi-module-java-with-ext-libs";
 
   private static final String APP_CLASS_NAME = "App";
-  private static final String PATH_TO_APP_CLASS =
-      PROJECT + "/app/src/main/java/multimodule/" + APP_CLASS_NAME + ".java";
+  private static final String PATH_FOR_EXPAND_APP_CLASS =
+      PROJECT + "/app/src/main/java/multimodule";
   private static final String BOOK_IMPL_CLASS_NAME = "BookImpl";
-  private static final String PATH_TO_BOOK_IMPL_CLASS =
-      PROJECT + "/model/src/main/java/multimodule/model/" + BOOK_IMPL_CLASS_NAME + ".java";
+  private static final Logger LOG = LoggerFactory.getLogger(AutocompleteProposalJavaDocTest.class);
+  private static final String PATH_FOR_EXPAND_IMPL_CLASS = "model/src/main/java/multimodule.model";
 
   @Inject private TestWorkspace workspace;
   @Inject private Ide ide;
@@ -64,13 +60,17 @@ public class AutocompleteProposalJavaDocTest {
     ide.open(workspace);
     loader.waitOnClosed();
     projectExplorer.waitItem(PROJECT);
-    projectExplorer.selectItem(PROJECT);
+    projectExplorer.waitAndSelectItem(PROJECT);
     notificationsPopupPanel.waitProgressPopupPanelClose();
 
-    projectExplorer.quickExpandWithJavaScript();
-    projectExplorer.openItemByPath(PATH_TO_APP_CLASS);
-    projectExplorer.scrollToItemByPath(PATH_TO_BOOK_IMPL_CLASS);
-    projectExplorer.openItemByPath(PATH_TO_BOOK_IMPL_CLASS);
+    projectExplorer.expandPathInProjectExplorerAndOpenFile(
+        PATH_FOR_EXPAND_APP_CLASS, APP_CLASS_NAME + ".java");
+
+    // close project tree
+    projectExplorer.openItemByPath(PROJECT);
+
+    projectExplorer.expandPathInProjectExplorerAndOpenFile(
+        PROJECT + "/model/src/main/java/multimodule.model", BOOK_IMPL_CLASS_NAME + ".java");
   }
 
   @BeforeMethod
@@ -79,9 +79,7 @@ public class AutocompleteProposalJavaDocTest {
   }
 
   @Test
-  public void shouldDisplayJavaDocOfClassMethod()
-      throws ForbiddenException, BadRequestException, IOException, ConflictException,
-          NotFoundException, ServerException, UnauthorizedException {
+  public void shouldDisplayJavaDocOfClassMethod() throws Exception {
     // when
     editor.waitActive();
     loader.waitOnClosed();

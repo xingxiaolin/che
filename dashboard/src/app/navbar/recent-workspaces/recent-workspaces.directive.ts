@@ -16,7 +16,7 @@
  * @description This class is handling the directive of the listing recent opened workspaces in the navbar
  * @author Oleksii Kurinnyi
  */
-export class NavbarRecentWorkspaces {
+export class NavbarRecentWorkspaces implements ng.IDirective {
   restrict: string;
   templateUrl: string;
   controller: string;
@@ -25,7 +25,6 @@ export class NavbarRecentWorkspaces {
 
   /**
    * Default constructor that is using resource
-   * @ngInject for Dependency injection
    */
   constructor() {
     this.restrict = 'E';

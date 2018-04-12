@@ -58,7 +58,7 @@ export class CreateFactoryConfig {
 
 
     // config routes
-    register.app.config(($routeProvider: any) => {
+    register.app.config(['$routeProvider', ($routeProvider: che.route.IRouteProvider) => {
       $routeProvider.accessWhen('/factories/create-factory', {
         title: 'New Factory',
         templateUrl: 'app/factories/create-factory/create-factory.html',
@@ -66,7 +66,7 @@ export class CreateFactoryConfig {
         controllerAs: 'createFactoryCtrl'
       });
 
-    });
+    }]);
 
   }
 }

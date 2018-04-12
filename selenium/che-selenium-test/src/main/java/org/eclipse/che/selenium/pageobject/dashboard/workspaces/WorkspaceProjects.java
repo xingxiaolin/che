@@ -13,11 +13,13 @@ package org.eclipse.che.selenium.pageobject.dashboard.workspaces;
 import static org.eclipse.che.selenium.core.constant.TestTimeoutsConstants.REDRAW_UI_ELEMENTS_TIMEOUT_SEC;
 import static org.openqa.selenium.support.ui.ExpectedConditions.invisibilityOfElementLocated;
 import static org.openqa.selenium.support.ui.ExpectedConditions.visibilityOfElementLocated;
+import static org.testng.Assert.fail;
 
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 import org.eclipse.che.selenium.core.SeleniumWebDriver;
 import org.openqa.selenium.By;
+import org.openqa.selenium.TimeoutException;
 import org.openqa.selenium.support.PageFactory;
 import org.openqa.selenium.support.ui.WebDriverWait;
 
@@ -77,6 +79,7 @@ public class WorkspaceProjects {
             visibilityOfElementLocated(
                 By.xpath(String.format(Locators.PROJECT_BY_NAME, projectName))))
         .click();
+    waitProjectDetailsPage();
   }
 
   /** click on 'DELETE' button in settings of project */
@@ -113,5 +116,15 @@ public class WorkspaceProjects {
             visibilityOfElementLocated(
                 By.xpath(String.format(Locators.PROJECT_CHECKBOX, projectName))))
         .click();
+  }
+
+  public void waitProjectDetailsPage() {
+    try {
+      new WebDriverWait(seleniumWebDriver, REDRAW_UI_ELEMENTS_TIMEOUT_SEC)
+          .until(visibilityOfElementLocated(By.xpath(Locators.DELETE_PROJECT)));
+    } catch (TimeoutException ex) {
+      // remove try-catch block after issue has been resolved
+      fail("Known issue https://github.com/eclipse/che/issues/8931");
+    }
   }
 }

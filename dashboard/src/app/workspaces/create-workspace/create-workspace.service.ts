@@ -23,6 +23,9 @@ import {CheWorkspace} from '../../../components/api/workspace/che-workspace.fact
  * @author Oleksii Kurinnyi
  */
 export class CreateWorkspaceSvc {
+
+  static $inject = ['$location', '$log', '$q', 'cheWorkspace', 'namespaceSelectorSvc', 'stackSelectorSvc', 'projectSourceSelectorService', 'cheNotification', 'confirmDialogService', '$document'];
+
   /**
    * Location service.
    */
@@ -72,7 +75,6 @@ export class CreateWorkspaceSvc {
 
   /**
    * Default constructor that is using resource injection
-   * @ngInject for Dependency injection
    */
   constructor($location: ng.ILocationService, $log: ng.ILogService, $q: ng.IQService, cheWorkspace: CheWorkspace, namespaceSelectorSvc: NamespaceSelectorSvc, stackSelectorSvc: StackSelectorSvc, projectSourceSelectorService: ProjectSourceSelectorService, cheNotification: CheNotification, confirmDialogService: ConfirmDialogService, $document: ng.IDocumentService) {
     this.$location = $location;
@@ -157,9 +159,10 @@ export class CreateWorkspaceSvc {
    * Creates a workspace from config.
    *
    * @param {che.IWorkspaceConfig} workspaceConfig the config of workspace which will be created
-   * @return {IPromise<any>}
+   * @param {any} attributes the attributes of the workspace
+   * @returns {ng.IPromise<any>}
    */
-  createWorkspace(workspaceConfig: che.IWorkspaceConfig, attributes?: any): ng.IPromise<any> {
+  createWorkspace(workspaceConfig: che.IWorkspaceConfig, attributes: any): ng.IPromise<any> {
     const namespaceId = this.namespaceSelectorSvc.getNamespaceId(),
           projectTemplates = this.projectSourceSelectorService.getProjectTemplates();
 
@@ -167,17 +170,17 @@ export class CreateWorkspaceSvc {
       workspaceConfig.projects = projectTemplates;
       this.addProjectCommands(workspaceConfig, projectTemplates);
       return this.cheWorkspace.createWorkspaceFromConfig(namespaceId, workspaceConfig, attributes).then((workspace: che.IWorkspace) => {
+        this.projectSourceSelectorService.clearTemplatesList();
+        const workspaces = this.cheWorkspace.getWorkspaces();
+        if (workspaces.findIndex((_workspace: che.IWorkspace) => {
+            return _workspace.id === workspace.id;
+          }) === -1) {
+          workspaces.push(workspace);
+        }
+        this.cheWorkspace.getWorkspacesById().set(workspace.id, workspace);
+        this.cheWorkspace.startUpdateWorkspaceStatus(workspace.id);
 
-        return this.cheWorkspace.startWorkspace(workspace.id, workspace.config.defaultEnv).then(() => {
-          this.redirectToIde(namespaceId, workspace);
-          this.projectSourceSelectorService.clearTemplatesList();
-
-          this.cheWorkspace.getWorkspacesById().set(workspace.id, workspace);
-          this.cheWorkspace.startUpdateWorkspaceStatus(workspace.id);
-          return this.cheWorkspace.fetchStatusChange(workspace.id, 'RUNNING');
-        }).then(() => {
-          return this.cheWorkspace.fetchWorkspaceDetails(workspace.id);
-        });
+        return workspace;
       }, (error: any) => {
         let errorMessage = 'Creation workspace failed.';
         if (error && error.data && error.data.message) {
@@ -209,11 +212,20 @@ export class CreateWorkspaceSvc {
   /**
    * Redirects to IDE with specified workspace.
    *
-   * @param {string} namespaceId the namespace ID
    * @param {che.IWorkspace} workspace the workspace to open in IDE
    */
-  redirectToIde(namespaceId: string, workspace: che.IWorkspace): void {
-    const path = `/ide/${namespaceId}/${workspace.config.name}`;
+  redirectToIDE(workspace: che.IWorkspace): void {
+    const path = `/ide/${workspace.namespace}/${workspace.config.name}`;
+    this.$location.path(path);
+  }
+
+  /**
+   * Redirects to the details page of the workspace.
+   *
+   * @param {che.IWorkspace} workspace the workspace to open in IDE
+   */
+  redirectToDetails(workspace: che.IWorkspace): void {
+    const path = `/workspace/${workspace.namespace}/${workspace.config.name}`;
     this.$location.path(path);
   }
 

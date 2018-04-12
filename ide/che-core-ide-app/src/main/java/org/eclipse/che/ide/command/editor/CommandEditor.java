@@ -168,6 +168,10 @@ public class CommandEditor extends AbstractEditorPresenter
     return false;
   }
 
+  public List<CommandEditorPage> getPages() {
+    return pages;
+  }
+
   @Nullable
   @Override
   public SVGResource getTitleImage() {
@@ -236,7 +240,7 @@ public class CommandEditor extends AbstractEditorPresenter
 
               updateDirtyState(false);
 
-              view.setSaveEnabled(false);
+              initializePages();
 
               callback.onSuccess(getEditorInput());
             })

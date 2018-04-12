@@ -20,6 +20,8 @@ interface ICheAccordionScope extends ng.IScope {
  */
 export class CheAccordion implements ng.IDirective {
 
+  static $inject = ['$timeout'];
+
   restrict = 'E';
   transclude = true;
   replace = true;
@@ -34,7 +36,6 @@ export class CheAccordion implements ng.IDirective {
 
   /**
    * Default constructor that is using resource
-   * @ngInject for Dependency injection
    */
   constructor($timeout: ng.ITimeoutService) {
     this.$timeout = $timeout;
@@ -43,24 +44,7 @@ export class CheAccordion implements ng.IDirective {
   link($scope: ICheAccordionScope, $element: ng.IAugmentedJQuery): void {
     let currentBodyElement = $element.find('.che-accordion-body');
 
-    // automatic switching panes
-    $scope.$watch(() => {
-      return $scope.openCondition;
-    }, (doOpenPane: boolean) => {
-      if (!$element.siblings().hasClass('che-accordion-dirty')) {
-        openPane(doOpenPane);
-      }
-    });
-
-    // manual switching panes
-    $element.bind('click', (event: JQueryEventObject) => {
-      if (angular.element(event.target).parent().hasClass('che-accordion-title')) {
-        $element.addClass('che-accordion-dirty');
-        openPane(true);
-      }
-    });
-
-    function openPane (doOpenPane: boolean) {
+    let openPane = (doOpenPane: boolean) => {
       if ($element.hasClass('che-accordion-closed')) {
         let siblingElements = $element.siblings(),
           panesToClose = [];
@@ -99,6 +83,23 @@ export class CheAccordion implements ng.IDirective {
           }
         });
       }
-    }
+    };
+
+    // automatic switching panes
+    $scope.$watch(() => {
+      return $scope.openCondition;
+    }, (doOpenPane: boolean) => {
+      if (!$element.siblings().hasClass('che-accordion-dirty')) {
+        openPane(doOpenPane);
+      }
+    });
+
+    // manual switching panes
+    $element.bind('click', (event: JQueryEventObject) => {
+      if (angular.element(event.target).parent().hasClass('che-accordion-title')) {
+        $element.addClass('che-accordion-dirty');
+        openPane(true);
+      }
+    });
   }
 }

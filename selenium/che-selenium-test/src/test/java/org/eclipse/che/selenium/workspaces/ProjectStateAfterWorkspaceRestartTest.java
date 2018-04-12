@@ -12,21 +12,22 @@ package org.eclipse.che.selenium.workspaces;
 
 import static org.eclipse.che.selenium.core.constant.TestMenuCommandsConstants.Workspace.STOP_WORKSPACE;
 import static org.eclipse.che.selenium.core.constant.TestMenuCommandsConstants.Workspace.WORKSPACE;
+import static org.eclipse.che.selenium.core.project.ProjectTemplates.MAVEN_SPRING;
+import static org.testng.Assert.fail;
 
 import com.google.inject.Inject;
 import java.net.URL;
 import java.nio.file.Paths;
 import org.eclipse.che.commons.lang.NameGenerator;
 import org.eclipse.che.selenium.core.client.TestProjectServiceClient;
-import org.eclipse.che.selenium.core.project.ProjectTemplates;
 import org.eclipse.che.selenium.core.workspace.TestWorkspace;
 import org.eclipse.che.selenium.pageobject.CodenvyEditor;
 import org.eclipse.che.selenium.pageobject.Consoles;
 import org.eclipse.che.selenium.pageobject.Ide;
-import org.eclipse.che.selenium.pageobject.Loader;
 import org.eclipse.che.selenium.pageobject.Menu;
 import org.eclipse.che.selenium.pageobject.ProjectExplorer;
 import org.eclipse.che.selenium.pageobject.ToastLoader;
+import org.openqa.selenium.TimeoutException;
 import org.testng.annotations.BeforeClass;
 import org.testng.annotations.Test;
 
@@ -35,12 +36,10 @@ public class ProjectStateAfterWorkspaceRestartTest {
   private static final String PROJECT_NAME = NameGenerator.generate("project", 4);
   private static final String EXP_TEXT_NOT_PRESENT =
       "@Override\n" + "   public ModelAndView handleRequest";
-  private boolean passedState = false;
 
   @Inject private TestWorkspace workspace;
   @Inject private Ide ide;
   @Inject private ProjectExplorer projectExplorer;
-  @Inject private Loader loader;
   @Inject private Consoles consoles;
   @Inject private ToastLoader toastLoader;
   @Inject private Menu menu;
@@ -54,55 +53,61 @@ public class ProjectStateAfterWorkspaceRestartTest {
             .getClass()
             .getResource("/projects/guess-project");
     testProjectServiceClient.importProject(
-        workspace.getId(),
-        Paths.get(resource.toURI()),
-        PROJECT_NAME,
-        ProjectTemplates.MAVEN_SPRING);
+        workspace.getId(), Paths.get(resource.toURI()), PROJECT_NAME, MAVEN_SPRING);
     ide.open(workspace);
   }
 
   @Test
   public void checkProjectAfterStopStartWs() {
-    // create workspace from dashboard
-    projectExplorer.waitProjectExplorer();
-    projectExplorer.waitItem(PROJECT_NAME);
-    projectExplorer.selectItem(PROJECT_NAME);
+    ide.waitOpenedWorkspaceIsReadyToUse();
     projectExplorer.quickExpandWithJavaScript();
+
+    openFilesInEditor();
+
+    // stop and start workspace
+    menu.runCommand(WORKSPACE, STOP_WORKSPACE);
+    toastLoader.waitToastLoaderIsOpen();
+    toastLoader.waitExpectedTextInToastLoader("Workspace is not running");
+    consoles.closeProcessesArea();
+    editor.waitTabIsNotPresent("AppController");
+    editor.waitTabIsNotPresent("index.jsp");
+    projectExplorer.waitDisappearItemByPath(PROJECT_NAME);
+
+    toastLoader.clickOnStartButton();
+    ide.waitOpenedWorkspaceIsReadyToUse();
+
+    try {
+      // check state of the project
+      checkFilesAreOpened();
+    } catch (TimeoutException ex) {
+      // Remove try-catch block after issue has been resolved
+      fail("Known issue https://github.com/eclipse/che/issues/7551");
+    }
+
+    projectExplorer.openItemByPath(PROJECT_NAME + "/README.md");
+    editor.waitActive();
+    editor.waitTextNotPresentIntoEditor(EXP_TEXT_NOT_PRESENT);
+    editor.waitTextIntoEditor("Developer Workspace");
+  }
+
+  private void openFilesInEditor() {
     projectExplorer.openItemByPath(PROJECT_NAME + "/src/main/webapp/index.jsp");
     editor.waitActive();
     projectExplorer.openItemByPath(
         PROJECT_NAME + "/src/main/java/org/eclipse/qa/examples/AppController.java");
     editor.waitActive();
-    loader.waitOnClosed();
+    projectExplorer.openItemByPath(PROJECT_NAME + "/pom.xml");
+    editor.waitActive();
+  }
 
-    // stop and start workspace
-    menu.runCommand(WORKSPACE, STOP_WORKSPACE);
-    loader.waitOnClosed();
-    toastLoader.waitToastLoaderIsOpen();
-    toastLoader.waitExpectedTextInToastLoader("Workspace is not running");
-    loader.waitOnClosed();
-    consoles.closeProcessesArea();
-    editor.waitTabIsNotPresent("AppController");
-    editor.waitTabIsNotPresent("index.jsp");
-    projectExplorer.waitProjectExplorer();
-    projectExplorer.waitDisappearItemByPath(PROJECT_NAME);
-    toastLoader.waitExpectedTextInToastLoader("Workspace is not running");
-    toastLoader.clickOnStartButton();
-
-    // check state of the project
-    projectExplorer.waitProjectExplorer();
-    toastLoader.waitToastLoaderIsClosed();
-    loader.waitOnClosed();
-    projectExplorer.waitItem(PROJECT_NAME);
-    projectExplorer.waitItem(PROJECT_NAME + "/src/main/java/org/eclipse/qa/examples");
-    editor.waitTabIsPresent("AppController");
-    editor.waitTabIsPresent("index.jsp");
+  private void checkFilesAreOpened() {
+    projectExplorer.waitItem(PROJECT_NAME + "/src/main/webapp/WEB-INF");
+    projectExplorer.waitItem(PROJECT_NAME + "/src/main/webapp/WEB-INF/jsp");
+    projectExplorer.waitItem(PROJECT_NAME + "/src/main/webapp/index.jsp");
     projectExplorer.waitItem(
         PROJECT_NAME + "/src/main/java/org/eclipse/qa/examples/AppController.java");
-    projectExplorer.waitItem(PROJECT_NAME + "/src/main/webapp/index.jsp");
-    projectExplorer.openItemByPath(PROJECT_NAME + "/README.md");
-    editor.waitActive();
-    editor.waitTextNotPresentIntoEditor(EXP_TEXT_NOT_PRESENT);
-    editor.waitTextIntoEditor("Developer Workspace");
+    editor.waitTabIsPresent("index.jsp");
+    editor.waitTabIsPresent("AppController");
+    editor.waitTabIsPresent("qa-spring-sample");
   }
 }

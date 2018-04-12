@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2015-2017 Red Hat, Inc.
+ * Copyright (c) 2015-2018 Red Hat, Inc.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -26,7 +26,7 @@ function webpackWrapper(watch, test, callback) {
     watch: watch,
     module: {
       preLoaders: [{ test: /\.ts$/, exclude: /node_modules/, loader: 'tslint-loader'}],
-      loaders: [{ test: /\.ts$/, exclude: /node_modules/, loaders: ['ng-annotate', 'babel-loader', 'awesome-typescript-loader']}]
+      loaders: [{ test: /\.ts$/, exclude: /node_modules/, loaders: ['babel-loader', 'awesome-typescript-loader']}]
     },
     output: { filename: 'index.module.js' }
   };

@@ -13,6 +13,7 @@ package org.eclipse.che.selenium.git;
 import com.google.inject.Inject;
 import com.google.inject.name.Named;
 import org.eclipse.che.commons.lang.NameGenerator;
+import org.eclipse.che.selenium.core.TestGroup;
 import org.eclipse.che.selenium.core.client.TestGitHubServiceClient;
 import org.eclipse.che.selenium.core.client.TestProjectServiceClient;
 import org.eclipse.che.selenium.core.constant.TestMenuCommandsConstants;
@@ -30,6 +31,7 @@ import org.testng.annotations.BeforeClass;
 import org.testng.annotations.Test;
 
 /** @author Aleksandr Shmaraev */
+@Test(groups = TestGroup.GITHUB)
 public class ImportRecursiveSubmoduleTest {
   public static final String PROJECT_NAME = NameGenerator.generate("ProjectSubmodule-", 4);
   private static final String SUBMODULE_NAME_1 = "Repo_For_Test";
@@ -38,11 +40,11 @@ public class ImportRecursiveSubmoduleTest {
   @Inject private TestWorkspace ws;
   @Inject private Ide ide;
 
-  @Inject
+  @Inject(optional = true)
   @Named("github.username")
   private String gitHubUsername;
 
-  @Inject
+  @Inject(optional = true)
   @Named("github.password")
   private String gitHubPassword;
 
@@ -160,7 +162,7 @@ public class ImportRecursiveSubmoduleTest {
 
   private void openSubmoduleOne(String projectName) throws Exception {
     projectExplorer.openItemByPath(projectName);
-    projectExplorer.selectItem(projectName + "/" + SUBMODULE_NAME_1);
+    projectExplorer.waitAndSelectItem(projectName + "/" + SUBMODULE_NAME_1);
     menu.runCommand(
         TestMenuCommandsConstants.Project.PROJECT,
         TestMenuCommandsConstants.Project.CONVERT_TO_PROJECT);
@@ -175,14 +177,13 @@ public class ImportRecursiveSubmoduleTest {
     projectExplorer.waitItem(projectName);
     projectExplorer.expandPathInProjectExplorerAndOpenFile(
         projectName + "/" + SUBMODULE_NAME_1 + "/src/main/java/com.codenvy.example.spring",
-        1,
         "GreetingController.java");
-    projectExplorer.waitItemInVisibleArea("HelloWorld.java");
+    projectExplorer.waitVisibilityByName("HelloWorld.java");
     editor.closeFileByNameWithSaving("GreetingController");
   }
 
   private void openSubmoduleTwo(String projectName) throws Exception {
-    projectExplorer.selectItem(projectName + "/" + SUBMODULE_NAME_2);
+    projectExplorer.waitAndSelectItem(projectName + "/" + SUBMODULE_NAME_2);
     menu.runCommand(
         TestMenuCommandsConstants.Project.PROJECT,
         TestMenuCommandsConstants.Project.CONVERT_TO_PROJECT);
@@ -196,11 +197,11 @@ public class ImportRecursiveSubmoduleTest {
     loader.waitOnClosed();
     projectExplorer.waitItem(projectName);
     projectExplorer.expandPathInProjectExplorerAndOpenFile(
-        projectName + "/" + SUBMODULE_NAME_2 + "/src/main/java/com.company.example", 1, "A.java");
+        projectName + "/" + SUBMODULE_NAME_2 + "/src/main/java/com.company.example", "A.java");
     projectExplorer.openItemByPath(
         projectName + "/" + SUBMODULE_NAME_2 + "/src/main/java/commenttest");
-    projectExplorer.waitItemInVisibleArea("GitPullTest.java");
-    projectExplorer.waitItemInVisibleArea("JavaCommentsTest.java");
+    projectExplorer.waitVisibilityByName("GitPullTest.java");
+    projectExplorer.waitVisibilityByName("JavaCommentsTest.java");
     editor.closeFileByNameWithSaving("A");
   }
 }

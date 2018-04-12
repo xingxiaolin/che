@@ -23,6 +23,9 @@ const MAX_RECENT_WORKSPACES_ITEMS: number = 5;
  * @author Oleksii Kurinnyi
  */
 export class NavbarRecentWorkspacesController {
+
+  static $inject = ['ideSvc', 'cheWorkspace', 'cheBranding', '$window', '$log', '$scope', '$rootScope', 'workspacesService'];
+
   cheWorkspace: CheWorkspace;
   dropdownItemTempl: Array<any>;
   workspaces: Array<che.IWorkspace>;
@@ -40,7 +43,6 @@ export class NavbarRecentWorkspacesController {
 
   /**
    * Default constructor
-   * @ngInject for Dependency injection
    */
   constructor(ideSvc: IdeSvc,
               cheWorkspace: CheWorkspace,
@@ -230,22 +232,33 @@ export class NavbarRecentWorkspacesController {
   }
 
   /**
-   * Returns IDE link
-   * @param workspaceId {String} workspace id
+   * @param {che.IWorkspace} workspace details
    * @returns {string}
    */
-  getIdeLink(workspaceId: string): string {
-    let workspace = this.cheWorkspace.getWorkspaceById(workspaceId);
+  getLink(workspace: che.IWorkspace): string {
+    if (this.workspacesService.isSupported(workspace)) {
+      return this.getIdeLink(workspace);
+    } else {
+      return this.getWorkspaceDetailsLink(workspace);
+    }
+  }
+
+  /**
+   * Returns IDE link
+   * @param {che.IWorkspace} workspace details
+   * @returns {string}
+   */
+  getIdeLink(workspace: che.IWorkspace): string {
     return '#/ide/' + (workspace ? (workspace.namespace + '/' + workspace.config.name) : 'unknown');
   }
 
   /**
-   * Opens new tab/window with IDE
-   * @param workspaceId {String} workspace id
+   * Returns link to page with workspace details
+   * @param {che.IWorkspace} workspace details
+   * @returns {string}
    */
-  openLinkInNewTab(workspaceId: string): void {
-    let url = this.getIdeLink(workspaceId);
-    this.$window.open(url, '_blank');
+  getWorkspaceDetailsLink(workspace: che.IWorkspace): string {
+    return '#/workspace/' + workspace.namespace + '/' + workspace.config.name;
   }
 
   /**
@@ -310,8 +323,7 @@ export class NavbarRecentWorkspacesController {
     let workspace = this.cheWorkspace.getWorkspaceById(workspaceId);
 
     this.updateRecentWorkspace(workspaceId);
-    this.cheWorkspace.startWorkspace(workspace.id, workspace.config.defaultEnv).then(() => {
-    }, (error: any) => {
+    this.cheWorkspace.startWorkspace(workspace.id, workspace.config.defaultEnv).catch((error: any) => {
       this.$log.error(error);
     });
   }

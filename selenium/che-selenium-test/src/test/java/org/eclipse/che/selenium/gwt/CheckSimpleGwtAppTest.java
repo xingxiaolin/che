@@ -13,10 +13,10 @@ package org.eclipse.che.selenium.gwt;
 import static org.eclipse.che.dto.server.DtoFactory.newDto;
 import static org.eclipse.che.selenium.core.constant.TestBuildConstants.BUILD_SUCCESS;
 import static org.eclipse.che.selenium.core.constant.TestCommandsConstants.CUSTOM;
+import static org.eclipse.che.selenium.core.constant.TestProjectExplorerContextMenuConstants.ContextMenuCommandGoals.COMMON;
 import static org.eclipse.che.selenium.core.constant.TestTimeoutsConstants.APPLICATION_START_TIMEOUT_SEC;
 import static org.eclipse.che.selenium.core.constant.TestTimeoutsConstants.REDRAW_UI_ELEMENTS_TIMEOUT_SEC;
 import static org.eclipse.che.selenium.core.workspace.WorkspaceTemplate.UBUNTU_JDK8;
-import static org.eclipse.che.selenium.pageobject.ProjectExplorer.CommandsGoal.COMMON;
 
 import com.google.inject.Inject;
 import java.net.URL;
@@ -41,6 +41,7 @@ import org.eclipse.che.selenium.pageobject.ToastLoader;
 import org.openqa.selenium.By;
 import org.openqa.selenium.support.ui.ExpectedConditions;
 import org.openqa.selenium.support.ui.WebDriverWait;
+import org.testng.annotations.AfterClass;
 import org.testng.annotations.BeforeClass;
 import org.testng.annotations.Test;
 
@@ -123,7 +124,7 @@ public class CheckSimpleGwtAppTest {
 
     projectExplorer.waitItem(projectName);
     toastLoader.waitAppeareanceAndClosing();
-    projectExplorer.selectItem(projectName);
+    projectExplorer.waitAndSelectItem(projectName);
     projectExplorer.invokeCommandWithContextMenu(COMMON, projectName, BUILD_COMMAND);
     consoles.waitExpectedTextIntoConsole(BUILD_SUCCESS, 600);
     projectExplorer.invokeCommandWithContextMenu(COMMON, projectName, RUN_GWT_COMMAND);
@@ -143,5 +144,10 @@ public class CheckSimpleGwtAppTest {
         .until(
             ExpectedConditions.textToBePresentInElementLocated(
                 By.tagName("body"), expectedTextOnCodeServerPage));
+  }
+
+  @AfterClass
+  public void tearDown() {
+    testWorkspace.delete();
   }
 }

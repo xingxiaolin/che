@@ -16,20 +16,19 @@
  * @description This class is handling the directive for the container with warnings
  * @author Ann Shumilova
  */
-export class WorkspaceWarnings {
-  private restrict: string;
-  private bindToController:boolean;
-  private templateUrl: string;
-  private controller: string;
-  private controllerAs: string;
-  private transclude: boolean;
-  private scope: {
+export class WorkspaceWarnings implements ng.IDirective {
+  restrict: string;
+  bindToController: boolean;
+  templateUrl: string;
+  controller: string;
+  controllerAs: string;
+  transclude: boolean;
+  scope: {
     [propName: string]: string
   };
 
   /**
    * Default constructor that is using resource
-   * @ngInject for Dependency injection
    */
   constructor() {
     this.restrict = 'E';
@@ -41,7 +40,7 @@ export class WorkspaceWarnings {
     this.transclude = true;
     this.scope = {
       workspace: '=workspace'
-    }
+    };
   }
 
 }

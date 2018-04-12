@@ -18,8 +18,10 @@ import {CheStack} from '../../../../../components/api/che-stack.factory';
  */
 export class CreateProjectStackLibraryController {
 
+  static $inject = ['$scope', 'cheStack', 'lodash'];
+
   private $scope: ng.IScope;
-  private lodash: _.LoDashStatic;
+  private lodash: any;
   private tabName: string;
   private selectedStackId: string;
   private allStackTags: Array<string> = [];
@@ -28,9 +30,10 @@ export class CreateProjectStackLibraryController {
 
   /**
    * Default constructor that is using resource
-   * @ngInject for Dependency injection
    */
-  constructor($scope: ng.IScope, cheStack: CheStack, lodash: _.LoDashStatic) {
+  constructor($scope: ng.IScope,
+              cheStack: CheStack,
+              lodash: any) {
     this.$scope = $scope;
     this.lodash = lodash;
 
@@ -43,7 +46,7 @@ export class CreateProjectStackLibraryController {
       });
     }
 
-    $scope.$on('event:library:selectStackId', (event, data) => {
+    $scope.$on('event:library:selectStackId', (event: ng.IAngularEvent, data: string) => {
       this.setStackSelectionById(data);
     });
   }

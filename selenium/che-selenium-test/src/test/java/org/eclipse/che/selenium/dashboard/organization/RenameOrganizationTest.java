@@ -127,6 +127,7 @@ public class RenameOrganizationTest {
     // Back to the Organizations list and test that the organizations renamed
     organizationPage.clickBackButton();
     organizationListPage.waitForOrganizationsList();
+
     assertTrue(organizationListPage.getValues(NAME).contains(newChildOrgQualifiedName));
     assertTrue(organizationListPage.getValues(NAME).contains(NEW_PARENT_ORG_NAME));
   }
