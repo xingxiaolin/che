@@ -69,8 +69,8 @@ public class InitRepositoryPresenter {
               console.print(constant.initSuccess());
               consolesPanelPresenter.addCommandOutput(console);
               notificationManager.notify(constant.initSuccess());
-
               project.synchronize();
+              appContext.getWorkspaceRoot().synchronize();
             })
         .catchError(
             error -> {
