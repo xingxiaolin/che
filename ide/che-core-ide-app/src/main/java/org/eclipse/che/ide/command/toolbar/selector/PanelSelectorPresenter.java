@@ -28,7 +28,6 @@ import org.eclipse.che.ide.api.parts.PerspectiveManager;
 public class PanelSelectorPresenter implements Presenter, PanelSelectorView.ActionDelegate {
 
   private PanelSelectorView view;
-
   private PerspectiveManager perspectiveManager;
 
   @Inject
@@ -140,6 +139,9 @@ public class PanelSelectorPresenter implements Presenter, PanelSelectorView.Acti
     }
 
     updateButtonState();
+
+    // set focus to the active editor if it exists
+    editorPartStack.openPreviousActivePart();
   }
 
   /** Updates icon for panel selector button displaying the current state of panels. */

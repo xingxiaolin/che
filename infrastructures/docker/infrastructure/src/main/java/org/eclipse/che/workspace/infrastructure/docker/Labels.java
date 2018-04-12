@@ -34,8 +34,10 @@ public final class Labels {
   public static final String LABEL_WORKSPACE_ID = LABEL_PREFIX + "workspace.id";
   public static final String LABEL_WORKSPACE_ENV = LABEL_PREFIX + "workspace.env";
   public static final String LABEL_WORKSPACE_OWNER = LABEL_PREFIX + "workspace.owner";
+  public static final String LABEL_WORKSPACE_OWNER_ID = LABEL_PREFIX + "workspace.owner.id";
+  public static final String LABEL_MACHINE_NAME = LABEL_PREFIX + "machine.name";
 
-  private static final String LABEL_MACHINE_NAME = LABEL_PREFIX + "machine.name";
+  private static final String LABEL_MACHINE_ATTRIBUTES = LABEL_PREFIX + "machine.attributes";
   private static final String SERVER_PORT_LABEL_FMT = LABEL_PREFIX + "server.%s.port";
   private static final String SERVER_PROTOCOL_LABEL_FMT = LABEL_PREFIX + "server.%s.protocol";
   private static final String SERVER_PATH_LABEL_FMT = LABEL_PREFIX + "server.%s.path";
@@ -87,7 +89,7 @@ public final class Labels {
     public Serializer runtimeId(RuntimeIdentity runtimeId) {
       labels.put(LABEL_WORKSPACE_ID, runtimeId.getWorkspaceId());
       labels.put(LABEL_WORKSPACE_ENV, runtimeId.getEnvName());
-      labels.put(LABEL_WORKSPACE_OWNER, runtimeId.getOwner());
+      labels.put(LABEL_WORKSPACE_OWNER_ID, runtimeId.getOwnerId());
       return this;
     }
 
@@ -121,6 +123,18 @@ public final class Labels {
       return this;
     }
 
+    /**
+     * Serializes machine attributes as docker container labels. Appends serialization result to
+     * this aggregate.
+     *
+     * @param attributes machine attributes
+     * @return this serializer
+     */
+    public Serializer machineAttributes(Map<String, String> attributes) {
+      labels.put(LABEL_MACHINE_ATTRIBUTES, GSON.toJson(attributes));
+      return this;
+    }
+
     /** Returns docker container labels aggregated during serialization. */
     public Map<String, String> labels() {
       return labels;
@@ -146,7 +160,7 @@ public final class Labels {
       return new RuntimeIdentityImpl(
           labels.get(LABEL_WORKSPACE_ID),
           labels.get(LABEL_WORKSPACE_ENV),
-          labels.get(LABEL_WORKSPACE_OWNER));
+          labels.get(LABEL_WORKSPACE_OWNER_ID));
     }
 
     /** Retrieves server configuration from docker labels and returns (ref -> server config) map. */
@@ -169,6 +183,16 @@ public final class Labels {
         }
       }
       return servers;
+    }
+
+    /** Retrieves machine attributes from docker labels and returns them. */
+    public Map<String, String> machineAttributes() {
+      final Map<String, String> attributes =
+          GSON.fromJson(labels.get(LABEL_MACHINE_ATTRIBUTES), mapTypeToken);
+      if (attributes != null) {
+        return attributes;
+      }
+      return new HashMap<>();
     }
   }
 

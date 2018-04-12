@@ -84,6 +84,7 @@ public class ImportFromConfigPresenter implements ImportFromConfigView.ActionDel
   @Override
   public void onImportClicked() {
     view.closeDialog();
+
     FactoryDto factoryDTO;
     try {
       factoryDTO = dtoFactory.createDtoFromJson(view.getFileContent(), FactoryDto.class);

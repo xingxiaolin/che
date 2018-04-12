@@ -14,7 +14,10 @@ import {CheKeycloak} from '../../components/api/che-keycloak.factory';
 import {CheService} from '../../components/api/che-service.factory';
 
 export class CheNavBarController {
-  private menuItemUrl = {
+
+  static $inject = ['$mdSidenav', '$scope', '$location', '$route', 'cheAPI', '$window', 'chePermissions', 'cheKeycloak', 'cheService'];
+
+  menuItemUrl = {
     dashboard: '#/',
     workspaces: '#/workspaces',
     administration: '#/administration',
@@ -56,10 +59,10 @@ export class CheNavBarController {
   private cheKeycloak: CheKeycloak;
   private cheService: CheService;
   private isPermissionServiceAvailable: boolean;
+  private isKeycloackPresent: boolean;
 
   /**
    * Default constructor
-   * @ngInject for Dependency injection
    */
   constructor($mdSidenav: ng.material.ISidenavService,
               $scope: ng.IScope,
@@ -79,6 +82,8 @@ export class CheNavBarController {
     this.chePermissions = chePermissions;
     this.cheKeycloak = cheKeycloak;
     this.cheService = cheService;
+
+    this.isKeycloackPresent = this.cheKeycloak.isPresent();
 
     this.profile = cheAPI.getProfile().getProfile();
 

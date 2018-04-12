@@ -15,6 +15,7 @@ import com.google.inject.name.Named;
 import java.net.URL;
 import java.nio.file.Paths;
 import org.eclipse.che.commons.lang.NameGenerator;
+import org.eclipse.che.selenium.core.TestGroup;
 import org.eclipse.che.selenium.core.client.TestProjectServiceClient;
 import org.eclipse.che.selenium.core.client.TestUserPreferencesServiceClient;
 import org.eclipse.che.selenium.core.constant.TestGitConstants;
@@ -33,6 +34,7 @@ import org.testng.annotations.BeforeClass;
 import org.testng.annotations.Test;
 
 /** @author Aleksandr Shmaraev */
+@Test(groups = TestGroup.GITHUB)
 public class AmendCommitTest {
   private static final String PROJECT_NAME = NameGenerator.generate("AmendCommit_", 4);
   private static final String PATH_TO_FILE =
@@ -81,7 +83,7 @@ public class AmendCommitTest {
   public void checkAmendPreviousCommit() {
     projectExplorer.waitProjectExplorer();
     projectExplorer.waitItem(PROJECT_NAME);
-    projectExplorer.selectItem(PROJECT_NAME);
+    projectExplorer.waitAndSelectItem(PROJECT_NAME);
     menu.runCommand(
         TestMenuCommandsConstants.Git.GIT, TestMenuCommandsConstants.Git.INITIALIZE_REPOSITORY);
     askDialog.confirmAndWaitClosed();
@@ -91,13 +93,13 @@ public class AmendCommitTest {
     loader.waitOnClosed();
 
     // perform init commit
-    projectExplorer.selectItem(PROJECT_NAME);
+    projectExplorer.waitAndSelectItem(PROJECT_NAME);
     menu.runCommand(TestMenuCommandsConstants.Git.GIT, TestMenuCommandsConstants.Git.COMMIT);
     git.waitAndRunCommit("init");
     loader.waitOnClosed();
 
     // edit java file and commit the change
-    projectExplorer.selectItem(PROJECT_NAME);
+    projectExplorer.waitAndSelectItem(PROJECT_NAME);
     projectExplorer.quickExpandWithJavaScript();
     projectExplorer.openItemByPath(PATH_TO_FILE);
     editor.waitActive();
@@ -111,14 +113,14 @@ public class AmendCommitTest {
     git.waitGitStatusBarWithMess(NOTHING_TO_COMMIT);
 
     // view git history
-    projectExplorer.selectItem(PROJECT_NAME);
+    projectExplorer.waitAndSelectItem(PROJECT_NAME);
     menu.runCommand(TestMenuCommandsConstants.Git.GIT, TestMenuCommandsConstants.Git.SHOW_HISTORY);
     loader.waitOnClosed();
     git.waitTextInHistoryForm(COMMIT_MESSAGE);
     git.closeGitHistoryForm();
 
     // only amend commit message
-    projectExplorer.selectItem(PROJECT_NAME);
+    projectExplorer.waitAndSelectItem(PROJECT_NAME);
     menu.runCommand(TestMenuCommandsConstants.Git.GIT, TestMenuCommandsConstants.Git.COMMIT);
     git.waitAndRunAmendCommitMessage(AMEND_COMMIT_MESS);
     menu.runCommand(TestMenuCommandsConstants.Git.GIT, TestMenuCommandsConstants.Git.SHOW_HISTORY);
@@ -141,7 +143,7 @@ public class AmendCommitTest {
     git.waitGitStatusBarWithMess(NOTHING_TO_COMMIT);
 
     // view git history
-    projectExplorer.selectItem(PROJECT_NAME);
+    projectExplorer.waitAndSelectItem(PROJECT_NAME);
     menu.runCommand(TestMenuCommandsConstants.Git.GIT, TestMenuCommandsConstants.Git.SHOW_HISTORY);
     loader.waitOnClosed();
     git.waitTextInHistoryForm(AMEND_COMMIT);

@@ -12,16 +12,13 @@ package org.eclipse.che.selenium.workspaces.notjavastack;
 
 import com.google.inject.Inject;
 import org.eclipse.che.commons.lang.NameGenerator;
-import org.eclipse.che.selenium.core.SeleniumWebDriver;
 import org.eclipse.che.selenium.core.client.TestWorkspaceServiceClient;
 import org.eclipse.che.selenium.core.constant.TestStacksConstants;
 import org.eclipse.che.selenium.core.user.TestUser;
-import org.eclipse.che.selenium.pageobject.Loader;
+import org.eclipse.che.selenium.core.webdriver.SeleniumWebDriverHelper;
 import org.eclipse.che.selenium.pageobject.ProjectExplorer;
-import org.eclipse.che.selenium.pageobject.dashboard.CreateWorkspace;
 import org.eclipse.che.selenium.pageobject.dashboard.Dashboard;
-import org.eclipse.che.selenium.pageobject.dashboard.NavigationBar;
-import org.eclipse.che.selenium.pageobject.dashboard.workspaces.WorkspaceDetails;
+import org.eclipse.che.selenium.pageobject.dashboard.NewWorkspace;
 import org.eclipse.che.selenium.pageobject.dashboard.workspaces.Workspaces;
 import org.eclipse.che.selenium.pageobject.machineperspective.MachineTerminal;
 import org.testng.annotations.AfterClass;
@@ -33,14 +30,11 @@ public class CreateWorkspaceWithNodeStackTest {
   private final String WORKSPACE = NameGenerator.generate("WsNode", 4);
 
   @Inject private TestUser defaultTestUser;
-  @Inject private NavigationBar navigationBar;
-  @Inject private CreateWorkspace createWorkspace;
+  @Inject private NewWorkspace newWorkspace;
   @Inject private Dashboard dashboard;
-  @Inject private WorkspaceDetails workspaceDetails;
   @Inject private ProjectExplorer projectExplorer;
-  @Inject private Loader loader;
   @Inject private MachineTerminal terminal;
-  @Inject private SeleniumWebDriver seleniumWebDriver;
+  @Inject private SeleniumWebDriverHelper seleniumWebDriverHelper;
   @Inject private TestWorkspaceServiceClient workspaceServiceClient;
   @Inject private Workspaces workspaces;
 
@@ -59,16 +53,16 @@ public class CreateWorkspaceWithNodeStackTest {
     dashboard.waitDashboardToolbarTitle();
     dashboard.selectWorkspacesItemOnDashboard();
     dashboard.waitToolbarTitleName("Workspaces");
-    workspaces.clickOnNewWorkspaceBtn();
+    workspaces.clickOnAddWorkspaceBtn();
 
-    createWorkspace.waitToolbar();
-    createWorkspace.typeWorkspaceName(WORKSPACE);
-    createWorkspace.selectStack(TestStacksConstants.NODE.getId());
-    createWorkspace.setMachineRAM("2");
-    createWorkspace.clickOnCreateWorkspaceButton();
+    newWorkspace.waitToolbar();
+    newWorkspace.typeWorkspaceName(WORKSPACE);
+    newWorkspace.selectStack(TestStacksConstants.NODE.getId());
+    newWorkspace.setMachineRAM("dev-machine", 2.0);
+    newWorkspace.clickOnCreateButtonAndOpenInIDE();
 
     dashboard.waitNotificationIsClosed();
-    seleniumWebDriver.switchFromDashboardIframeToIde();
+    seleniumWebDriverHelper.switchToIdeFrameAndWaitAvailability();
 
     projectExplorer.waitProjectExplorer();
     terminal.waitTerminalTab(60);

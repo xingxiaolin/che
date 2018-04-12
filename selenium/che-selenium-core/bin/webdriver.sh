@@ -78,12 +78,16 @@ initVariables() {
     PRODUCT_HOST=$(detectDockerInterfaceIp)
     PRODUCT_PORT=8080
 
+    SUPPORTED_INFRASTRUCTURES=(docker openshift)
+
     unset DEBUG_OPTIONS
     unset MAVEN_OPTIONS
     unset TMP_SUITE_PATH
     unset ORIGIN_TESTS_SCOPE
     unset TMP_DIR
-    unset NEW_USER_ID
+    unset NEW_DEFAULT_USER_ID
+    unset NEW_SECOND_USER_ID
+    unset EXCLUDE_PARAM
 }
 
 cleanUpEnvironment() {
@@ -93,7 +97,13 @@ cleanUpEnvironment() {
     fi
 
     if [[ -n ${NEW_USER_ID} ]]; then
-       removeTestUser
+       echo "[TEST] Removing default test user with name '${CHE_TESTUSER_NAME}'..."
+       removeUser ${NEW_USER_ID}  ${CHE_TESTUSER_NAME}
+    fi
+
+    if [[ -n ${NEW_SECOND_USER_ID} ]]; then
+       echo "[TEST] Removing second test user with name '${CHE_SECOND_TESTUSER_NAME}'..."
+       removeUser ${NEW_SECOND_USER_ID} ${CHE_SECOND_TESTUSER_NAME}
     fi
 }
 
@@ -151,6 +161,8 @@ checkParameters() {
         elif [[ "$var" =~ ^-[[:alpha:]]$ ]]; then :
         elif [[ "$var" == --skip-sources-validation ]]; then :
         elif [[ "$var" == --multiuser ]]; then :
+        elif [[ "$var" =~ --exclude=.* ]]; then :
+
         else
             printHelp
             echo "[TEST] Unrecognized or misused parameter "${var}
@@ -206,6 +218,9 @@ applyCustomOptions() {
 
         elif [[ "$var" == --multiuser ]]; then
             CHE_MULTIUSER=true
+
+        elif [[ "$var" =~ --exclude=.* ]]; then
+            EXCLUDE_PARAM=$(echo "$var" | sed -e "s/--exclude=//g")
 
         fi
     done
@@ -397,9 +412,12 @@ Modes (defines environment to run tests):
                                         Default value is in range [2,5] and depends on available RAM.
 
 Define tests scope:
-    --test=<TEST_CLASS>                 Single test to run
+    --test=<TEST_CLASS>                 Single test/package to run.
+                                        For example: '--test=DialogAboutTest', '--test=org.eclipse.che.selenium.git.**'.
     --suite=<SUITE>                     Test suite to run, found:
 "$(for x in $(ls -1 src/test/resources/suites); do echo "                                            * "$x; done)"
+    --exclude=<TEST_GROUPS_TO_EXCLUDE>  Comma-separated list of test groups to exclude from execution.
+                                        For example, use '--exclude=github' to exclude GitHub-related tests.
 
 Handle failing tests:
     --failed-tests                      Rerun failed tests that left after the previous try
@@ -448,20 +466,21 @@ HOW TO of usage:
 printRunOptions() {
     echo "[TEST]"
     echo "[TEST] =========== RUN OPTIONS ==========================="
-    echo "[TEST] Mode                : "${MODE}
-    echo "[TEST] Rerun attempts      : "${RERUN_ATTEMPTS}
+    echo "[TEST] Mode                : ${MODE}"
+    echo "[TEST] Rerun attempts      : ${RERUN_ATTEMPTS}"
     echo "[TEST] ==================================================="
-    echo "[TEST] Product Protocol    : "${PRODUCT_PROTOCOL}
-    echo "[TEST] Product Host        : "${PRODUCT_HOST}
-    echo "[TEST] Product Port        : "${PRODUCT_PORT}
-    echo "[TEST] Product Config      : "$(getTestGroups)
-    echo "[TEST] Tests               : "${TESTS_SCOPE}
-    echo "[TEST] Threads             : "${THREADS}
-    echo "[TEST] Workspace pool size : "${WORKSPACE_POOL_SIZE}
-    echo "[TEST] Web browser         : "${BROWSER}
-    echo "[TEST] Web driver ver      : "${WEBDRIVER_VERSION}
-    echo "[TEST] Web driver port     : "${WEBDRIVER_PORT}
-    echo "[TEST] Additional opts     : "${GRID_OPTIONS}" "${DEBUG_OPTIONS}" "${MAVEN_OPTIONS}
+    echo "[TEST] Product Protocol    : ${PRODUCT_PROTOCOL}"
+    echo "[TEST] Product Host        : ${PRODUCT_HOST}"
+    echo "[TEST] Product Port        : ${PRODUCT_PORT}"
+    echo "[TEST] Product Config      : $(getProductConfig)"
+    echo "[TEST] Tests               : ${TESTS_SCOPE}"
+    echo "[TEST] Tests to exclude    : $(getExcludedGroups)"
+    echo "[TEST] Threads             : ${THREADS}"
+    echo "[TEST] Workspace pool size : ${WORKSPACE_POOL_SIZE}"
+    echo "[TEST] Web browser         : ${BROWSER}"
+    echo "[TEST] Web driver ver      : ${WEBDRIVER_VERSION}"
+    echo "[TEST] Web driver port     : ${WEBDRIVER_PORT}"
+    echo "[TEST] Additional opts     : ${GRID_OPTIONS} ${DEBUG_OPTIONS} ${MAVEN_OPTIONS}"
     echo "[TEST] ==================================================="
 }
 
@@ -524,14 +543,12 @@ fetchActualResults() {
     unset ACTUAL_RESULTS
     unset ACTUAL_RESULTS_URL
 
-    # define the URL of CI job to compare result with result on it
-    if [[ ${CHE_MULTIUSER} == true ]]; then
-      local nameOfCIJob=che-multiuser-integration-tests
-    else
-      local nameOfCIJob=che-integration-tests
-    fi
+    # define the URL of CI job to compare local result with result on CI
+    local multiuserToken=$([[ "$CHE_MULTIUSER" == true ]] && echo "-multiuser")
+    local infrastructureToken=$([[ "$CHE_INFRASTRUCTURE" == "openshift" ]] && echo "-ocp" || echo "-$CHE_INFRASTRUCTURE")
+    local nameOfCIJob="che-integration-tests${multiuserToken}-master${infrastructureToken}"
 
-    [[ -z ${BASE_ACTUAL_RESULTS_URL+x} ]] && { BASE_ACTUAL_RESULTS_URL="https://ci.codenvycorp.com/view/qa/job/$nameOfCIJob/"; }
+    [[ -z ${BASE_ACTUAL_RESULTS_URL+x} ]] && { BASE_ACTUAL_RESULTS_URL="https://ci.codenvycorp.com/view/qa/job/${nameOfCIJob}/"; }
 
     local build=$(echo $@ | sed 's/.*--compare-with-ci\W\+\([0-9]\+\).*/\1/')
     if [[ ! ${build} =~ ^[0-9]+$ ]]; then
@@ -655,7 +672,7 @@ printProposals() {
         echo -e "[TEST] \t${BLUE}${CUR_DIR}/${CALLER} ${cmd} --threads=${THREADS} -Mgrid --failed-tests${NO_COLOUR}"
 
         echo "[TEST]"
-        if [[  ${total} -lt 50 ]]; then
+        if [[ ${total} -lt 50 ]]; then
             echo "[TEST] Or run them one by one:"
             for r in $(echo ${regressions[@]} | tr ' ' '\n' | sed  's/\(.*\)[.][^.]*/\1/' | sort | uniq)
             do
@@ -700,14 +717,14 @@ runTests() {
                 -Dbrowser=${BROWSER} \
                 -Dche.threads=${THREADS} \
                 -Dche.workspace_pool_size=${WORKSPACE_POOL_SIZE} \
-                -DtestGroups="$(getTestGroups)" \
+                -DexcludedGroups="$(getExcludedGroups)" \
                 ${DEBUG_OPTIONS} \
                 ${GRID_OPTIONS} \
                 ${MAVEN_OPTIONS}
 }
 
-# Return list of test groups in comma-separated view
-getTestGroups() {
+# Return list of product features
+getProductConfig() {
   local testGroups=${CHE_INFRASTRUCTURE}
 
   if [[ ${CHE_MULTIUSER} == true ]]; then
@@ -717,6 +734,28 @@ getTestGroups() {
   fi
 
   echo ${testGroups}
+}
+
+# Prepare list of test groups to exclude.
+# It consists of "--exclude" parameter value + list of groups which don't comply with product config
+getExcludedGroups() {
+    local excludeParamArray=(${EXCLUDE_PARAM//,/ })
+
+    local productConfig=$(getProductConfig)
+    local productConfigArray=(${productConfig//,/ })
+
+    local uncomplyingGroups=(${SUPPORTED_INFRASTRUCTURES[@]} singleuser multiuser)
+
+    for productConfigGroup in ${productConfigArray[*]}; do
+        for i in ${!uncomplyingGroups[@]}; do
+            if [[ "${productConfigGroup}" == "${uncomplyingGroups[i]}" ]]; then
+                unset uncomplyingGroups[i]
+            fi
+        done
+    done
+
+    local excludedGroups=("${uncomplyingGroups[@]}" "${excludeParamArray[@]}")
+    echo $(IFS=$','; echo "${excludedGroups[*]}")
 }
 
 # Reruns failed tests
@@ -825,7 +864,7 @@ storeTestReport() {
     if [[ -f ${TMP_SUITE_PATH} ]]; then
         cp ${TMP_SUITE_PATH} target/suite;
     fi
-    zip -qr ${report} target/screenshots target/htmldumps target/site target/failsafe-reports target/log target/bin target/suite
+    zip -qr ${report} target/screenshots target/htmldumps target/workspace-logs target/webdriver-logs target/site target/failsafe-reports target/log target/bin target/suite
 
     echo -e "[TEST] Tests results and reports are saved to ${BLUE}${report}${NO_COLOUR}"
     echo "[TEST]"
@@ -845,24 +884,32 @@ prepareToFirstRun() {
     initRunMode
 
     if [[ ${CHE_MULTIUSER} == false ]]; then
-      prepareTestUserForSingleuserChe
+      prepareTestUsersForSingleuserChe
     else
-      prepareTestUserForMultiuserChe
+      prepareTestUsersForMultiuserChe
     fi
 }
 
-prepareTestUserForSingleuserChe() {
+prepareTestUsersForSingleuserChe() {
+    export CHE_ADMIN_NAME=
     export CHE_ADMIN_EMAIL=
     export CHE_ADMIN_PASSWORD=
+    export CHE_ADMIN_OFFLINE__TOKEN=
 
+    export CHE_TESTUSER_NAME=che
     export CHE_TESTUSER_EMAIL=che@eclipse.org
     export CHE_TESTUSER_PASSWORD=secret
+    export CHE_TESTUSER_OFFLINE__TOKEN=
 }
 
-prepareTestUserForMultiuserChe() {
+prepareTestUsersForMultiuserChe() {
     export CHE_ADMIN_NAME=${CHE_ADMIN_NAME:-admin}
     export CHE_ADMIN_EMAIL=${CHE_ADMIN_EMAIL:-admin@admin.com}
     export CHE_ADMIN_PASSWORD=${CHE_ADMIN_PASSWORD:-admin}
+    export CHE_ADMIN_OFFLINE__TOKEN=${CHE_ADMIN_OFFLINE__TOKEN}
+
+    export CHE_TESTUSER_OFFLINE__TOKEN=${CHE_TESTUSER_OFFLINE__TOKEN}
+    export CHE_SECOND_TESTUSER_OFFLINE__TOKEN=${CHE_SECOND_TESTUSER_OFFLINE__TOKEN}
 
     if [[ -n ${CHE_TESTUSER_EMAIL+x} ]] && [[ -n ${CHE_TESTUSER_PASSWORD+x} ]]; then
         return
@@ -870,52 +917,81 @@ prepareTestUserForMultiuserChe() {
 
     # create test user by executing kcadm.sh commands inside keycloak docker container if there are no its credentials among environment variables
     if [[ "${PRODUCT_HOST}" == "$(detectDockerInterfaceIp)" ]] || [[ "${CHE_INFRASTRUCTURE}" == "openshift" ]]; then
-
-        echo "[TEST] Creating test user..."
+        # create default test user
         local time=$(date +%s)
         export CHE_TESTUSER_NAME=${CHE_TESTUSER_NAME:-user${time}}
         export CHE_TESTUSER_EMAIL=${CHE_TESTUSER_EMAIL:-${CHE_TESTUSER_NAME}@1.com}
         export CHE_TESTUSER_PASSWORD=${CHE_TESTUSER_PASSWORD:-${time}}
-
-        if [[ "${CHE_INFRASTRUCTURE}" == "openshift" ]]; then
-            local kc_container_id=$(docker ps | grep 'eclipse-che/keycloak' | cut -d ' ' -f1)
-        else
-            local kc_container_id=$(docker ps | grep che_keycloak | cut -d ' ' -f1)
-        fi
-
-        local cli_auth="--no-config --server http://localhost:8080/auth --user ${CHE_ADMIN_NAME} --password ${CHE_ADMIN_PASSWORD} --realm master"
-        local response=$(docker exec -i $kc_container_id sh -c "keycloak/bin/kcadm.sh create users -r che -s username=${CHE_TESTUSER_NAME} -s enabled=true $cli_auth 2>&1")
-        if [[ "$response" =~ "Created new user with id" ]]; then
-           NEW_USER_ID=$(echo "$response" | grep "Created new user with id" | sed -e "s#Created new user with id ##" | sed -e "s#'##g")
-           # set test user's permanent password
-           docker exec -i $kc_container_id sh -c "keycloak/bin/kcadm.sh set-password -r che --username ${CHE_TESTUSER_NAME} --new-password ${CHE_TESTUSER_PASSWORD} $cli_auth"
-           # set email of test user to ${cheTestUserEmail}
-           docker exec -i $kc_container_id sh -c "keycloak/bin/kcadm.sh update users/${NEW_USER_ID} -r che --set email=${CHE_TESTUSER_EMAIL} $cli_auth"
-           # add realm role "user" test user
-           docker exec -i $kc_container_id sh -c "keycloak/bin/kcadm.sh add-roles -r che --uusername ${CHE_TESTUSER_NAME} --rolename user $cli_auth"
-           # add role "read-token" of client "broker" to test user
-           docker exec -i $kc_container_id sh -c "keycloak/bin/kcadm.sh add-roles -r che --uusername ${CHE_TESTUSER_NAME} --cclientid broker --rolename read-token $cli_auth"
-        else
+        echo "[TEST] Creating default test user with name '$CHE_TESTUSER_NAME'..."
+        NEW_USER_ID=$(createUser ${CHE_TESTUSER_NAME} ${CHE_TESTUSER_EMAIL} ${CHE_TESTUSER_PASSWORD})
+        if [[ -z ${NEW_USER_ID} ]]; then
            # set test user credentials to be equal to admin ones in case of problem with creation of user
-           echo -e "${RED}[WARN] There is a problem with creation of test user in Keycloak server: '${response}'.${NO_COLOUR}"
-           echo -e "Admin user will be used as a test user."
+           echo -e "${RED}[WARN] There is a problem with creation of default test user in Keycloak server: '${response}'.${NO_COLOUR}"
+           echo -e "Admin user will be used as default test user."
            CHE_TESTUSER_NAME=${CHE_ADMIN_NAME}
            CHE_TESTUSER_EMAIL=${CHE_ADMIN_EMAIL}
            CHE_TESTUSER_PASSWORD=${CHE_ADMIN_PASSWORD}
         fi
+
+        # create second test user
+        time=$(date +%s)
+        export CHE_SECOND_TESTUSER_NAME=${CHE_SECOND_TESTUSER_NAME:-user${time}}
+        export CHE_SECOND_TESTUSER_EMAIL=${CHE_SECOND_TESTUSER_EMAIL:-${CHE_SECOND_TESTUSER_NAME}@1.com}
+        export CHE_SECOND_TESTUSER_PASSWORD=${CHE_SECOND_TESTUSER_PASSWORD:-${time}}
+        echo "[TEST] Creating second test user with name '$CHE_SECOND_TESTUSER_NAME'..."
+        NEW_SECOND_USER_ID=$(createUser ${CHE_SECOND_TESTUSER_NAME} ${CHE_SECOND_TESTUSER_EMAIL} ${CHE_SECOND_TESTUSER_PASSWORD})
+        if [[ -z ${NEW_SECOND_USER_ID} ]]; then
+           # set test user credentials to be equal to admin ones in case of problem with creation of user
+           echo -e "${RED}[WARN] There is a problem with creation of second test user in Keycloak server: '${response}'.${NO_COLOUR}"
+           echo -e "Admin user will be used as a second test user."
+           CHE_SECOND_TESTUSER_NAME=${CHE_ADMIN_NAME}
+           CHE_SECOND_TESTUSER_EMAIL=${CHE_ADMIN_EMAIL}
+           CHE_SECOND_TESTUSER_PASSWORD=${CHE_ADMIN_PASSWORD}
+        fi
+
+        # add role "read-token" of client "broker" to admin user
+        docker exec -i $(getKeycloakContainerId) sh -c "keycloak/bin/kcadm.sh add-roles -r che --uusername ${CHE_ADMIN_NAME} --cclientid broker --rolename read-token --no-config --server http://localhost:8080/auth --user ${CHE_ADMIN_NAME} --password ${CHE_ADMIN_PASSWORD} --realm master"
     fi
 }
 
-removeTestUser() {
-    echo "[TEST] Removing test user with name '${CHE_TESTUSER_NAME}'..."
-    if [[ "${CHE_INFRASTRUCTURE}" == "openshift" ]]; then
-        local kc_container_id=$(docker ps | grep 'eclipse-che/keycloak' | cut -d ' ' -f1)
-    else
-        local kc_container_id=$(docker ps | grep che_keycloak | cut -d ' ' -f1)
-    fi
+createUser() {
+    local username=$1
+    local email=$2
+    local password=$3
+
+    local kc_container_id=$(getKeycloakContainerId)
 
     local cli_auth="--no-config --server http://localhost:8080/auth --user ${CHE_ADMIN_NAME} --password ${CHE_ADMIN_PASSWORD} --realm master"
-    local response=$(docker exec -i $kc_container_id sh -c "keycloak/bin/kcadm.sh delete users/${NEW_USER_ID} -r che -s username=${CHE_TESTUSER_NAME} $cli_auth 2>&1")
+    local response=$(docker exec -i $kc_container_id sh -c "keycloak/bin/kcadm.sh create users -r che -s username=${username} -s enabled=true $cli_auth 2>&1")
+    if [[ "$response" =~ "Created new user with id" ]]; then
+       local newUserId=$(echo "$response" | grep "Created new user with id" | sed -e "s#Created new user with id ##" | sed -e "s#'##g")
+       # set test user's permanent password
+       docker exec -i $kc_container_id sh -c "keycloak/bin/kcadm.sh set-password -r che --username ${username} --new-password ${password} $cli_auth"
+       # set email of test user to ${cheTestUserEmail}
+       docker exec -i $kc_container_id sh -c "keycloak/bin/kcadm.sh update users/${newUserId} -r che --set email=${email} $cli_auth"
+       # add realm role "user" test user
+       docker exec -i $kc_container_id sh -c "keycloak/bin/kcadm.sh add-roles -r che --uusername ${username} --rolename user $cli_auth"
+       # add role "read-token" of client "broker" to test user
+       docker exec -i $kc_container_id sh -c "keycloak/bin/kcadm.sh add-roles -r che --uusername ${username} --cclientid broker --rolename read-token $cli_auth"
+
+       echo $newUserId
+    fi
+}
+
+removeUser() {
+    local userId=$1
+    local username=$2
+
+    local cli_auth="--no-config --server http://localhost:8080/auth --user ${CHE_ADMIN_NAME} --password ${CHE_ADMIN_PASSWORD} --realm master"
+    docker exec -i $(getKeycloakContainerId) sh -c "keycloak/bin/kcadm.sh delete users/${userId} -r che -s username=${username} ${cli_auth} 2>&1"
+}
+
+getKeycloakContainerId() {
+    if [[ "${CHE_INFRASTRUCTURE}" == "openshift" ]]; then
+        echo $(docker ps | grep 'keycloak_keycloak-' | cut -d ' ' -f1)
+    else
+        echo $(docker ps | grep che_keycloak | cut -d ' ' -f1)
+    fi
 }
 
 testProduct() {

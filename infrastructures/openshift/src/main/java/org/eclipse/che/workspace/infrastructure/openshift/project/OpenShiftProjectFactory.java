@@ -17,6 +17,7 @@ import com.google.inject.Singleton;
 import javax.inject.Named;
 import org.eclipse.che.api.workspace.server.spi.InfrastructureException;
 import org.eclipse.che.commons.annotation.Nullable;
+import org.eclipse.che.workspace.infrastructure.kubernetes.namespace.KubernetesNamespaceFactory;
 import org.eclipse.che.workspace.infrastructure.openshift.OpenShiftClientFactory;
 
 /**
@@ -25,7 +26,7 @@ import org.eclipse.che.workspace.infrastructure.openshift.OpenShiftClientFactory
  * @author Anton Korneta
  */
 @Singleton
-public class OpenShiftProjectFactory {
+public class OpenShiftProjectFactory extends KubernetesNamespaceFactory {
 
   private final String projectName;
   private final OpenShiftClientFactory clientFactory;
@@ -34,6 +35,7 @@ public class OpenShiftProjectFactory {
   public OpenShiftProjectFactory(
       @Nullable @Named("che.infra.openshift.project") String projectName,
       OpenShiftClientFactory clientFactory) {
+    super(projectName, clientFactory);
     this.projectName = projectName;
     this.clientFactory = clientFactory;
   }

@@ -27,6 +27,7 @@ import org.eclipse.che.api.core.model.workspace.WorkspaceStatus;
 import org.eclipse.che.ide.api.app.AppContext;
 import org.eclipse.che.ide.api.workspace.event.WorkspaceStoppedEvent;
 import org.eclipse.che.ide.bootstrap.BasicIDEInitializedEvent;
+import org.eclipse.che.ide.ui.window.WindowClientBundle;
 
 /**
  * Toast notification appearing on the top of the IDE and containing a proposal message to start
@@ -40,6 +41,8 @@ class StartWorkspaceNotification {
   private final StartWorkspaceNotificationUiBinder uiBinder;
   private final WorkspaceStatusNotification wsStatusNotification;
   private final Provider<CurrentWorkspaceManager> currentWorkspaceManagerProvider;
+  private final RestartingStateHolder restartingStateHolder;
+  private final WindowClientBundle windowClientBundle;
 
   @UiField Button button;
 
@@ -49,10 +52,14 @@ class StartWorkspaceNotification {
       StartWorkspaceNotificationUiBinder uiBinder,
       Provider<CurrentWorkspaceManager> currentWorkspaceManagerProvider,
       EventBus eventBus,
-      AppContext appContext) {
+      AppContext appContext,
+      RestartingStateHolder restartingStateHolder,
+      WindowClientBundle windowClientBundle) {
     this.wsStatusNotification = wsStatusNotification;
     this.uiBinder = uiBinder;
     this.currentWorkspaceManagerProvider = currentWorkspaceManagerProvider;
+    this.restartingStateHolder = restartingStateHolder;
+    this.windowClientBundle = windowClientBundle;
 
     eventBus.addHandler(
         BasicIDEInitializedEvent.TYPE,
@@ -69,7 +76,11 @@ class StartWorkspaceNotification {
 
   /** Displays a notification with a proposal to start the current workspace. */
   void show() {
+    if (restartingStateHolder.isRestarting()) {
+      return;
+    }
     Widget widget = uiBinder.createAndBindUi(StartWorkspaceNotification.this);
+    button.addStyleName(windowClientBundle.getStyle().windowFrameFooterButtonPrimary());
     wsStatusNotification.show(WORKSPACE_STOPPED, widget);
   }
 

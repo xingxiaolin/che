@@ -10,24 +10,19 @@
  */
 package org.eclipse.che.selenium.workspaces;
 
-import static org.eclipse.che.selenium.core.constant.TestTimeoutsConstants.UPDATING_PROJECT_TIMEOUT_SEC;
-import static org.eclipse.che.selenium.pageobject.dashboard.workspaces.WorkspaceDetails.StateWorkspace.RUNNING;
-import static org.eclipse.che.selenium.pageobject.dashboard.workspaces.WorkspaceDetails.StateWorkspace.STOPPING;
+import static org.eclipse.che.selenium.core.project.ProjectTemplates.MAVEN_SPRING;
 import static org.testng.Assert.fail;
 
 import com.google.inject.Inject;
 import java.net.URL;
 import java.nio.file.Paths;
 import org.eclipse.che.commons.lang.NameGenerator;
-import org.eclipse.che.selenium.core.SeleniumWebDriver;
 import org.eclipse.che.selenium.core.client.TestProjectServiceClient;
 import org.eclipse.che.selenium.core.client.TestWorkspaceServiceClient;
-import org.eclipse.che.selenium.core.project.ProjectTemplates;
+import org.eclipse.che.selenium.core.webdriver.SeleniumWebDriverHelper;
 import org.eclipse.che.selenium.core.workspace.TestWorkspace;
 import org.eclipse.che.selenium.pageobject.CodenvyEditor;
-import org.eclipse.che.selenium.pageobject.Events;
 import org.eclipse.che.selenium.pageobject.Ide;
-import org.eclipse.che.selenium.pageobject.Loader;
 import org.eclipse.che.selenium.pageobject.ProjectExplorer;
 import org.eclipse.che.selenium.pageobject.dashboard.Dashboard;
 import org.eclipse.che.selenium.pageobject.dashboard.workspaces.WorkspaceDetails;
@@ -46,12 +41,10 @@ public class ProjectStateAfterRenameWorkspaceTest {
   @Inject private TestWorkspace testWorkspace;
   @Inject private Ide ide;
   @Inject private ProjectExplorer projectExplorer;
-  @Inject private Loader loader;
   @Inject private CodenvyEditor editor;
   @Inject private Dashboard dashboard;
   @Inject private WorkspaceDetails workspaceDetails;
-  @Inject private Events events;
-  @Inject private SeleniumWebDriver seleniumWebDriver;
+  @Inject private SeleniumWebDriverHelper seleniumWebDriverHelper;
   @Inject private TestProjectServiceClient testProjectServiceClient;
   @Inject private TestWorkspaceServiceClient testWorkspaceServiceClient;
   @Inject private Workspaces workspaces;
@@ -62,10 +55,7 @@ public class ProjectStateAfterRenameWorkspaceTest {
     URL resource =
         ProjectStateAfterRenameWorkspaceTest.this.getClass().getResource("/projects/guess-project");
     testProjectServiceClient.importProject(
-        testWorkspace.getId(),
-        Paths.get(resource.toURI()),
-        PROJECT_NAME,
-        ProjectTemplates.MAVEN_SPRING);
+        testWorkspace.getId(), Paths.get(resource.toURI()), PROJECT_NAME, MAVEN_SPRING);
     ide.open(testWorkspace);
   }
 
@@ -76,9 +66,9 @@ public class ProjectStateAfterRenameWorkspaceTest {
 
   @Test
   public void checkProjectAfterRenameWs() throws Exception {
-    projectExplorer.waitProjectExplorer();
+    ide.waitOpenedWorkspaceIsReadyToUse();
     projectExplorer.waitItem(PROJECT_NAME);
-    projectExplorer.selectItem(PROJECT_NAME);
+    projectExplorer.waitAndSelectItem(PROJECT_NAME);
     projectExplorer.quickExpandWithJavaScript();
     projectExplorer.waitItem(PROJECT_NAME + "/src/main/webapp/index.jsp");
     projectExplorer.waitItem(
@@ -97,16 +87,16 @@ public class ProjectStateAfterRenameWorkspaceTest {
     workspaces.selectWorkspaceItemName(testWorkspace.getName());
     workspaceOverview.enterNameWorkspace(WORKSPACE_NEW_NAME);
     workspaceDetails.clickOnSaveChangesBtn();
-    workspaceDetails.checkStateOfWorkspace(STOPPING);
-    workspaceDetails.checkStateOfWorkspace(RUNNING, UPDATING_PROJECT_TIMEOUT_SEC);
+    dashboard.waitNotificationMessage("Workspace updated");
+    dashboard.waitNotificationIsClosed();
     workspaceOverview.checkNameWorkspace(WORKSPACE_NEW_NAME);
 
     // open the IDE, check state of the project
     workspaceDetails.clickOpenInIdeWsBtn();
 
-    seleniumWebDriver.switchFromDashboardIframeToIde();
+    seleniumWebDriverHelper.switchToIdeFrameAndWaitAvailability();
 
-    projectExplorer.waitProjectExplorer();
+    ide.waitOpenedWorkspaceIsReadyToUse();
     projectExplorer.waitItem(PROJECT_NAME);
 
     try {

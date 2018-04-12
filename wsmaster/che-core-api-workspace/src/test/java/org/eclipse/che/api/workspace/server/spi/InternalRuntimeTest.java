@@ -39,6 +39,7 @@ import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
 import org.eclipse.che.api.core.ValidationException;
 import org.eclipse.che.api.core.model.workspace.Warning;
+import org.eclipse.che.api.core.model.workspace.WorkspaceStatus;
 import org.eclipse.che.api.core.model.workspace.config.ServerConfig;
 import org.eclipse.che.api.core.model.workspace.runtime.Machine;
 import org.eclipse.che.api.core.model.workspace.runtime.MachineStatus;
@@ -490,7 +491,7 @@ public class InternalRuntimeTest {
     doReturn(internalMachines).when(internalRuntime).getInternalMachines();
     doThrow(new InfrastructureException(badServerRewritingExcMessage))
         .when(urlRewriter)
-        .rewriteURL(any(RuntimeIdentity.class), anyString(), eq(badServerURL));
+        .rewriteURL(any(RuntimeIdentity.class), any(), anyString(), eq(badServerURL));
 
     // when
     Map<String, ? extends Machine> actualMachines = internalRuntime.getMachines();
@@ -545,7 +546,7 @@ public class InternalRuntimeTest {
     return new ServerImpl()
         .withStatus(server.getStatus())
         .withAttributes(server.getAttributes())
-        .withUrl(TEST_URL_REWRITER.rewriteURL(null, null, server.getUrl()));
+        .withUrl(TEST_URL_REWRITER.rewriteURL(null, null, null, server.getUrl()));
   }
 
   /**
@@ -617,8 +618,10 @@ public class InternalRuntimeTest {
   }
 
   private static class TestURLRewriter implements URLRewriter {
+
     @Override
-    public String rewriteURL(RuntimeIdentity identity, String name, String url)
+    public String rewriteURL(
+        RuntimeIdentity identity, String machineName, String serverName, String url)
         throws InfrastructureException {
       return url + "#something";
     }
@@ -628,10 +631,10 @@ public class InternalRuntimeTest {
     public TestInternalRuntime(URLRewriter urlRewriter, boolean running)
         throws ValidationException, InfrastructureException {
       super(
-          new TestRuntimeContext(null, new RuntimeIdentityImpl("ws", "env", "owner"), null),
+          new TestRuntimeContext(null, new RuntimeIdentityImpl("ws", "env", "id"), null),
           urlRewriter,
           emptyList(),
-          running);
+          running ? WorkspaceStatus.RUNNING : null);
     }
 
     @Override

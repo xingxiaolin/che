@@ -12,7 +12,10 @@ package org.eclipse.che.selenium.core;
 
 import static java.lang.String.format;
 import static org.eclipse.che.selenium.core.constant.TestTimeoutsConstants.APPLICATION_START_TIMEOUT_SEC;
+import static org.eclipse.che.selenium.core.constant.TestTimeoutsConstants.LOADER_TIMEOUT_SEC;
 import static org.eclipse.che.selenium.core.utils.WaitUtils.sleepQuietly;
+import static org.openqa.selenium.support.ui.ExpectedConditions.frameToBeAvailableAndSwitchToIt;
+import static org.openqa.selenium.support.ui.ExpectedConditions.visibilityOfElementLocated;
 
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
@@ -23,6 +26,7 @@ import java.net.URL;
 import java.util.List;
 import java.util.Scanner;
 import java.util.Set;
+import java.util.logging.Level;
 import javax.inject.Named;
 import org.eclipse.che.commons.annotation.Nullable;
 import org.eclipse.che.selenium.core.constant.TestBrowser;
@@ -38,10 +42,12 @@ import org.openqa.selenium.chrome.ChromeOptions;
 import org.openqa.selenium.interactions.HasInputDevices;
 import org.openqa.selenium.interactions.Keyboard;
 import org.openqa.selenium.interactions.Mouse;
+import org.openqa.selenium.logging.LogType;
+import org.openqa.selenium.logging.LoggingPreferences;
+import org.openqa.selenium.remote.CapabilityType;
 import org.openqa.selenium.remote.DesiredCapabilities;
 import org.openqa.selenium.remote.RemoteWebDriver;
 import org.openqa.selenium.support.ui.ExpectedCondition;
-import org.openqa.selenium.support.ui.ExpectedConditions;
 import org.openqa.selenium.support.ui.WebDriverWait;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -250,12 +256,17 @@ public class SeleniumWebDriver
 
     switch (browser) {
       case GOOGLE_CHROME:
+        LoggingPreferences loggingPreferences = new LoggingPreferences();
+        loggingPreferences.enable(LogType.PERFORMANCE, Level.ALL);
+        loggingPreferences.enable(LogType.BROWSER, Level.ALL);
+
         ChromeOptions options = new ChromeOptions();
         options.addArguments("--no-sandbox");
         options.addArguments("--dns-prefetch-disable");
 
         capability = DesiredCapabilities.chrome();
         capability.setCapability(ChromeOptions.CAPABILITY, options);
+        capability.setCapability(CapabilityType.LOGGING_PREFS, loggingPreferences);
         break;
 
       default:
@@ -308,13 +319,22 @@ public class SeleniumWebDriver
   }
 
   public void switchFromDashboardIframeToIde() {
-    new WebDriverWait(this, APPLICATION_START_TIMEOUT_SEC)
-        .until(ExpectedConditions.frameToBeAvailableAndSwitchToIt(By.id("ide-application-iframe")));
+    switchFromDashboardIframeToIde(APPLICATION_START_TIMEOUT_SEC);
   }
 
   public void switchFromDashboardIframeToIde(int timeout) {
-    new WebDriverWait(this, timeout)
-        .until(ExpectedConditions.frameToBeAvailableAndSwitchToIt(By.id("ide-application-iframe")));
+    wait(timeout).until(visibilityOfElementLocated(By.id("ide-application-iframe")));
+
+    wait(LOADER_TIMEOUT_SEC)
+        .until(
+            (ExpectedCondition<Boolean>)
+                driver ->
+                    (((JavascriptExecutor) driver)
+                            .executeScript("return angular.element('body').scope().showIDE"))
+                        .toString()
+                        .equals("true"));
+
+    wait(timeout).until(frameToBeAvailableAndSwitchToIt(By.id("ide-application-iframe")));
   }
 
   public WebDriverWait wait(int timeOutInSeconds) {

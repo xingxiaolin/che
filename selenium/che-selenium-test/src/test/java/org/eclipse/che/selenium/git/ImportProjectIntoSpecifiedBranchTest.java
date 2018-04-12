@@ -15,6 +15,7 @@ import com.google.inject.name.Named;
 import java.io.IOException;
 import org.eclipse.che.commons.json.JsonParseException;
 import org.eclipse.che.commons.lang.NameGenerator;
+import org.eclipse.che.selenium.core.TestGroup;
 import org.eclipse.che.selenium.core.client.TestGitHubServiceClient;
 import org.eclipse.che.selenium.core.client.TestProjectServiceClient;
 import org.eclipse.che.selenium.core.constant.TestMenuCommandsConstants;
@@ -32,6 +33,7 @@ import org.testng.annotations.BeforeClass;
 import org.testng.annotations.Test;
 
 /** @author Aleksandr Shmaraev */
+@Test(groups = TestGroup.GITHUB)
 public class ImportProjectIntoSpecifiedBranchTest {
   private static final String PROJECT_NAME = NameGenerator.generate("ImportIntoBranch_1-", 4);
   private static final String BRANCH_1 = "xxx";
@@ -82,7 +84,7 @@ public class ImportProjectIntoSpecifiedBranchTest {
     performImportIntoBranch(
         "git@github.com:" + gitHubUsername + "/Repo_For_Test.git", PROJECT_NAME, BRANCH_1);
     projectExplorer.waitItem(PROJECT_NAME);
-    projectExplorer.selectVisibleItem(PROJECT_NAME);
+    projectExplorer.waitAndSelectItemByName(PROJECT_NAME);
     loader.waitOnClosed();
     menu.runCommand(TestMenuCommandsConstants.Git.GIT, TestMenuCommandsConstants.Git.BRANCHES);
     git.waitBranchInTheListWithCoState(BRANCH_1);
@@ -99,7 +101,7 @@ public class ImportProjectIntoSpecifiedBranchTest {
     performImportIntoBranch(
         "https://github.com/" + gitHubUsername + "/Repo_For_Test.git", PROJECT_NAME, BRANCH_2);
     projectExplorer.waitItem(PROJECT_NAME);
-    projectExplorer.selectVisibleItem(PROJECT_NAME);
+    projectExplorer.waitAndSelectItemByName(PROJECT_NAME);
     loader.waitOnClosed();
     menu.runCommand(TestMenuCommandsConstants.Git.GIT, TestMenuCommandsConstants.Git.BRANCHES);
     git.waitBranchInTheListWithCoState(BRANCH_2);
@@ -122,7 +124,7 @@ public class ImportProjectIntoSpecifiedBranchTest {
     projectWizard.waitCreateProjectWizardFormIsClosed();
     projectExplorer.waitProjectExplorer();
     projectExplorer.waitItem(PROJECT_NAME);
-    projectExplorer.selectVisibleItem(PROJECT_NAME);
+    projectExplorer.waitAndSelectItemByName(PROJECT_NAME);
     loader.waitOnClosed();
     menu.runCommand(TestMenuCommandsConstants.Git.GIT, TestMenuCommandsConstants.Git.BRANCHES);
     git.waitBranchInTheListWithCoState(BRANCH_3);

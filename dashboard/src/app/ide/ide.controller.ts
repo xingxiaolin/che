@@ -19,6 +19,8 @@ import {CheWorkspace} from '../../components/api/workspace/che-workspace.factory
  * @author Florent Benoit
  */
 class IdeCtrl {
+  static $inject = ['$location', '$rootScope', '$routeParams', '$timeout', 'ideSvc', 'ideIFrameSvc', 'cheWorkspace', 'routeHistory'];
+
   $rootScope: che.IRootScopeService;
   $routeParams: che.route.IRouteParamsService;
   $timeout: ng.ITimeoutService;
@@ -34,7 +36,6 @@ class IdeCtrl {
 
   /**
    * Default constructor that is using resource
-   * @ngInject for Dependency injection
    */
   constructor($location: ng.ILocationService, $rootScope: ng.IRootScopeService,
               $routeParams: ng.route.IRouteParamsService, $timeout: ng.ITimeoutService, ideSvc: IdeSvc,
@@ -151,11 +152,7 @@ class IdeCtrl {
       return;
     }
 
-    if (this.ideSvc.openedWorkspace && this.selectedWorkspace.id === this.ideSvc.openedWorkspace.id) {
-      this.ideSvc.displayIDE();
-    } else {
-      this.ideSvc.openIde(this.selectedWorkspace.id);
-    }
+    this.ideSvc.openIde(this.selectedWorkspace.id);
   }
 }
 

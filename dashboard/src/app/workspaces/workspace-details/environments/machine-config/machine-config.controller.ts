@@ -24,10 +24,13 @@ export interface IMachinesListItem extends che.IWorkspaceRuntimeMachine {
  * @author Oleksii Kurinnyi
  */
 export class WorkspaceMachineConfigController {
+
+  static $inject = ['$mdDialog', '$q', '$scope', '$timeout', 'lodash', 'confirmDialogService'];
+
   $mdDialog: ng.material.IDialogService;
   $q: ng.IQService;
   $timeout: ng.ITimeoutService;
-  lodash: _.LoDashStatic;
+  lodash: any;
 
   timeoutPromise;
 
@@ -50,9 +53,13 @@ export class WorkspaceMachineConfigController {
 
   /**
    * Default constructor that is using resource injection
-   * @ngInject for Dependency injection
    */
-  constructor($mdDialog: ng.material.IDialogService, $q: ng.IQService, $scope: ng.IScope, $timeout: ng.ITimeoutService, lodash: _.LoDashStatic, confirmDialogService: ConfirmDialogService) {
+  constructor($mdDialog: ng.material.IDialogService,
+              $q: ng.IQService,
+              $scope: ng.IScope,
+              $timeout: ng.ITimeoutService,
+              lodash: any,
+              confirmDialogService: ConfirmDialogService) {
     this.$mdDialog = $mdDialog;
     this.$q = $q;
     this.$timeout = $timeout;

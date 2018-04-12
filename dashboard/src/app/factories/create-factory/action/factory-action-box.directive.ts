@@ -14,21 +14,20 @@
  * Defines a directive for displaying action box.
  * @author Florent Benoit
  */
-export class FactoryActionBox {
-  private restrict: string;
-  private templateUrl: string;
-  private replace: boolean;
-  private controller: string;
-  private controllerAs: string;
-  private bindToController: boolean;
+export class FactoryActionBox implements ng.IDirective {
+  restrict: string;
+  templateUrl: string;
+  replace: boolean;
+  controller: string;
+  controllerAs: string;
+  bindToController: boolean;
 
-  private scope: {
+  scope: {
     [propName: string]: string;
   };
 
   /**
    * Default constructor that is using resource
-   * @ngInject for Dependency injection
    */
   constructor() {
     this.restrict = 'E';

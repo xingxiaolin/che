@@ -11,13 +11,14 @@
 package org.eclipse.che.api.workspace.server.hc;
 
 import com.google.common.annotations.VisibleForTesting;
-import com.google.common.collect.ImmutableMap;
+import com.google.common.collect.ImmutableSet;
 import com.google.inject.assistedinject.Assisted;
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.Timer;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutionException;
@@ -25,6 +26,7 @@ import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 import java.util.function.Consumer;
 import javax.inject.Inject;
+import javax.inject.Named;
 import javax.ws.rs.core.UriBuilder;
 import org.eclipse.che.api.core.model.workspace.runtime.RuntimeIdentity;
 import org.eclipse.che.api.core.model.workspace.runtime.Server;
@@ -39,20 +41,17 @@ import org.eclipse.che.api.workspace.server.token.MachineTokenProvider;
  */
 public class ServersChecker {
   // Is used to define servers which will be checked by this server checker class.
-  // It is also a workaround to set correct paths for servers readiness checks.
-  private static final Map<String, String> LIVENESS_CHECKS_PATHS =
-      ImmutableMap.of(
-          "wsagent/http", "/api/",
-          "exec-agent/http", "/process",
-          "terminal", "/");
+  private static final Set<String> LIVENESS_SERVERS =
+      ImmutableSet.of("wsagent/http", "exec-agent/http", "terminal", "theia");
   private final RuntimeIdentity runtimeIdentity;
   private final String machineName;
   private final Map<String, ? extends Server> servers;
   private final MachineTokenProvider machineTokenProvider;
+  private final int serverPingSuccessThreshold;
 
   private Timer timer;
   private long resultTimeoutSeconds;
-  private CompletableFuture result;
+  private CompletableFuture<?> result;
 
   /**
    * Creates instance of this class.
@@ -65,12 +64,14 @@ public class ServersChecker {
       @Assisted RuntimeIdentity runtimeIdentity,
       @Assisted String machineName,
       @Assisted Map<String, ? extends Server> servers,
-      MachineTokenProvider machineTokenProvider) {
+      MachineTokenProvider machineTokenProvider,
+      @Named("che.workspace.server.ping_success_threshold") int serverPingSuccessThreshold) {
     this.runtimeIdentity = runtimeIdentity;
     this.machineName = machineName;
     this.servers = servers;
     this.timer = new Timer("ServersChecker", true);
     this.machineTokenProvider = machineTokenProvider;
+    this.serverPingSuccessThreshold = serverPingSuccessThreshold;
   }
 
   /**
@@ -82,7 +83,8 @@ public class ServersChecker {
    * @throws InternalInfrastructureException if check of a server failed due to an unexpected error
    * @throws InfrastructureException if check of a server failed due to an error
    */
-  public void startAsync(Consumer<String> serverReadinessHandler) throws InfrastructureException {
+  public CompletableFuture<?> startAsync(Consumer<String> serverReadinessHandler)
+      throws InfrastructureException {
     timer = new Timer("ServersChecker", true);
     List<ServerChecker> serverCheckers = getServerCheckers();
     // should be completed with an exception if a server considered unavailable
@@ -111,6 +113,7 @@ public class ServersChecker {
     for (ServerChecker serverChecker : serverCheckers) {
       serverChecker.start();
     }
+    return result;
   }
 
   /**
@@ -159,7 +162,7 @@ public class ServersChecker {
     for (Map.Entry<String, ? extends Server> serverEntry : servers.entrySet()) {
       // TODO replace with correct behaviour
       // workaround needed because we don't have server readiness check in the model
-      if (LIVENESS_CHECKS_PATHS.containsKey(serverEntry.getKey())) {
+      if (LIVENESS_SERVERS.contains(serverEntry.getKey())) {
         checkers.add(getChecker(serverEntry.getKey(), serverEntry.getValue()));
       }
     }
@@ -169,16 +172,26 @@ public class ServersChecker {
   private ServerChecker getChecker(String serverRef, Server server) throws InfrastructureException {
     // TODO replace with correct behaviour
     // workaround needed because we don't have server readiness check in the model
-    String livenessCheckPath = LIVENESS_CHECKS_PATHS.get(serverRef);
     // Create server readiness endpoint URL
     URL url;
     try {
-      // TODO: ws -> http is workaround used for terminal websocket server,
-      // should be removed after server checks added to model
+      String serverUrl = server.getUrl();
+
+      if ("terminal".equals(serverRef)) {
+        serverUrl = serverUrl.replaceFirst("^ws", "http").replaceFirst("/pty$", "/");
+      }
+
+      if ("wsagent/http".equals(serverRef)) {
+        // add trailing slash
+        serverUrl = serverUrl + '/';
+      }
+
       url =
-          UriBuilder.fromUri(server.getUrl().replaceFirst("^ws", "http"))
-              .replacePath(livenessCheckPath)
-              .queryParam("token", machineTokenProvider.getToken(runtimeIdentity.getWorkspaceId()))
+          UriBuilder.fromUri(serverUrl)
+              .queryParam(
+                  "token",
+                  machineTokenProvider.getToken(
+                      runtimeIdentity.getOwnerId(), runtimeIdentity.getWorkspaceId()))
               .build()
               .toURL();
     } catch (MalformedURLException e) {
@@ -195,10 +208,10 @@ public class ServersChecker {
     // workaround needed because terminal server doesn't have endpoint to check it readiness
     if ("terminal".equals(serverRef)) {
       return new TerminalHttpConnectionServerChecker(
-          url, machineName, serverRef, 3, 180, TimeUnit.SECONDS, timer);
+          url, machineName, serverRef, 3, 180, serverPingSuccessThreshold, TimeUnit.SECONDS, timer);
     }
     // TODO do not hardcode timeouts, use server conf instead
     return new HttpConnectionServerChecker(
-        url, machineName, serverRef, 3, 180, TimeUnit.SECONDS, timer);
+        url, machineName, serverRef, 3, 180, serverPingSuccessThreshold, TimeUnit.SECONDS, timer);
   }
 }

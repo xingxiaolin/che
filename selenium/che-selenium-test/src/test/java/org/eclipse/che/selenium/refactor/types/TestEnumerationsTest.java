@@ -38,9 +38,9 @@ import org.testng.annotations.Test;
 /** @author Musienko Maxim */
 public class TestEnumerationsTest {
   private static final String NAME_OF_PROJECT =
-      NameGenerator.generate(TestEnumerationsTest.class.getName(), 2);
+      NameGenerator.generate(TestEnumerationsTest.class.getSimpleName(), 2);
   private static final String PATH_TO_PACKAGE_IN_CHE_PREFIX =
-      NAME_OF_PROJECT + "/src" + "/main" + "/java" + "/renametype";
+      NAME_OF_PROJECT + "/src/main/java/renametype";
 
   private String pathToCurrentPackage;
   private String contentFromInA;
@@ -78,7 +78,7 @@ public class TestEnumerationsTest {
     setFieldsForTest("testEnum1");
     projectExplorer.openItemByPath(pathToCurrentPackage + "/A.java");
     editor.waitTextIntoEditor(contentFromInA);
-    projectExplorer.selectItem(pathToCurrentPackage + "/A.java");
+    projectExplorer.waitAndSelectItem(pathToCurrentPackage + "/A.java");
     menu.runCommand(
         TestMenuCommandsConstants.Assistant.ASSISTANT,
         TestMenuCommandsConstants.Assistant.Refactoring.REFACTORING,

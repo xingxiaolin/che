@@ -14,7 +14,6 @@ import {ImportStackService} from '../../stack-details/import-stack.service';
 import {CheStack} from '../../../../components/api/che-stack.factory';
 import {IEnvironmentManagerMachine} from '../../../../components/api/environment/environment-manager-machine';
 import {CheBranding} from '../../../../components/branding/che-branding.factory';
-import {EnvironmentManager} from '../../../../components/api/environment/environment-manager';
 import {CheRecipeTypes} from '../../../../components/api/recipe/che-recipe-types';
 import {RecipeEditor} from './recipe-editor/recipe-editor';
 import {CheWorkspace} from '../../../../components/api/workspace/che-workspace.factory';
@@ -29,6 +28,8 @@ const DEFAULT_WORKSPACE_RAM: number = 2 * Math.pow(1024, 3);
  */
 export class BuildStackController {
 
+  static $inject = ['$mdDialog', '$location', 'cheStack', 'importStackService', 'cheEnvironmentRegistry', 'cheBranding', 'cheWorkspace'];
+
   importStackService: ImportStackService;
   cheEnvironmentRegistry: CheEnvironmentRegistry;
   stackDocsUrl: string;
@@ -41,7 +42,6 @@ export class BuildStackController {
 
   /**
    * Default constructor that is using resource
-   * @ngInject for Dependency injection
    */
   constructor($mdDialog: ng.material.IDialogService,
               $location: ng.ILocationService,
@@ -68,7 +68,7 @@ export class BuildStackController {
    * It will hide the dialog box.
    */
   cancel(): void {
-    this.importStackService.setStack({});
+    this.importStackService.setStack({} as che.IStack);
     this.$mdDialog.cancel();
   }
 
@@ -109,9 +109,9 @@ export class BuildStackController {
     // set recipe for default environment
     defaultEnv.recipe = angular.copy(recipeEditor.recipe);
 
-    // create dev-machine in case of dockerfile or dockerimage recipe
+    // create new-machine in case of dockerfile or dockerimage recipe
     defaultEnv.machines = (CheRecipeTypes.DOCKERFILE === recipeEditor.recipe.type || CheRecipeTypes.DOCKERIMAGE === recipeEditor.recipe.type) ? {
-      'dev-machine': {
+      'new-machine': {
         'installers': [],
         'attributes': {
           'memoryLimitBytes': 2147483648
@@ -119,11 +119,6 @@ export class BuildStackController {
       }
     } : {};
     const machines = recipeEditor.environmentManager.getMachines(defaultEnv);
-
-    // add ws-agent to a machine if it's the only one
-    if (machines.length === 1) {
-      recipeEditor.environmentManager.setDev(machines[0], true);
-    }
 
     // check each machine for RAM to be set
     machines.forEach((machine: IEnvironmentManagerMachine) => {

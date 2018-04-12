@@ -10,8 +10,7 @@
  */
 package org.eclipse.che.selenium.opendeclaration;
 
-import static org.eclipse.che.selenium.pageobject.CodenvyEditor.MarkersType.WARNING_MARKER;
-import static org.testng.Assert.fail;
+import static org.eclipse.che.selenium.pageobject.CodenvyEditor.MarkerLocator.WARNING;
 
 import com.google.inject.Inject;
 import java.net.URL;
@@ -24,7 +23,6 @@ import org.eclipse.che.selenium.pageobject.CodenvyEditor;
 import org.eclipse.che.selenium.pageobject.Ide;
 import org.eclipse.che.selenium.pageobject.ProjectExplorer;
 import org.openqa.selenium.Keys;
-import org.openqa.selenium.TimeoutException;
 import org.testng.annotations.BeforeClass;
 import org.testng.annotations.Test;
 
@@ -34,7 +32,6 @@ import org.testng.annotations.Test;
  */
 public class Eclipse0115Test {
 
-  private static final String PATH_TO_PACKAGE_PREFIX = "/src/main/java/org/eclipse/qa/examples/";
   private static final String PROJECT_NAME =
       NameGenerator.generate(Eclipse0115Test.class.getSimpleName(), 4);
 
@@ -56,17 +53,9 @@ public class Eclipse0115Test {
   public void test0115() throws Exception {
     projectExplorer.waitProjectExplorer();
     projectExplorer.waitItem(PROJECT_NAME);
-    projectExplorer.quickExpandWithJavaScript();
-    projectExplorer.openItemByPath(PROJECT_NAME + PATH_TO_PACKAGE_PREFIX + "X.java");
-    editor.waitActive();
-
-    try {
-      editor.waitMarkerInPosition(WARNING_MARKER, 14);
-    } catch (TimeoutException ex) {
-      // remove try-catch block after issue has been resolved
-      fail("Known issue https://github.com/eclipse/che/issues/7161", ex);
-    }
-
+    projectExplorer.expandPathInProjectExplorerAndOpenFile(
+        PROJECT_NAME + "/src/main/java/org.eclipse.qa.examples", "X.java");
+    editor.waitMarkerInPosition(WARNING, 14);
     editor.goToCursorPositionVisible(32, 14);
     editor.typeTextIntoEditor(Keys.F4.toString());
     editor.waitSpecifiedValueForLineAndChar(35, 24);

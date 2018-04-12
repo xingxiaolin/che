@@ -10,6 +10,7 @@
  */
 package org.eclipse.che.selenium.core.factory;
 
+import org.eclipse.che.api.core.model.workspace.WorkspaceStatus;
 import org.eclipse.che.api.factory.shared.dto.FactoryDto;
 import org.eclipse.che.selenium.core.SeleniumWebDriver;
 import org.eclipse.che.selenium.core.client.TestFactoryServiceClient;
@@ -17,6 +18,7 @@ import org.eclipse.che.selenium.core.client.TestWorkspaceServiceClient;
 import org.eclipse.che.selenium.core.entrance.Entrance;
 import org.eclipse.che.selenium.core.provider.TestDashboardUrlProvider;
 import org.eclipse.che.selenium.core.user.TestUser;
+import org.eclipse.che.selenium.core.webdriver.SeleniumWebDriverHelper;
 import org.openqa.selenium.WebDriver;
 
 /** @author Anatolii Bazko */
@@ -29,6 +31,7 @@ public class TestFactory {
   private final Entrance entrance;
   private final String factoryUrl;
   private final SeleniumWebDriver seleniumWebDriver;
+  private final SeleniumWebDriverHelper seleniumWebDriverHelper;
 
   public TestFactory(
       String factoryUrl,
@@ -38,7 +41,8 @@ public class TestFactory {
       TestFactoryServiceClient factoryServiceClient,
       TestWorkspaceServiceClient workspaceServiceClient,
       Entrance entrance,
-      SeleniumWebDriver seleniumWebDriver) {
+      SeleniumWebDriver seleniumWebDriver,
+      SeleniumWebDriverHelper seleniumWebDriverHelper) {
     this.factoryDto = factoryDto;
     this.owner = owner;
     this.factoryUrl = factoryUrl;
@@ -47,18 +51,19 @@ public class TestFactory {
     this.workspaceServiceClient = workspaceServiceClient;
     this.entrance = entrance;
     this.seleniumWebDriver = seleniumWebDriver;
+    this.seleniumWebDriverHelper = seleniumWebDriverHelper;
   }
 
   /** Login to factory and open it by url. */
-  public void authenticateAndOpen() throws Exception {
+  public void authenticateAndOpen() {
     seleniumWebDriver.get(dashboardUrl.get().toString());
     entrance.login(owner);
     seleniumWebDriver.get(factoryUrl);
-    seleniumWebDriver.switchFromDashboardIframeToIde();
+    seleniumWebDriverHelper.switchToIdeFrameAndWaitAvailability();
   }
 
   /** Opens factory url. */
-  public void open(WebDriver driver) throws Exception {
+  public void open(WebDriver driver) {
     driver.get(factoryUrl);
   }
 
@@ -68,7 +73,7 @@ public class TestFactory {
     deleteFactory();
   }
 
-  private void deleteFactory() throws Exception {
+  private void deleteFactory() {
     if (isNamedFactory()) {
       testFactoryServiceClient.deleteFactory(factoryDto.getName());
     }
@@ -76,5 +81,11 @@ public class TestFactory {
 
   private boolean isNamedFactory() {
     return factoryDto.getName() != null;
+  }
+
+  public WorkspaceStatus getWorkspaceStatusAssociatedWithFactory() throws Exception {
+    return workspaceServiceClient
+        .getByName(factoryDto.getWorkspace().getName(), owner.getName())
+        .getStatus();
   }
 }

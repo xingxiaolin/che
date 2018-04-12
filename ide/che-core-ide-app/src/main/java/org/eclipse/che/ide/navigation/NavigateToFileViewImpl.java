@@ -10,8 +10,6 @@
  */
 package org.eclipse.che.ide.navigation;
 
-import static com.google.gwt.event.dom.client.KeyCodes.KEY_BACKSPACE;
-import static com.google.gwt.event.dom.client.KeyCodes.KEY_DELETE;
 import static com.google.gwt.event.dom.client.KeyCodes.KEY_DOWN;
 import static com.google.gwt.event.dom.client.KeyCodes.KEY_ENTER;
 import static com.google.gwt.event.dom.client.KeyCodes.KEY_ESCAPE;
@@ -19,8 +17,10 @@ import static com.google.gwt.event.dom.client.KeyCodes.KEY_PAGEDOWN;
 import static com.google.gwt.event.dom.client.KeyCodes.KEY_PAGEUP;
 import static com.google.gwt.event.dom.client.KeyCodes.KEY_UP;
 
+import com.google.common.base.Strings;
+import com.google.gwt.core.client.Scheduler;
 import com.google.gwt.dom.client.Style;
-import com.google.gwt.event.dom.client.KeyDownEvent;
+import com.google.gwt.event.dom.client.KeyUpEvent;
 import com.google.gwt.event.shared.HandlerRegistration;
 import com.google.gwt.resources.client.CssResource;
 import com.google.gwt.uibinder.client.UiBinder;
@@ -38,6 +38,7 @@ import com.google.inject.Singleton;
 import elemental.dom.Element;
 import elemental.html.TableCellElement;
 import elemental.html.TableElement;
+import java.util.Collections;
 import java.util.List;
 import org.eclipse.che.api.project.shared.dto.SearchResultDto;
 import org.eclipse.che.ide.CoreLocalizationConstant;
@@ -127,7 +128,7 @@ public class NavigateToFileViewImpl extends PopupPanel implements NavigateToFile
             @Override
             public void run() {
               getElement().getStyle().setProperty("clip", "auto");
-              delegate.onFileNameChanged(fileName.getText());
+              delegate.onFileNameChanged();
             }
           }.schedule(300);
         });
@@ -213,6 +214,9 @@ public class NavigateToFileViewImpl extends PopupPanel implements NavigateToFile
     // Create and show list of items
     final TableElement itemHolder = Elements.createTableElement();
     suggestionsContainer.getElement().appendChild(((com.google.gwt.dom.client.Element) itemHolder));
+    if (list != null) {
+      list.asWidget().removeFromParent();
+    }
     list =
         SimpleList.create(
             suggestionsContainer.getElement().cast(),
@@ -268,6 +272,14 @@ public class NavigateToFileViewImpl extends PopupPanel implements NavigateToFile
     suggestionsPanel.getElement().getStyle().setHeight(newHeight, Style.Unit.PX);
   }
 
+  @Override
+  public void setFileNameTextBoxEnabled(boolean enabled) {
+    fileName.setEnabled(enabled);
+    if (enabled) {
+      Scheduler.get().scheduleFinally(() -> fileName.setFocus(true));
+    }
+  }
+
   private final SimpleList.ListEventDelegate<SearchResultDto> eventDelegate =
       new SimpleList.ListEventDelegate<SearchResultDto>() {
         @Override
@@ -282,7 +294,7 @@ public class NavigateToFileViewImpl extends PopupPanel implements NavigateToFile
       };
 
   @UiHandler("fileName")
-  void handleKeyDown(KeyDownEvent event) {
+  void handleKeyUp(KeyUpEvent event) {
     int nativeKeyCode = event.getNativeKeyCode();
     switch (nativeKeyCode) {
       case KEY_UP:
@@ -332,22 +344,11 @@ public class NavigateToFileViewImpl extends PopupPanel implements NavigateToFile
         hidePopup();
         break;
       default:
-        // here need some delay to be sure input box initiated with given value
-        // in manually testing hard to reproduce this problem but it reproduced with selenium tests
-        new Timer() {
-          @Override
-          public void run() {
-            String fileName = NavigateToFileViewImpl.this.fileName.getText();
-            // Skip handling non letter characters.
-            if (nativeKeyCode == KEY_BACKSPACE
-                || nativeKeyCode == KEY_DELETE
-                || fileName
-                    .toLowerCase()
-                    .contains(String.valueOf((char) nativeKeyCode).toLowerCase())) {
-              delegate.onFileNameChanged(fileName);
-            }
-          }
-        }.schedule(300);
+        if (Strings.isNullOrEmpty(fileName.getText())) {
+          showItems(Collections.emptyList());
+        } else {
+          delegate.onFileNameChanged();
+        }
         break;
     }
   }

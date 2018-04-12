@@ -16,6 +16,7 @@ import {StackSelectorScope} from './stack-selector-scope.enum';
 import {StackSelectorSvc} from './stack-selector.service';
 import {CheBranding} from '../../../../components/branding/che-branding.factory';
 import {ConfirmDialogService} from '../../../../components/service/confirm-dialog/confirm-dialog.service';
+import {CheWorkspace} from '../../../../components/api/workspace/che-workspace.factory';
 
 /**
  * @ngdoc controller
@@ -24,6 +25,9 @@ import {ConfirmDialogService} from '../../../../components/service/confirm-dialo
  * @author Oleksii Kurinnyi
  */
 export class StackSelectorController {
+
+  static $inject = ['$filter', '$mdDialog', '$q', 'lodash', 'cheStack', 'cheWorkspace', 'confirmDialogService', '$location', 'cheBranding', 'cheEnvironmentRegistry', 'stackSelectorSvc'];
+
   /**
    * Filter service.
    */
@@ -132,14 +136,25 @@ export class StackSelectorController {
    * The priority stacks to be placed before others (comes from configuration).
    */
   private priorityStacks: Array<string>;
+  /**
+   * List of supported types of recipes.
+   */
+  private supportedRecipeTypes: string[];
 
   /**
    * Default constructor that is using resource injection
-   * @ngInject for Dependency injection
    */
-  constructor($filter: ng.IFilterService, $mdDialog: ng.material.IDialogService, lodash: any, cheStack: CheStack,
-              confirmDialogService: ConfirmDialogService, $location: ng.ILocationService, cheBranding: CheBranding,
-              cheEnvironmentRegistry: CheEnvironmentRegistry, stackSelectorSvc: StackSelectorSvc) {
+  constructor($filter: ng.IFilterService,
+              $mdDialog: ng.material.IDialogService,
+              $q: ng.IQService,
+              lodash: any,
+              cheStack: CheStack,
+              cheWorkspace: CheWorkspace,
+              confirmDialogService: ConfirmDialogService,
+              $location: ng.ILocationService,
+              cheBranding: CheBranding,
+              cheEnvironmentRegistry: CheEnvironmentRegistry,
+              stackSelectorSvc: StackSelectorSvc) {
     this.$filter = $filter;
     this.$location = $location;
     this.$mdDialog = $mdDialog;
@@ -165,8 +180,20 @@ export class StackSelectorController {
 
     this.stacks = this.stackSelectorSvc.getStacks();
     this.updateMachines();
-    this.buildStacksListsByScope();
-    this.buildFilteredList();
+
+    $q.when().then(() => {
+      const types = cheWorkspace.getSupportedRecipeTypes();
+      if (types.length) {
+        return $q.when(types);
+      }
+      return cheWorkspace.fetchWorkspaceSettings().then(() => {
+        return $q.when(cheWorkspace.getSupportedRecipeTypes());
+      });
+    }).then((recipeTypes: string[]) => {
+      this.supportedRecipeTypes = recipeTypes;
+      this.buildStacksListsByScope();
+      this.buildFilteredList();
+    });
   }
 
   /**
@@ -196,19 +223,19 @@ export class StackSelectorController {
       this.stackMachines[stack.id] = [];
       if (stack.workspaceConfig) {
         // get machines memory limits
-              const defaultEnv = stack.workspaceConfig.defaultEnv,
-                    environment = stack.workspaceConfig.environments[defaultEnv],
-                    environmentManager = this.getEnvironmentManager(environment.recipe.type);
-              if (environmentManager) {
-                let machines = environmentManager.getMachines(environment);
+        const defaultEnv = stack.workspaceConfig.defaultEnv,
+          environment = stack.workspaceConfig.environments[defaultEnv],
+          environmentManager = this.getEnvironmentManager(environment.recipe.type);
+        if (environmentManager) {
+          let machines = environmentManager.getMachines(environment);
 
-                machines.forEach((machine: any) => {
-                  this.stackMachines[stack.id].push({
-                    name: machine.name,
-                    memoryLimitBytes: environmentManager.getMemoryLimit(machine)
-                  });
-                });
-              }
+          machines.forEach((machine: any) => {
+            this.stackMachines[stack.id].push({
+              name: machine.name,
+              memoryLimitBytes: environmentManager.getMemoryLimit(machine)
+            });
+          });
+        }
       }
     });
   }
@@ -221,6 +248,14 @@ export class StackSelectorController {
 
     scopes.forEach((scope: StackSelectorScope) => {
       this.stacksByScope[scope] = this.$filter('stackScopeFilter')(this.stacks, scope, this.stackMachines);
+    });
+
+    // for quickstart do not show stacks based on unsupported recipe types
+    this.stacksByScope[StackSelectorScope.QUICK_START] = this.stacksByScope[StackSelectorScope.QUICK_START].filter((stack: che.IStack) => {
+      const defaultEnvName = stack.workspaceConfig.defaultEnv,
+        defaultEnv = stack.workspaceConfig.environments[defaultEnvName],
+        recipeType = defaultEnv.recipe.type;
+      return this.supportedRecipeTypes.indexOf(recipeType) !== -1;
     });
   }
 
@@ -308,19 +343,8 @@ export class StackSelectorController {
    * Handles the adding stack options.
    */
   onAddStack(): void {
-    this.confirmDialogService.showConfirmDialog('Create stack', 'Would you like to create a stack from a recipe?', 'Yes', 'No').then(() => {
-      this.$mdDialog.show({
-        controller: 'BuildStackController',
-        controllerAs: 'buildStackController',
-        bindToController: true,
-        clickOutsideToClose: true,
-        locals: {
-          callbackController: this
-        },
-        templateUrl: 'app/stacks/list-stacks/build-stack/build-stack.html'
-      });
-    }, () => {
-      this.$location.path('/stack/create');
+    this.confirmDialogService.showConfirmDialog('Create stack', 'Would you like to create a new stack?', 'Yes', 'No').then(() => {
+      this.$location.path('/stacks');
     });
   }
 

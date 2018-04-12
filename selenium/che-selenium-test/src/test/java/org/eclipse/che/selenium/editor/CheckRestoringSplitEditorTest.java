@@ -12,8 +12,8 @@ package org.eclipse.che.selenium.editor;
 
 import static org.eclipse.che.selenium.core.constant.TestTimeoutsConstants.LOAD_PAGE_TIMEOUT_SEC;
 import static org.eclipse.che.selenium.core.project.ProjectTemplates.MAVEN_JAVA_MULTIMODULE;
-import static org.eclipse.che.selenium.pageobject.CodenvyEditor.TabAction.SPIT_HORISONTALLY;
-import static org.eclipse.che.selenium.pageobject.CodenvyEditor.TabAction.SPLIT_VERTICALLY;
+import static org.eclipse.che.selenium.pageobject.CodenvyEditor.TabActionLocator.SPIT_HORISONTALLY;
+import static org.eclipse.che.selenium.pageobject.CodenvyEditor.TabActionLocator.SPLIT_VERTICALLY;
 import static org.testng.Assert.fail;
 
 import com.google.common.base.Joiner;
@@ -25,10 +25,12 @@ import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.util.Arrays;
 import java.util.List;
+import org.eclipse.che.api.core.rest.HttpJsonRequestFactory;
 import org.eclipse.che.commons.lang.NameGenerator;
 import org.eclipse.che.commons.lang.Pair;
 import org.eclipse.che.selenium.core.SeleniumWebDriver;
 import org.eclipse.che.selenium.core.client.TestProjectServiceClient;
+import org.eclipse.che.selenium.core.provider.TestApiEndpointUrlProvider;
 import org.eclipse.che.selenium.core.workspace.TestWorkspace;
 import org.eclipse.che.selenium.pageobject.CodenvyEditor;
 import org.eclipse.che.selenium.pageobject.Ide;
@@ -63,6 +65,8 @@ public class CheckRestoringSplitEditorTest {
   @Inject private TestProjectServiceClient testProjectServiceClient;
   @Inject private SeleniumWebDriver seleniumWebDriver;
   @Inject private NotificationsPopupPanel notificationsPopupPanel;
+  @Inject private TestApiEndpointUrlProvider testApiEndpointUrlProvider;
+  @Inject private HttpJsonRequestFactory httpJsonRequestFactory;
 
   @BeforeClass
   public void prepare() throws Exception {
@@ -80,7 +84,7 @@ public class CheckRestoringSplitEditorTest {
   }
 
   @Test
-  public void checkRestoringStateSplittedEditor() throws IOException {
+  public void checkRestoringStateSplittedEditor() throws IOException, Exception {
     projectExplorer.waitItem(PROJECT_NAME);
     projectExplorer.quickExpandWithJavaScript();
     splitEditorAndOpenFiles();
@@ -90,16 +94,19 @@ public class CheckRestoringSplitEditorTest {
       popupDialogsBrowser.acceptAlert();
     }
 
+    projectExplorer.waitAndSelectItem(PROJECT_NAME);
+    projectExplorer.waitItemIsSelected(PROJECT_NAME);
+
     seleniumWebDriver.navigate().refresh();
     projectExplorer.waitItem(PROJECT_NAME);
     try {
-      projectExplorer.waitItemInVisibleArea(javaClassName);
+      projectExplorer.waitVisibilityByName(javaClassName);
     } catch (TimeoutException ex) {
       // remove try-catch block after issue has been resolved
       fail("Known issue https://github.com/eclipse/che/issues/7551", ex);
     }
 
-    notificationsPopupPanel.waitPopUpPanelsIsClosed();
+    notificationsPopupPanel.waitPopupPanelsAreClosed();
     checkSplitdEditorAfterRefreshing(
         1, javaClassTab, expectedTextFromEditor.get(0), cursorPositionForJavaFile);
     checkSplitdEditorAfterRefreshing(
@@ -128,7 +135,7 @@ public class CheckRestoringSplitEditorTest {
     projectExplorer.openItemByPath(PATH_TO_JAVA_FILE);
     loader.waitOnClosed();
     editor.waitActive();
-    editor.openContextMenuForTabByName(javaClassTab);
+    editor.openAndWaitContextMenuForTabByName(javaClassTab);
     editor.runActionForTabFromContextMenu(SPIT_HORISONTALLY);
     editor.selectTabByIndexEditorWindowAndOpenMenu(0, javaClassTab);
     editor.runActionForTabFromContextMenu(SPLIT_VERTICALLY);
@@ -147,5 +154,13 @@ public class CheckRestoringSplitEditorTest {
     editor.goToPosition(cursorPositionForReadMeFile.first, cursorPositionForReadMeFile.second);
     editor.selectTabByName(pomFileTab);
     editor.goToPosition(cursorPositionForPomFile.first, cursorPositionForPomFile.second);
+  }
+
+  private String getPreferences() throws Exception {
+    return httpJsonRequestFactory
+        .fromUrl(testApiEndpointUrlProvider.get() + "preferences")
+        .useGetMethod()
+        .request()
+        .asString();
   }
 }

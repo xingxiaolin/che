@@ -645,11 +645,20 @@ public interface CoreLocalizationConstant extends Messages {
   @Key("start.ws.button")
   String startWsButton();
 
+  @Key("restart.ws.agent.button")
+  String restartWsAgentButton();
+
+  @Key("ignore.ws.agent.button")
+  String ignoreWsAgentButton();
+
   @Key("placeholder.select.ws.to.start")
   String placeholderSelectWsToStart();
 
   @Key("start.ws.title")
   String startWsTitle();
+
+  @Key("start.ws.description")
+  String startWsDescription();
 
   @Key("stop.ws.title")
   String stopWsTitle();
@@ -1220,6 +1229,12 @@ public interface CoreLocalizationConstant extends Messages {
   @Key("machine.output.action.description")
   String machineOutputActionDescription();
 
+  @Key("machine.ssh.action.title")
+  String machineSSHActionTitle();
+
+  @Key("machine.ssh.action.description")
+  String machineSSHActionDescription();
+
   @Key("control.connect.ssh")
   String connectViaSSH();
 
@@ -1285,6 +1300,12 @@ public interface CoreLocalizationConstant extends Messages {
 
   @Key("menu.loader.workspaceStarted")
   String menuLoaderWorkspaceStarted();
+
+  @Key("menu.loader.workspaceStopping")
+  String menuLoaderWorkspaceStopping();
+
+  @Key("menu.loader.workspaceStopped")
+  String menuLoaderWorkspaceStopped();
 
   @Key("menu.loader.waitingWorkspace")
   String menuLoaderWaitingWorkspace();

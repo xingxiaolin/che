@@ -33,9 +33,10 @@ export class OrganizationsConfigServiceMock {
   private permissions: any[] = [];
   private usersByOrgs: Map<string, any[]> = new Map();
 
+  static $inject = ['cheAPIBuilder', 'cheHttpBackend'];
+
   /**
    * Default constructor
-   * @ngInject for Dependency injection
    */
   constructor(cheAPIBuilder: CheAPIBuilder, cheHttpBackend: CheHttpBackend) {
     this.cheAPIBuilder = cheAPIBuilder;
@@ -61,7 +62,6 @@ export class OrganizationsConfigServiceMock {
     const org1 = this.addAndGetOrganization(1);
     // add children organizations
     const org2 = this.addAndGetOrganization(2, org1);
-    const org3 = this.addAndGetOrganization(3, org1);
 
     // for root organization
 

@@ -11,7 +11,6 @@
 package org.eclipse.che.selenium.dashboard;
 
 import static org.eclipse.che.selenium.pageobject.dashboard.workspaces.WorkspaceDetails.StateWorkspace.RUNNING;
-import static org.eclipse.che.selenium.pageobject.dashboard.workspaces.WorkspaceDetails.StateWorkspace.STOPPING;
 import static org.eclipse.che.selenium.pageobject.dashboard.workspaces.WorkspaceDetails.TabNames.OVERVIEW;
 
 import com.google.inject.Inject;
@@ -50,12 +49,11 @@ public class DeleteRunningWorkspaceTest {
   public void deleteRunningWorkspaceTest() {
     dashboard.selectWorkspacesItemOnDashboard();
     workspaces.selectWorkspaceItemName(workspaceName);
-    workspaces.waitToolbarTitleName(workspaceName);
+    workspaceDetails.waitToolbarTitleName(workspaceName);
     workspaceDetails.selectTabInWorkspaceMenu(OVERVIEW);
     workspaceDetails.checkStateOfWorkspace(RUNNING);
     workspaceOverview.clickOnDeleteWorkspace();
     workspaceDetails.clickOnDeleteButtonInDialogWindow();
-    workspaceDetails.checkStateOfWorkspace(STOPPING);
     dashboard.waitToolbarTitleName("Workspaces");
     workspaces.waitWorkspaceIsNotPresent(workspaceName);
   }

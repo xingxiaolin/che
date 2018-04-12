@@ -11,12 +11,15 @@
 package org.eclipse.che.selenium.debugger;
 
 import static javax.ws.rs.core.MediaType.APPLICATION_FORM_URLENCODED;
+import static org.eclipse.che.selenium.core.constant.TestProjectExplorerContextMenuConstants.ContextMenuCommandGoals.COMMON;
+import static org.eclipse.che.selenium.core.constant.TestTimeoutsConstants.LOADER_TIMEOUT_SEC;
 import static org.testng.Assert.assertTrue;
 import static org.testng.Assert.fail;
 
 import com.google.inject.Inject;
 import java.nio.file.Paths;
 import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.TimeUnit;
 import org.eclipse.che.commons.lang.NameGenerator;
 import org.eclipse.che.selenium.core.SeleniumWebDriver;
 import org.eclipse.che.selenium.core.client.TestCommandServiceClient;
@@ -36,14 +39,18 @@ import org.eclipse.che.selenium.pageobject.ProjectExplorer;
 import org.eclipse.che.selenium.pageobject.debug.DebugPanel;
 import org.eclipse.che.selenium.pageobject.debug.JavaDebugConfig;
 import org.eclipse.che.selenium.pageobject.intelligent.CommandsPalette;
+import org.eclipse.che.selenium.pageobject.machineperspective.MachineTerminal;
 import org.openqa.selenium.Keys;
-import org.openqa.selenium.TimeoutException;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.testng.annotations.AfterMethod;
 import org.testng.annotations.BeforeClass;
 import org.testng.annotations.Test;
 
 /** @author Musienko Maxim */
 public class StepIntoStepOverStepReturnWithChangeVariableTest {
+  private static final Logger LOG =
+      LoggerFactory.getLogger(StepIntoStepOverStepReturnWithChangeVariableTest.class);
   private static final String PROJECT = NameGenerator.generate("project", 4);
   private static final String START_DEBUG = "startDebug";
   private static final String CLEAN_TOMCAT = "cleanTomcat";
@@ -66,6 +73,7 @@ public class StepIntoStepOverStepReturnWithChangeVariableTest {
   @Inject private Loader loader;
   @Inject private CommandsPalette commandsPalette;
   @Inject private SeleniumWebDriver seleniumWebDriver;
+  @Inject private MachineTerminal machineTerminal;
 
   @BeforeClass
   public void prepare() throws Exception {
@@ -104,7 +112,7 @@ public class StepIntoStepOverStepReturnWithChangeVariableTest {
   public void shutDownTomCatAndCleanWebApp() {
     editor.closeAllTabs();
     debugPanel.stopDebuggerWithUiAndCleanUpTomcat(CLEAN_TOMCAT);
-    projectExplorer.clickOnProjectExplorerTabInTheLeftPanel();
+    projectExplorer.clickOnProjectExplorerTab();
   }
 
   @Test
@@ -131,17 +139,12 @@ public class StepIntoStepOverStepReturnWithChangeVariableTest {
                 .replace("tcp", "http")
             + "/spring/guess";
     String requestMess = "numGuess=6&submit=Ok";
-    CompletableFuture<String> instToRequestThread =
+    CompletableFuture<String> requestToApplication =
         debugUtils.gotoDebugAppAndSendRequest(
             appUrl, requestMess, APPLICATION_FORM_URLENCODED, 200);
-    editor.waitActiveBreakpoint(34);
-    try {
-      debugPanel.waitDebugHighlightedText("result = \"Sorry, you failed. Try again later!\";");
-    } catch (TimeoutException ex) {
-      // remove try-catch block after issue has been resolved
-      fail("Known issue: https://github.com/eclipse/che/issues/8105", ex);
-    }
 
+    editor.waitActiveBreakpoint(34);
+    debugPanel.waitDebugHighlightedText("result = \"Sorry, you failed. Try again later!\";");
     debugPanel.clickOnButton(DebugPanel.DebuggerActionButtons.STEP_OVER);
     debugPanel.waitDebugHighlightedText("AdditonalClass.check();");
     debugPanel.clickOnButton(DebugPanel.DebuggerActionButtons.STEP_INTO);
@@ -157,7 +160,21 @@ public class StepIntoStepOverStepReturnWithChangeVariableTest {
     debugPanel.typeAndSaveTextAreaDialog("\"7\"");
     debugPanel.waitTextInVariablesPanel("numGuessByUser=\"7\"");
     debugPanel.clickOnButton(DebugPanel.DebuggerActionButtons.RESUME_BTN_ID);
-    assertTrue(instToRequestThread.get().contains("<html>"));
+
+    String applicationResponse = requestToApplication.get(LOADER_TIMEOUT_SEC, TimeUnit.SECONDS);
+    // remove try-catch block after issue has been resolved
+    try {
+      assertTrue(
+          applicationResponse.contains("Sorry, you failed. Try again later!"),
+          "Actual application response content was: " + applicationResponse);
+    } catch (AssertionError ex) {
+      machineTerminal.logApplicationInfo(PROJECT, ws);
+      if (applicationResponse != null && applicationResponse.contains("504 Gateway Time-out")) {
+        fail("Known issue: https://github.com/eclipse/che/issues/9251", ex);
+      } else {
+        throw ex;
+      }
+    }
   }
 
   @Test(priority = 1)
@@ -178,9 +195,8 @@ public class StepIntoStepOverStepReturnWithChangeVariableTest {
     String absPathToClass = PROJECT + "/src/main/java/org/eclipse/qa/examples/AppController.java";
     projectExplorer.waitItem(PROJECT);
     loader.waitOnClosed();
-    projectExplorer.selectItem(PROJECT);
-    projectExplorer.invokeCommandWithContextMenu(
-        ProjectExplorer.CommandsGoal.COMMON, PROJECT, BUILD);
+    projectExplorer.waitAndSelectItem(PROJECT);
+    projectExplorer.invokeCommandWithContextMenu(COMMON, PROJECT, BUILD);
     consoles.waitExpectedTextIntoConsole(TestBuildConstants.BUILD_SUCCESS);
     projectExplorer.quickRevealToItemWithJavaScript(absPathToClass);
     projectExplorer.openItemByPath(absPathToClass);

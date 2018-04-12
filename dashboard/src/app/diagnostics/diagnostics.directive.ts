@@ -24,7 +24,7 @@
  *
  * @author Florent Benoit
  */
-export class Diagnostics {
+export class Diagnostics implements ng.IDirective {
 
   replace: boolean = false;
   restrict: string = 'E';
@@ -39,7 +39,6 @@ export class Diagnostics {
 
   /**
    * Default constructor that is using resource
-   * @ngInject for Dependency injection
    */
   constructor() {
     // scope values

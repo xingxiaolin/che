@@ -16,6 +16,9 @@ import {ShareWorkspaceController} from '../share-workspace.controller';
  * @author Oleksii Kurinnyi
  */
 export class AddDeveloperController {
+
+  static $inject = ['$q', '$mdDialog'];
+
   /**
    * Promises service.
    */
@@ -27,7 +30,9 @@ export class AddDeveloperController {
   /**
    * true if user owns the workspace.
    */
+  /* tslint:disable */
   private canShare: boolean;
+  /* tslint:enable */
   /**
    * List of users to share the workspace.
    */
@@ -39,7 +44,6 @@ export class AddDeveloperController {
 
   /**
    * Default constructor.
-   * @ngInject for Dependency injection
    */
   constructor($q: ng.IQService, $mdDialog: ng.material.IDialogService) {
     this.$q = $q;

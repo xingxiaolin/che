@@ -10,6 +10,7 @@
  */
 'use strict';
 import {CheRecipeTypes} from '../../../components/api/recipe/che-recipe-types';
+import {CheWorkspace} from '../../../components/api/workspace/che-workspace.factory';
 
 
 /**
@@ -18,6 +19,16 @@ import {CheRecipeTypes} from '../../../components/api/recipe/che-recipe-types';
  * @author Oleksii Orel
  */
 export class StackValidationService {
+  static $inject = ['cheWorkspace'];
+
+  private cheWorkspace: CheWorkspace;
+
+  /**
+   * Default constructor that is using resource
+   */
+  constructor(cheWorkspace: CheWorkspace) {
+    this.cheWorkspace = cheWorkspace;
+  }
 
   /**
    * Return result of recipe validation.
@@ -26,7 +37,7 @@ export class StackValidationService {
    */
   getStackValidation(stack: che.IStack | {}): che.IValidation {
     let mandatoryKeys: Array<string> = ['name', 'workspaceConfig'];
-    let additionalKeys: Array<string> = ['description', 'projects', 'tags', 'creator', 'scope', 'components', 'source'];
+    let additionalKeys: Array<string> = ['description', 'projects', 'tags', 'creator', 'scope', 'components'];
     let validKeys: Array<string> = mandatoryKeys.concat(additionalKeys);
     let errors: Array<string> = [];
     let isValid: boolean = true;
@@ -148,11 +159,8 @@ export class StackValidationService {
         devMachines.push(key);
       }
     });
-    if (devMachines.length !== 1) {
-      let error = `Exactly one of machines should contain '${wsAgent}' in agent's list.`;
-      if (devMachines.length === 0) {
-        error = 'Can\'t find development machine. ' + error;
-      }
+    if (devMachines.length > 1) {
+      let error = `Only one of the machines can contain '${wsAgent}' in agent's list.`;
       isValid = false;
       errors.push(error);
     }
@@ -268,7 +276,7 @@ export class StackValidationService {
       if (!recipe.contentType) {
         errors.push('Unknown recipe contentType.');
       }
-    } else {
+    } else if (this.cheWorkspace.getSupportedRecipeTypes().indexOf(recipe.type) === -1) {
       isValid = false;
       errors.push('Unknown recipe type.');
     }

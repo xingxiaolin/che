@@ -28,12 +28,15 @@ public interface TestUser {
    */
   String getAuthToken();
 
+  /** Return user's offline token. */
+  String getOfflineToken();
+
   /** Return user's name. */
   String getName();
 
   /** Return user's id. */
   String getId();
 
-  /** Deletes user and its stuff. */
-  void delete();
+  /** Clean up user's stuff. */
+  void cleanUp();
 }

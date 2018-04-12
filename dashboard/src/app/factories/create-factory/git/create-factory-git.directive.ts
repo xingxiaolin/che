@@ -14,20 +14,19 @@
  * Defines a directive for creating factory from git.
  * @author Florent Benoit
  */
-export class CreateFactoryGit {
-  private restrict: string;
-  private templateUrl: string;
-  private controller: string;
-  private controllerAs: string;
-  private bindToController: boolean;
+export class CreateFactoryGit implements ng.IDirective {
+  restrict: string;
+  templateUrl: string;
+  controller: string;
+  controllerAs: string;
+  bindToController: boolean;
 
-  private scope: {
+  scope: {
     [propName: string]: string;
   };
 
   /**
    * Default constructor that is using resource
-   * @ngInject for Dependency injection
    */
   constructor() {
     this.controller = 'CreateFactoryGitController';

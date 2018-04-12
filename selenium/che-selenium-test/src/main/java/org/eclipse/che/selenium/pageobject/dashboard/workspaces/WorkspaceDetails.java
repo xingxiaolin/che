@@ -12,6 +12,7 @@ package org.eclipse.che.selenium.pageobject.dashboard.workspaces;
 
 import static java.lang.String.format;
 import static org.eclipse.che.selenium.core.constant.TestTimeoutsConstants.EXPECTED_MESS_IN_CONSOLE_SEC;
+import static org.eclipse.che.selenium.core.constant.TestTimeoutsConstants.LOADER_TIMEOUT_SEC;
 import static org.eclipse.che.selenium.core.constant.TestTimeoutsConstants.LOAD_PAGE_TIMEOUT_SEC;
 import static org.eclipse.che.selenium.core.constant.TestTimeoutsConstants.REDRAW_UI_ELEMENTS_TIMEOUT_SEC;
 import static org.openqa.selenium.support.ui.ExpectedConditions.elementToBeClickable;
@@ -22,6 +23,7 @@ import static org.openqa.selenium.support.ui.ExpectedConditions.visibilityOfElem
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 import org.eclipse.che.selenium.core.SeleniumWebDriver;
+import org.eclipse.che.selenium.core.utils.WaitUtils;
 import org.eclipse.che.selenium.pageobject.Loader;
 import org.eclipse.che.selenium.pageobject.dashboard.Dashboard;
 import org.openqa.selenium.By;
@@ -49,8 +51,9 @@ public class WorkspaceDetails {
     String INSTALLERS = "Installers";
     String ENV_VARIABLES = "Env Variables";
     String CONFIG = "Config";
-    String SSH = "Ssh";
+    String SSH = "SSH";
     String SHARE = "Share";
+    String VOLUMES = "Volumes";
   }
 
   private interface Locators {
@@ -59,13 +62,18 @@ public class WorkspaceDetails {
     String STOP_WORKSPACE_BTN = "stop-workspace-button";
     String OPEN_IN_IDE_WS_BTN = "open-in-ide-button";
     String TAB_NAMES_IN_WS = "//md-pagination-wrapper//span[text()='%s']";
-    String SAVE_CHANGED_BUTTON = "//che-button-save-flat//span[text()='Save']";
-    String CANCEL_CHANGES_BUTTON = "//che-button-cancel-flat//span[text()='Cancel']";
+    String SAVE_CHANGED_BUTTON = "//button[@name='save-button']";
+    String APPLY_CHANGES_BUTTON = "//che-button-save-flat[@class='apply-button']";
+    String CANCEL_CHANGES_BUTTON = "//button[@name='cancel-button']";
     String CANCEL_DIALOG_BUTTON = "//md-dialog[@role='dialog']//button/span[text()='Cancel']";
     String CLOSE_DIALOG_BUTTON = "//md-dialog[@role='dialog']//button/span[text()='Close']";
     String DELETE_DIALOG_BUTTON = "//md-dialog[@role='dialog']//button/span[text()='Delete']";
     String UPDATE_DIALOG_BUTTON = "//md-dialog[@role='dialog']//button/span[text()='Update']";
     String ADD_DIALOG_BUTTON = "//md-dialog[@role='dialog']//button/span[text()='Add']";
+    String TOOLBAR_TITLE_NAME =
+        "//div[contains(@class,'che-toolbar')]//span[contains(text(),'%s')]";
+    String ORGANIZATION_NAME_ID = "namespace-name";
+    String OPEN_ORGANIZATION_BUTTON_ID = "open-namespace-button";
   }
 
   public enum StateWorkspace {
@@ -107,6 +115,9 @@ public class WorkspaceDetails {
 
   @FindBy(xpath = Locators.SAVE_CHANGED_BUTTON)
   WebElement saveBtn;
+
+  @FindBy(xpath = Locators.APPLY_CHANGES_BUTTON)
+  WebElement applyButton;
 
   @FindBy(xpath = Locators.CANCEL_CHANGES_BUTTON)
   WebElement cancelBtn;
@@ -180,8 +191,16 @@ public class WorkspaceDetails {
         .click();
   }
 
-  public void clickOnCancelChangesBtn() {
+  public void clickOnApplyChangesBtn() {
     loader.waitOnClosed();
+    new WebDriverWait(seleniumWebDriver, REDRAW_UI_ELEMENTS_TIMEOUT_SEC)
+        .until(visibilityOf(applyButton))
+        .click();
+  }
+
+  public void clickOnCancelChangesBtn() {
+    // this timeout is needed for the Cancel to appears after renaming of a workspace
+    WaitUtils.sleepQuietly(3);
     new WebDriverWait(seleniumWebDriver, REDRAW_UI_ELEMENTS_TIMEOUT_SEC)
         .until(visibilityOf(cancelBtn))
         .click();
@@ -215,6 +234,29 @@ public class WorkspaceDetails {
   public void clickOnAddButtonInDialogWindow() {
     new WebDriverWait(seleniumWebDriver, REDRAW_UI_ELEMENTS_TIMEOUT_SEC)
         .until(visibilityOfElementLocated(By.xpath(Locators.ADD_DIALOG_BUTTON)))
+        .click();
+  }
+
+  /**
+   * Wait toolbar name is present on dashboard
+   *
+   * @param titleName name of user
+   */
+  public void waitToolbarTitleName(String titleName) {
+    new WebDriverWait(seleniumWebDriver, LOADER_TIMEOUT_SEC)
+        .until(
+            visibilityOfElementLocated(By.xpath(format(Locators.TOOLBAR_TITLE_NAME, titleName))));
+  }
+
+  public String getOrganizationName() {
+    return new WebDriverWait(seleniumWebDriver, REDRAW_UI_ELEMENTS_TIMEOUT_SEC)
+        .until(visibilityOfElementLocated(By.id(Locators.ORGANIZATION_NAME_ID)))
+        .getText();
+  }
+
+  public void clickOnOpenOrganizationButton() {
+    new WebDriverWait(seleniumWebDriver, REDRAW_UI_ELEMENTS_TIMEOUT_SEC)
+        .until(visibilityOfElementLocated(By.id(Locators.OPEN_ORGANIZATION_BUTTON_ID)))
         .click();
   }
 }

@@ -10,20 +10,29 @@
  */
 package org.eclipse.che.selenium.git;
 
-import static org.eclipse.che.selenium.core.constant.TestProjectExplorerContextMenuConstants.GO_BACK;
-import static org.eclipse.che.selenium.core.constant.TestProjectExplorerContextMenuConstants.GO_INTO;
+import static org.eclipse.che.selenium.core.constant.TestProjectExplorerContextMenuConstants.ContextMenuFirstLevelItems.GO_BACK;
+import static org.eclipse.che.selenium.core.constant.TestProjectExplorerContextMenuConstants.ContextMenuFirstLevelItems.GO_INTO;
+import static org.eclipse.che.selenium.core.utils.WaitUtils.sleepQuietly;
 
 import com.google.inject.Inject;
 import com.google.inject.name.Named;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 import org.eclipse.che.commons.lang.NameGenerator;
+import org.eclipse.che.selenium.core.SeleniumWebDriver;
+import org.eclipse.che.selenium.core.TestGroup;
+import org.eclipse.che.selenium.core.client.TestGitHubRepository;
 import org.eclipse.che.selenium.core.client.TestGitHubServiceClient;
 import org.eclipse.che.selenium.core.client.TestProjectServiceClient;
+import org.eclipse.che.selenium.core.client.TestUserPreferencesServiceClient;
 import org.eclipse.che.selenium.core.constant.TestMenuCommandsConstants;
 import org.eclipse.che.selenium.core.user.TestUser;
+import org.eclipse.che.selenium.core.webdriver.SeleniumWebDriverHelper;
 import org.eclipse.che.selenium.core.workspace.TestWorkspace;
 import org.eclipse.che.selenium.pageobject.AskDialog;
 import org.eclipse.che.selenium.pageobject.CodenvyEditor;
 import org.eclipse.che.selenium.pageobject.Events;
+import org.eclipse.che.selenium.pageobject.GitHub;
 import org.eclipse.che.selenium.pageobject.Ide;
 import org.eclipse.che.selenium.pageobject.ImportProjectFromLocation;
 import org.eclipse.che.selenium.pageobject.Loader;
@@ -33,15 +42,18 @@ import org.eclipse.che.selenium.pageobject.ProjectExplorer;
 import org.eclipse.che.selenium.pageobject.WarningDialog;
 import org.eclipse.che.selenium.pageobject.Wizard;
 import org.eclipse.che.selenium.pageobject.git.Git;
+import org.openqa.selenium.TimeoutException;
 import org.testng.annotations.AfterMethod;
 import org.testng.annotations.BeforeClass;
 import org.testng.annotations.Test;
 
 /** @author Aleksandr Shmaraev */
+@Test(groups = TestGroup.GITHUB)
 public class KeepDirectoryGitImportTest {
   public static final String PROJECT_NAME = NameGenerator.generate("KeepDirectoryProject", 4);
   public static final String DIRECTORY_NAME_1 = "my-lib";
   public static final String DIRECTORY_NAME_2 = "my-lib/src/test";
+  private String currentWindow;
 
   @Inject private TestWorkspace ws;
   @Inject private Ide ide;
@@ -68,17 +80,22 @@ public class KeepDirectoryGitImportTest {
   @Inject private Preferences preferences;
   @Inject private TestGitHubServiceClient gitHubClientService;
   @Inject private TestProjectServiceClient projectServiceClient;
+  @Inject private TestUserPreferencesServiceClient testUserPreferencesServiceClient;
+  @Inject private TestGitHubRepository testRepo;
+  @Inject private SeleniumWebDriver seleniumWebDriver;
+  @Inject private GitHub gitHub;
+  @Inject private SeleniumWebDriverHelper seleniumWebDriverHelper;
 
   @BeforeClass
   public void prepare() throws Exception {
-    ide.open(ws);
+    testUserPreferencesServiceClient.addGitCommitter(gitHubUsername, productUser.getEmail());
 
-    // authorize application on GitHub
-    menu.runCommand(
-        TestMenuCommandsConstants.Profile.PROFILE_MENU,
-        TestMenuCommandsConstants.Profile.PREFERENCES);
-    preferences.waitPreferencesForm();
-    preferences.generateAndUploadSshKeyOnGithub(gitHubUsername, gitHubPassword);
+    Path entryPath = Paths.get(getClass().getResource("/projects/java-multimodule").getPath());
+    testRepo.addContent(entryPath);
+
+    ide.open(ws);
+    projectExplorer.waitProjectExplorer();
+    currentWindow = seleniumWebDriver.getWindowHandle();
   }
 
   @AfterMethod
@@ -89,15 +106,14 @@ public class KeepDirectoryGitImportTest {
   @Test(priority = 1)
   public void keepDirectoryImportBySshUrlTest() throws Exception {
     projectExplorer.waitProjectExplorer();
-    makeKeepDirectoryFromGitUrl(
-        "git@github.com:" + gitHubUsername + "/java-multimodule.git",
-        PROJECT_NAME,
-        DIRECTORY_NAME_1);
+
+    makeKeepDirectoryFromGitUrl(testRepo.getHtmlUrl(), PROJECT_NAME, DIRECTORY_NAME_1);
     projectExplorer.waitItem(PROJECT_NAME);
-    projectExplorer.selectVisibleItem(PROJECT_NAME);
+
+    projectExplorer.waitAndSelectItemByName(PROJECT_NAME);
     projectExplorer.openItemByPath(PROJECT_NAME);
     loader.waitOnClosed();
-    projectExplorer.waitItemIsDisappeared(PROJECT_NAME + "/my-webapp");
+    projectExplorer.waitItemInvisibility(PROJECT_NAME + "/my-webapp");
     projectExplorer.waitItem(PROJECT_NAME + "/my-lib");
     expandDirectoryMyLib(PROJECT_NAME);
   }
@@ -105,31 +121,23 @@ public class KeepDirectoryGitImportTest {
   @Test(priority = 2)
   public void keepDirectoryImportByHttpsUrlTest() throws Exception {
     projectExplorer.waitProjectExplorer();
-    makeKeepDirectoryFromGitUrl(
-        "https://github.com/" + gitHubUsername + "/java-multimodule2.git",
-        PROJECT_NAME,
-        DIRECTORY_NAME_2);
+    makeKeepDirectoryFromGitUrl(testRepo.getHtmlUrl(), PROJECT_NAME, DIRECTORY_NAME_2);
     projectExplorer.waitItem(PROJECT_NAME);
-    projectExplorer.selectVisibleItem(PROJECT_NAME);
-    projectExplorer.openItemByPath(PROJECT_NAME);
-    projectExplorer.waitItem(PROJECT_NAME + "/my-lib");
-    projectExplorer.openItemByPath(PROJECT_NAME + "/my-lib");
-    projectExplorer.openItemByPath(PROJECT_NAME + "/my-lib/src");
-    projectExplorer.openItemByPath(PROJECT_NAME + "/my-lib/src/test");
-    projectExplorer.openItemByPath(PROJECT_NAME + "/my-lib/src/test/java");
-    projectExplorer.openItemByPath(PROJECT_NAME + "/my-lib/src/test/java/hello");
-    projectExplorer.openItemByPath(PROJECT_NAME + "/my-lib/src/test/java/hello/SayHelloTest.java");
-    loader.waitOnClosed();
+
+    projectExplorer.expandPathInProjectExplorerAndOpenFile(
+        PROJECT_NAME + "/my-lib/src/test/java/hello", "SayHelloTest.java");
+
     editor.waitActive();
-    projectExplorer.waitItemIsDisappeared(PROJECT_NAME + "/my-lib/src/main");
-    projectExplorer.waitItemIsDisappeared(PROJECT_NAME + "/my-webapp");
+
+    projectExplorer.waitItemInvisibility(PROJECT_NAME + "/my-lib/src/main");
+    projectExplorer.waitItemInvisibility(PROJECT_NAME + "/my-webapp");
     projectExplorer.openContextMenuByPathSelectedItem(PROJECT_NAME + "/my-lib/src/test");
     projectExplorer.clickOnItemInContextMenu(GO_INTO);
     projectExplorer.waitDisappearItemByPath(PROJECT_NAME + "/src/my-lib");
-    projectExplorer.waitItemInVisibleArea("test");
-    projectExplorer.waitItemInVisibleArea("java");
-    projectExplorer.waitItemInVisibleArea("hello");
-    projectExplorer.waitItemInVisibleArea("SayHelloTest.java");
+    projectExplorer.waitVisibilityByName("test");
+    projectExplorer.waitVisibilityByName("java");
+    projectExplorer.waitVisibilityByName("hello");
+    projectExplorer.waitVisibilityByName("SayHelloTest.java");
     projectExplorer.openContextMenuByPathSelectedItem(PROJECT_NAME + "/my-lib/src/test");
     projectExplorer.clickOnItemInContextMenu(GO_BACK);
     projectExplorer.waitItem(PROJECT_NAME + "/my-lib/src");
@@ -147,10 +155,14 @@ public class KeepDirectoryGitImportTest {
     loader.waitOnClosed();
     importProject.waitLoadRepoBtn();
     importProject.clickLoadRepoBtn();
+
+    authorizeGitHubApplication();
     loader.waitOnClosed();
+
     importProject.selectItemInAccountList(
         gitHubClientService.getName(gitHubUsername, gitHubPassword));
-    importProject.selectProjectByName("java-multimodule");
+
+    importProject.selectProjectByName(testRepo.getName());
     importProject.typeProjectName(PROJECT_NAME);
     importProject.waitKeepDirectoryIsNotSelected();
     importProject.clickOnKeepDirectoryCheckbox();
@@ -161,22 +173,18 @@ public class KeepDirectoryGitImportTest {
     loader.waitOnClosed();
     projectExplorer.waitProjectExplorer();
     projectExplorer.waitItem(PROJECT_NAME);
-    projectExplorer.selectVisibleItem(PROJECT_NAME);
+    projectExplorer.waitAndSelectItemByName(PROJECT_NAME);
     projectExplorer.openItemByPath(PROJECT_NAME);
     loader.waitOnClosed();
-    projectExplorer.waitItemIsDisappeared(PROJECT_NAME + "/my-lib");
-    projectExplorer.waitItem(PROJECT_NAME + "/my-webapp");
-    projectExplorer.openItemByPath(PROJECT_NAME + "/my-webapp");
-    projectExplorer.openItemByPath(PROJECT_NAME + "/my-webapp/src");
-    loader.waitOnClosed();
-    projectExplorer.openItemByPath(PROJECT_NAME + "/my-webapp/src/main");
-    loader.waitOnClosed();
-    projectExplorer.waitItem(PROJECT_NAME + "/my-webapp/src/main/webapp");
+    projectExplorer.waitItemInvisibility(PROJECT_NAME + "/my-lib");
+
+    projectExplorer.expandPathInProjectExplorer(PROJECT_NAME + "/my-webapp/src/main/webapp");
+
     projectExplorer.openContextMenuByPathSelectedItem(PROJECT_NAME + "/my-webapp");
     projectExplorer.clickOnItemInContextMenu(GO_INTO);
     loader.waitOnClosed();
-    projectExplorer.waitItemInVisibleArea("my-webapp");
-    projectExplorer.waitItemIsDisappeared(PROJECT_NAME);
+    projectExplorer.waitVisibilityByName("my-webapp");
+    projectExplorer.waitItemInvisibility(PROJECT_NAME);
     projectExplorer.openContextMenuByPathSelectedItem(PROJECT_NAME + "/my-webapp");
     projectExplorer.clickOnItemInContextMenu(GO_BACK);
     projectExplorer.waitItem(PROJECT_NAME);
@@ -204,19 +212,40 @@ public class KeepDirectoryGitImportTest {
   }
 
   private void expandDirectoryMyLib(String projectName) throws Exception {
-    projectExplorer.openItemByPath(projectName + "/my-lib");
-    projectExplorer.openItemByPath(projectName + "/my-lib/src");
-    projectExplorer.openItemByPath(projectName + "/my-lib/src/main");
-    projectExplorer.openItemByPath(projectName + "/my-lib/src/test");
-    projectExplorer.openItemByPath(projectName + "/my-lib/src/main/java");
-    projectExplorer.openItemByPath(projectName + "/my-lib/src/test/java");
-    projectExplorer.openItemByPath(projectName + "/my-lib/src/main/java/hello");
-    projectExplorer.openItemByPath(projectName + "/my-lib/src/test/java/hello");
-    projectExplorer.openItemByPath(projectName + "/my-lib/src/main/java/hello/SayHello.java");
-    loader.waitOnClosed();
+    projectExplorer.expandPathInProjectExplorerAndOpenFile(
+        projectName + "/my-lib/src/main/java/hello", "SayHello.java");
     editor.waitActive();
-    projectExplorer.openItemByPath(projectName + "/my-lib/src/test/java/hello/SayHelloTest.java");
-    loader.waitOnClosed();
+    projectExplorer.expandPathInProjectExplorerAndOpenFile(
+        projectName + "/my-lib/src/test/java/hello", "SayHelloTest.java");
     editor.waitActive();
+  }
+
+  private void authorizeGitHubApplication() {
+    try {
+      askDialog.waitFormToOpen(25);
+    } catch (TimeoutException te) {
+      // consider someone has already authorized before
+      return;
+    }
+
+    askDialog.clickOkBtn();
+    askDialog.waitFormToClose();
+    seleniumWebDriver.switchToNoneCurrentWindow(currentWindow);
+
+    gitHub.waitAuthorizationPageOpened();
+    gitHub.typeLogin(gitHubUsername);
+    gitHub.typePass(gitHubPassword);
+    gitHub.clickOnSignInButton();
+
+    // it is needed for specified case when the github authorize page is not appeared
+    sleepQuietly(2);
+
+    if (seleniumWebDriver.getWindowHandles().size() > 1) {
+      gitHub.waitAuthorizeBtn();
+      gitHub.clickOnAuthorizeBtn();
+      seleniumWebDriver.switchTo().window(currentWindow);
+    }
+
+    seleniumWebDriver.switchTo().window(currentWindow);
   }
 }

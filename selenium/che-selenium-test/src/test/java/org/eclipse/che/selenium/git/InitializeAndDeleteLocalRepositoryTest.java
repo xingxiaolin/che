@@ -16,6 +16,7 @@ import java.net.URL;
 import java.nio.file.Paths;
 import org.eclipse.che.commons.lang.NameGenerator;
 import org.eclipse.che.selenium.core.SeleniumWebDriver;
+import org.eclipse.che.selenium.core.TestGroup;
 import org.eclipse.che.selenium.core.client.TestProjectServiceClient;
 import org.eclipse.che.selenium.core.client.TestUserPreferencesServiceClient;
 import org.eclipse.che.selenium.core.constant.TestGitConstants;
@@ -34,6 +35,7 @@ import org.testng.annotations.BeforeClass;
 import org.testng.annotations.Test;
 
 /** @author aleksandr shmaraev */
+@Test(groups = TestGroup.GITHUB)
 public class InitializeAndDeleteLocalRepositoryTest {
   private static final String PROJECT_NAME = NameGenerator.generate("InitAndDelLocalRepo-", 4);
   private static final String PATH_FOR_EXPAND =
@@ -80,7 +82,7 @@ public class InitializeAndDeleteLocalRepositoryTest {
     // Initialize git repository
     projectExplorer.waitProjectExplorer();
     projectExplorer.waitItem(PROJECT_NAME);
-    projectExplorer.selectItem(PROJECT_NAME);
+    projectExplorer.waitAndSelectItem(PROJECT_NAME);
     menu.runCommand(
         TestMenuCommandsConstants.Git.GIT, TestMenuCommandsConstants.Git.INITIALIZE_REPOSITORY);
     askDialog.acceptDialogWithText(ASK_DIALOG_TEXT);
@@ -92,17 +94,17 @@ public class InitializeAndDeleteLocalRepositoryTest {
     menu.waitCommandIsDisabledInMenu(TestMenuCommandsConstants.Git.INITIALIZE_REPOSITORY);
     menu.runCommandByXpath(TestMenuCommandsConstants.Git.STATUS);
     git.waitGitStatusBarWithMess("On branch master");
-    projectExplorer.selectItem(PROJECT_NAME);
+    projectExplorer.waitAndSelectItem(PROJECT_NAME);
     projectExplorer.quickExpandWithJavaScript();
     projectExplorer.openItemByPath(PATH_FOR_EXPAND + "AppController.java");
     loader.waitOnClosed();
 
     // Check git log
-    projectExplorer.selectItem(PROJECT_NAME);
+    projectExplorer.waitAndSelectItem(PROJECT_NAME);
     menu.runCommand(TestMenuCommandsConstants.Git.GIT, TestMenuCommandsConstants.Git.SHOW_HISTORY);
     warningDialog.waitWaitWarnDialogWindowWithSpecifiedTextMess(WARNING_TEXT);
     warningDialog.clickOkBtn();
-    projectExplorer.selectItem(PROJECT_NAME);
+    projectExplorer.waitAndSelectItem(PROJECT_NAME);
     menu.runCommand(TestMenuCommandsConstants.Git.GIT, TestMenuCommandsConstants.Git.COMMIT);
     git.waitAndRunCommit("init");
     loader.waitOnClosed();

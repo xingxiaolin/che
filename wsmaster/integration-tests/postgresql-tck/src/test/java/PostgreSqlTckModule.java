@@ -41,6 +41,9 @@ import org.eclipse.che.api.user.server.model.impl.UserImpl;
 import org.eclipse.che.api.user.server.spi.PreferenceDao;
 import org.eclipse.che.api.user.server.spi.ProfileDao;
 import org.eclipse.che.api.user.server.spi.UserDao;
+import org.eclipse.che.api.workspace.activity.JpaWorkspaceActivityDao;
+import org.eclipse.che.api.workspace.activity.WorkspaceActivityDao;
+import org.eclipse.che.api.workspace.activity.WorkspaceExpiration;
 import org.eclipse.che.api.workspace.server.jpa.JpaStackDao;
 import org.eclipse.che.api.workspace.server.jpa.JpaWorkspaceDao;
 import org.eclipse.che.api.workspace.server.model.impl.CommandImpl;
@@ -68,6 +71,10 @@ import org.eclipse.che.core.db.DBInitializer;
 import org.eclipse.che.core.db.postgresql.jpa.eclipselink.PostgreSqlExceptionHandler;
 import org.eclipse.che.core.db.schema.SchemaInitializer;
 import org.eclipse.che.core.db.schema.impl.flyway.FlywaySchemaInitializer;
+import org.eclipse.che.multiuser.machine.authentication.server.signature.jpa.JpaSignatureKeyDao;
+import org.eclipse.che.multiuser.machine.authentication.server.signature.model.impl.SignatureKeyImpl;
+import org.eclipse.che.multiuser.machine.authentication.server.signature.model.impl.SignatureKeyPairImpl;
+import org.eclipse.che.multiuser.machine.authentication.server.signature.spi.SignatureKeyDao;
 import org.eclipse.che.security.PasswordEncryptor;
 import org.eclipse.che.security.SHA512PasswordEncryptor;
 import org.postgresql.Driver;
@@ -118,7 +125,10 @@ public class PostgreSqlTckModule extends TckModule {
                 SshPairImpl.class,
                 InstallerImpl.class,
                 InstallerServerConfigImpl.class,
-                VolumeImpl.class)
+                WorkspaceExpiration.class,
+                VolumeImpl.class,
+                SignatureKeyImpl.class,
+                SignatureKeyPairImpl.class)
             .addEntityClass(
                 "org.eclipse.che.api.workspace.server.model.impl.ProjectConfigImpl$Attribute")
             .build());
@@ -162,13 +172,21 @@ public class PostgreSqlTckModule extends TckModule {
     // workspace
     bind(WorkspaceDao.class).to(JpaWorkspaceDao.class);
     bind(StackDao.class).to(JpaStackDao.class);
+    bind(WorkspaceActivityDao.class).to(JpaWorkspaceActivityDao.class);
     bind(new TypeLiteral<TckRepository<WorkspaceImpl>>() {}).toInstance(new WorkspaceRepository());
     bind(new TypeLiteral<TckRepository<StackImpl>>() {}).toInstance(new StackRepository());
+    bind(new TypeLiteral<TckRepository<WorkspaceExpiration>>() {})
+        .toInstance(new JpaTckRepository<>(WorkspaceExpiration.class));
 
     // installer
     bind(InstallerDao.class).to(JpaInstallerDao.class);
     bind(new TypeLiteral<TckRepository<InstallerImpl>>() {})
         .toInstance(new JpaTckRepository<>(InstallerImpl.class));
+
+    // sign keys
+    bind(SignatureKeyDao.class).to(JpaSignatureKeyDao.class);
+    bind(new TypeLiteral<TckRepository<SignatureKeyPairImpl>>() {})
+        .toInstance(new JpaTckRepository<>(SignatureKeyPairImpl.class));
   }
 
   private static void waitConnectionIsEstablished(String dbUrl, String dbUser, String dbPassword) {

@@ -40,10 +40,10 @@ import org.testng.annotations.Test;
  * @author Musienko Maxim
  */
 public class GenericsTest {
-  private static final String nameOfProject =
-      NameGenerator.generate(GenericsTest.class.getName(), 2);
-  private static final String pathToPackageInChePrefix =
-      nameOfProject + "/src" + "/main" + "/java" + "/renametype";
+  private static final String NAME_OF_PROJECT =
+      NameGenerator.generate(GenericsTest.class.getSimpleName(), 2);
+  private static final String PATH_TO_PACKAGE_IN_CHE_PREFIX =
+      NAME_OF_PROJECT + "/src/main/java/renametype";
 
   private String pathToCurrentPackage;
   private String contentFromInA;
@@ -66,14 +66,14 @@ public class GenericsTest {
     testProjectServiceClient.importProject(
         workspace.getId(),
         Paths.get(resource.toURI()),
-        nameOfProject,
+        NAME_OF_PROJECT,
         ProjectTemplates.MAVEN_SIMPLE);
     ide.open(workspace);
   }
 
   @Test
   public void testGenerics2() throws Exception {
-    projectExplorer.waitVisibleItem(nameOfProject);
+    projectExplorer.waitVisibleItem(NAME_OF_PROJECT);
     projectExplorer.quickExpandWithJavaScript();
 
     loader.waitOnClosed();
@@ -82,7 +82,7 @@ public class GenericsTest {
     projectExplorer.openItemByPath(pathToCurrentPackage + "/A.java");
     Assert.assertEquals(editor.getVisibleTextFromEditor(), contentFromInA);
     editor.waitTextIntoEditor(contentFromInA);
-    projectExplorer.selectItem(pathToCurrentPackage + "/A.java");
+    projectExplorer.waitAndSelectItem(pathToCurrentPackage + "/A.java");
     menu.runCommand(
         TestMenuCommandsConstants.Assistant.ASSISTANT,
         TestMenuCommandsConstants.Assistant.Refactoring.REFACTORING,
@@ -102,7 +102,7 @@ public class GenericsTest {
   }
 
   private void setFieldsForTest(String nameCurrentTest) throws Exception {
-    pathToCurrentPackage = pathToPackageInChePrefix + "/" + nameCurrentTest;
+    pathToCurrentPackage = PATH_TO_PACKAGE_IN_CHE_PREFIX + "/" + nameCurrentTest;
 
     URL resourcesInA =
         getClass()

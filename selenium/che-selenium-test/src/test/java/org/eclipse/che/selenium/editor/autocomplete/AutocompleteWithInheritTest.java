@@ -10,8 +10,8 @@
  */
 package org.eclipse.che.selenium.editor.autocomplete;
 
-import static org.eclipse.che.selenium.pageobject.CodenvyEditor.MarkersType.ERROR_MARKER;
-import static org.eclipse.che.selenium.pageobject.CodenvyEditor.MarkersType.TASK_MARKER_OVERVIEW;
+import static org.eclipse.che.selenium.pageobject.CodenvyEditor.MarkerLocator.ERROR;
+import static org.eclipse.che.selenium.pageobject.CodenvyEditor.MarkerLocator.TASK_OVERVIEW;
 
 import com.google.inject.Inject;
 import java.net.URL;
@@ -21,11 +21,14 @@ import org.eclipse.che.selenium.core.client.TestProjectServiceClient;
 import org.eclipse.che.selenium.core.project.ProjectTemplates;
 import org.eclipse.che.selenium.core.workspace.TestWorkspace;
 import org.eclipse.che.selenium.pageobject.CodenvyEditor;
+import org.eclipse.che.selenium.pageobject.CodenvyEditor.MarkerLocator;
 import org.eclipse.che.selenium.pageobject.Ide;
 import org.eclipse.che.selenium.pageobject.Loader;
 import org.eclipse.che.selenium.pageobject.MavenPluginStatusBar;
 import org.eclipse.che.selenium.pageobject.ProjectExplorer;
 import org.openqa.selenium.Keys;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.testng.annotations.BeforeClass;
 import org.testng.annotations.Test;
 
@@ -35,6 +38,7 @@ public class AutocompleteWithInheritTest {
       NameGenerator.generate(AutocompleteWithInheritTest.class.getSimpleName(), 4);
   private static final String BASE_CLASS = "AppController";
   private static final String EXTENDED_CLASS = "InheritClass";
+  private static final Logger LOG = LoggerFactory.getLogger(AutocompleteWithInheritTest.class);
 
   private static final String contentAfterFix =
       "public class InheritClass extends AppController {\n"
@@ -62,31 +66,27 @@ public class AutocompleteWithInheritTest {
         Paths.get(resource.toURI()),
         PROJECT_NAME,
         ProjectTemplates.MAVEN_SPRING);
+
     ide.open(workspace);
   }
 
   @Test
-  public void updateDependencyWithInheritTest() {
+  public void updateDependencyWithInheritTest() throws Exception {
     projectExplorer.waitProjectExplorer();
     projectExplorer.waitItem(PROJECT_NAME);
     mavenPluginStatusBar.waitClosingInfoPanel();
-
-    projectExplorer.selectItem(PROJECT_NAME);
-    projectExplorer.quickExpandWithJavaScript();
-
-    projectExplorer.openItemByVisibleNameInExplorer("AppController.java");
-    editor.waitAllMarkersDisappear(ERROR_MARKER);
-
+    projectExplorer.expandPathInProjectExplorerAndOpenFile(
+        PROJECT_NAME + "/src/main/java/example", BASE_CLASS + ".java");
+    editor.waitAllMarkersInvisibility(ERROR);
     projectExplorer.openItemByVisibleNameInExplorer(EXTENDED_CLASS + ".java");
-    editor.returnFocusInCurrentLine();
-    editor.waitMarkerInPosition(ERROR_MARKER, 13);
+    editor.waitMarkerInPosition(MarkerLocator.ERROR, 13);
     editor.setCursorToLine(13);
     editor.launchPropositionAssistPanel();
     editor.waitTextIntoFixErrorProposition("Add constructor 'InheritClass(int,String)'");
     editor.selectFirstItemIntoFixErrorPropByEnter();
     editor.waitTextIntoEditor(contentAfterFix);
-    editor.waitMarkerDisappears(ERROR_MARKER, 13);
-    editor.waitMarkerInPosition(TASK_MARKER_OVERVIEW, 18);
+    editor.waitMarkerInvisibility(ERROR, 13);
+    editor.waitMarkerInPosition(TASK_OVERVIEW, 18);
     editor.waitTabFileWithSavedStatus(EXTENDED_CLASS);
     editor.selectTabByName(BASE_CLASS);
     loader.waitOnClosed();
@@ -108,6 +108,6 @@ public class AutocompleteWithInheritTest {
     editor.launchPropositionAssistPanel();
     editor.waitTextIntoFixErrorProposition("Change type of 'testString' to 'int'");
     editor.selectFirstItemIntoFixErrorPropByDoubleClick();
-    editor.waitAllMarkersDisappear(ERROR_MARKER);
+    editor.waitAllMarkersInvisibility(ERROR);
   }
 }

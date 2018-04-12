@@ -22,13 +22,14 @@ import org.eclipse.che.selenium.core.SeleniumWebDriver;
 import org.eclipse.che.selenium.core.client.TestWorkspaceServiceClient;
 import org.eclipse.che.selenium.core.constant.TestStacksConstants;
 import org.eclipse.che.selenium.core.user.TestUser;
-import org.eclipse.che.selenium.pageobject.Loader;
+import org.eclipse.che.selenium.core.webdriver.SeleniumWebDriverHelper;
+import org.eclipse.che.selenium.pageobject.Ide;
 import org.eclipse.che.selenium.pageobject.MavenPluginStatusBar;
 import org.eclipse.che.selenium.pageobject.NotificationsPopupPanel;
 import org.eclipse.che.selenium.pageobject.ProjectExplorer;
-import org.eclipse.che.selenium.pageobject.dashboard.CreateWorkspace;
 import org.eclipse.che.selenium.pageobject.dashboard.Dashboard;
 import org.eclipse.che.selenium.pageobject.dashboard.NavigationBar;
+import org.eclipse.che.selenium.pageobject.dashboard.NewWorkspace;
 import org.eclipse.che.selenium.pageobject.dashboard.ProjectSourcePage;
 import org.eclipse.che.selenium.pageobject.dashboard.workspaces.WorkspaceDetails;
 import org.eclipse.che.selenium.pageobject.dashboard.workspaces.WorkspaceProjects;
@@ -46,16 +47,17 @@ public class CreateAndDeleteProjectsTest {
   @Inject private WorkspaceProjects workspaceProjects;
   @Inject private WorkspaceDetails workspaceDetails;
   @Inject private NavigationBar navigationBar;
-  @Inject private CreateWorkspace createWorkspace;
+  @Inject private NewWorkspace newWorkspace;
   @Inject private ProjectSourcePage projectSourcePage;
-  @Inject private Loader loader;
   @Inject private ProjectExplorer explorer;
   @Inject private SeleniumWebDriver seleniumWebDriver;
+  @Inject private SeleniumWebDriverHelper seleniumWebDriverHelper;
   @Inject private TestWorkspaceServiceClient workspaceServiceClient;
   @Inject private TestUser defaultTestUser;
   @Inject private NotificationsPopupPanel notificationsPopupPanel;
   @Inject private MavenPluginStatusBar mavenPluginStatusBar;
   @Inject private Workspaces workspaces;
+  @Inject private Ide ide;
 
   @BeforeClass
   public void setUp() {
@@ -71,26 +73,26 @@ public class CreateAndDeleteProjectsTest {
   public void createAndDeleteProjectTest() throws ExecutionException, InterruptedException {
     dashboard.waitDashboardToolbarTitle();
     dashboard.selectWorkspacesItemOnDashboard();
-    workspaces.clickOnNewWorkspaceBtn();
-    createWorkspace.waitToolbar();
+    workspaces.clickOnAddWorkspaceBtn();
+    newWorkspace.waitToolbar();
 
-    createWorkspace.selectStack(TestStacksConstants.JAVA.getId());
-    createWorkspace.typeWorkspaceName(WORKSPACE);
+    newWorkspace.selectStack(TestStacksConstants.JAVA.getId());
+    newWorkspace.typeWorkspaceName(WORKSPACE);
     projectSourcePage.clickOnAddOrImportProjectButton();
     projectSourcePage.selectSample(WEB_JAVA_SPRING);
     projectSourcePage.selectSample(CONSOLE_JAVA_SIMPLE);
     projectSourcePage.clickOnAddProjectButton();
-    createWorkspace.clickOnCreateWorkspaceButton();
+    newWorkspace.clickOnCreateButtonAndOpenInIDE();
 
-    String dashboardWindow = seleniumWebDriver.getWindowHandle();
-    seleniumWebDriver.switchFromDashboardIframeToIde();
-    loader.waitOnClosed();
-    explorer.waitProjectExplorer();
+    String dashboardWindow = seleniumWebDriverHelper.switchToIdeFrameAndWaitAvailability();
+    ide.waitOpenedWorkspaceIsReadyToUse();
+
     explorer.waitItem(CONSOLE_JAVA_SIMPLE);
-    notificationsPopupPanel.waitPopUpPanelsIsClosed();
+    notificationsPopupPanel.waitPopupPanelsAreClosed();
     mavenPluginStatusBar.waitClosingInfoPanel();
-    explorer.waitFolderDefinedTypeOfFolderByPath(CONSOLE_JAVA_SIMPLE, PROJECT_FOLDER);
-    explorer.waitFolderDefinedTypeOfFolderByPath(WEB_JAVA_SPRING, PROJECT_FOLDER);
+    explorer.waitDefinedTypeOfFolder(CONSOLE_JAVA_SIMPLE, PROJECT_FOLDER);
+    explorer.waitDefinedTypeOfFolder(WEB_JAVA_SPRING, PROJECT_FOLDER);
+    notificationsPopupPanel.waitPopupPanelsAreClosed();
 
     switchToWindow(dashboardWindow);
     dashboard.selectWorkspacesItemOnDashboard();

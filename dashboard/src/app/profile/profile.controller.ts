@@ -17,6 +17,9 @@ import {CheProfile} from '../../components/api/che-profile.factory';
  * @author Anna Shumilova
  */
 export class ProfileController {
+
+  static $inject = ['cheKeycloak', 'cheProfile', '$window'];
+
   private profileUrl: string;
   private firstName: string;
   private lastName: string;
@@ -26,17 +29,16 @@ export class ProfileController {
 
   /**
    * Default constructor that is using resource
-   * @ngInject for Dependency injection
    */
   constructor(cheKeycloak: CheKeycloak, cheProfile: CheProfile, $window: ng.IWindowService) {
     this.$window = $window;
 
     this.profileUrl = cheKeycloak.getProfileUrl();
     let profile = cheProfile.getProfile();
-    this.firstName = <string>profile.attributes['firstName'];
-    this.lastName = <string>profile.attributes['lastName'];
+    this.firstName = <string>profile.attributes.firstName;
+    this.lastName = <string>profile.attributes.lastName;
     this.email = profile.email;
-    this.userName = <string>profile.attributes['preferred_username'];
+    this.userName = <string>(profile.attributes as any).preferred_username;
   }
 
   /**
@@ -44,5 +46,12 @@ export class ProfileController {
    */
   editProfile(): void {
     this.$window.open(this.profileUrl);
+  }
+
+  /**
+   * Edit profile - redirects to proper page.
+   */
+  get cannotEdit(): boolean {
+    return !this.profileUrl;
   }
 }

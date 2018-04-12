@@ -18,16 +18,20 @@ import org.eclipse.che.selenium.core.client.TestProjectServiceClient;
 import org.eclipse.che.selenium.core.project.ProjectTemplates;
 import org.eclipse.che.selenium.core.workspace.TestWorkspace;
 import org.eclipse.che.selenium.pageobject.CodenvyEditor;
+import org.eclipse.che.selenium.pageobject.CodenvyEditor.MarkerLocator;
 import org.eclipse.che.selenium.pageobject.Consoles;
 import org.eclipse.che.selenium.pageobject.Ide;
 import org.eclipse.che.selenium.pageobject.Loader;
 import org.eclipse.che.selenium.pageobject.ProjectExplorer;
 import org.openqa.selenium.Keys;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.testng.annotations.BeforeClass;
 import org.testng.annotations.Test;
 
 /** @author Aleksandr Shmaraev */
 public class ShowHintsCommandTest {
+  private final Logger LOG = LoggerFactory.getLogger(ShowHintsCommandTest.class);
   private static final String PROJECT_NAME =
       NameGenerator.generate(ShowHintsCommandTest.class.getSimpleName(), 4);
 
@@ -67,12 +71,12 @@ public class ShowHintsCommandTest {
   }
 
   @Test
-  public void checkShowHintsCommand() {
+  public void checkShowHintsCommand() throws Exception {
     projectExplorer.waitProjectExplorer();
     projectExplorer.waitItem(PROJECT_NAME);
     console.closeProcessesArea();
-    projectExplorer.quickExpandWithJavaScript();
-    projectExplorer.openItemByVisibleNameInExplorer("AppController.java");
+    projectExplorer.expandPathInProjectExplorerAndOpenFile(
+        PROJECT_NAME + "/src/main/java/org.eclipse.qa.examples", "AppController.java");
     loader.waitOnClosed();
     projectExplorer.openItemByVisibleNameInExplorer("HintTestClass.java");
     loader.waitOnClosed();
@@ -84,7 +88,8 @@ public class ShowHintsCommandTest {
     editor.typeTextIntoEditor(Keys.TAB.toString());
     editor.typeTextIntoEditor("runCommand();");
     editor.waitTextIntoEditor("runCommand();");
-    editor.typeTextIntoEditor(Keys.HOME.toString());
+    editor.waitMarkerInPosition(MarkerLocator.ERROR, 33);
+    editor.goToCursorPositionVisible(32, 5);
     editor.callShowHintsPopUp();
     editor.waitShowHintsPopUpOpened();
     editor.waitExpTextIntoShowHintsPopUp(TEXT_IN_POP_UP_1);

@@ -35,12 +35,18 @@ interface IEditorState {
  * @author Oleksii Orel
  */
 export class CheEditorController {
+
+  static $inject = ['$timeout'];
+
   setEditorValue: (content: string) => void;
   /**
    * Editor options object.
    */
   private editorOptions: {
     mode?: string;
+    readOnly?: boolean;
+    lineWrapping?: boolean;
+    lineNumbers?: boolean;
     onLoad: Function;
   };
   /**
@@ -60,6 +66,10 @@ export class CheEditorController {
    */
   private onContentChange: Function;
   /**
+   * Is editor read only.
+   */
+  private editorReadOnly: boolean;
+  /**
    * Editor mode.
    */
   private editorMode: string;
@@ -70,11 +80,13 @@ export class CheEditorController {
 
   /**
    * Default constructor that is using resource injection
-   * @ngInject for Dependency injection
    */
   constructor($timeout: ng.ITimeoutService) {
     this.editorOptions = {
       mode: angular.isString(this.editorMode) ? this.editorMode : 'application/json',
+      readOnly: this.editorReadOnly ? this.editorReadOnly : false,
+      lineWrapping: true,
+      lineNumbers: true,
       onLoad: (editor: IEditor) => {
         $timeout(() => {
           editor.refresh();

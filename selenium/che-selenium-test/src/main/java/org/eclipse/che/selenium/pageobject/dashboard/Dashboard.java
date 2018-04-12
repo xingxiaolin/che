@@ -23,17 +23,19 @@ import static org.openqa.selenium.support.ui.ExpectedConditions.visibilityOfElem
 
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
-import java.util.Arrays;
+import com.google.inject.name.Named;
 import java.util.List;
 import javax.annotation.PreDestroy;
 import org.eclipse.che.selenium.core.SeleniumWebDriver;
+import org.eclipse.che.selenium.core.client.TestKeycloakSettingsServiceClient;
 import org.eclipse.che.selenium.core.entrance.Entrance;
 import org.eclipse.che.selenium.core.provider.TestDashboardUrlProvider;
-import org.eclipse.che.selenium.core.provider.TestIdeUrlProvider;
 import org.eclipse.che.selenium.core.user.TestUser;
 import org.eclipse.che.selenium.core.utils.WaitUtils;
+import org.eclipse.che.selenium.pageobject.TestWebElementRenderChecker;
 import org.eclipse.che.selenium.pageobject.site.LoginPage;
 import org.openqa.selenium.By;
+import org.openqa.selenium.TimeoutException;
 import org.openqa.selenium.WebElement;
 import org.openqa.selenium.support.FindBy;
 import org.openqa.selenium.support.PageFactory;
@@ -45,25 +47,31 @@ public class Dashboard {
   protected final SeleniumWebDriver seleniumWebDriver;
   protected final TestUser defaultUser;
 
-  private final TestIdeUrlProvider testIdeUrlProvider;
   private final TestDashboardUrlProvider testDashboardUrlProvider;
   private final Entrance entrance;
   private final LoginPage loginPage;
+  private final TestWebElementRenderChecker testWebElementRenderChecker;
+  private final TestKeycloakSettingsServiceClient testKeycloakSettingsServiceClient;
+  private final boolean isMultiuser;
 
   @Inject
   public Dashboard(
       SeleniumWebDriver seleniumWebDriver,
       TestUser defaultUser,
-      TestIdeUrlProvider testIdeUrlProvider,
       TestDashboardUrlProvider testDashboardUrlProvider,
       Entrance entrance,
-      LoginPage loginPage) {
+      LoginPage loginPage,
+      TestWebElementRenderChecker testWebElementRenderChecker,
+      TestKeycloakSettingsServiceClient testKeycloakSettingsServiceClient,
+      @Named("che.multiuser") boolean isMultiuser) {
     this.seleniumWebDriver = seleniumWebDriver;
     this.defaultUser = defaultUser;
-    this.testIdeUrlProvider = testIdeUrlProvider;
     this.testDashboardUrlProvider = testDashboardUrlProvider;
     this.entrance = entrance;
     this.loginPage = loginPage;
+    this.testWebElementRenderChecker = testWebElementRenderChecker;
+    this.testKeycloakSettingsServiceClient = testKeycloakSettingsServiceClient;
+    this.isMultiuser = isMultiuser;
     PageFactory.initElements(seleniumWebDriver, this);
   }
 
@@ -76,6 +84,7 @@ public class Dashboard {
     ORGANIZATIONS("Organizations"),
     SETTINGS("Settings"),
     CREATE_TEAM("Create Team");
+
     private final String title;
 
     MenuItem(String title) {
@@ -102,6 +111,7 @@ public class Dashboard {
     String LICENSE_NAG_MESSAGE_XPATH = "//div[contains(@class, 'license-message')]";
     String TOOLBAR_TITLE_NAME =
         "//div[contains(@class,'che-toolbar')]//span[contains(text(),'%s')]";
+    String WORKSPACE_NAME_IN_RECENT_LIST = "//span[@title='%s']";
   }
 
   @FindBy(id = Locators.DASHBOARD_TOOLBAR_TITLE)
@@ -240,13 +250,17 @@ public class Dashboard {
   }
 
   public void logout() {
-    String apiEndpoint = testDashboardUrlProvider.get().toString();
-    List<String> api = Arrays.asList(apiEndpoint.split(":"));
-    String logoutApiEndpoint = api.get(0) + ":" + api.get(1);
-    String logoutURL = logoutApiEndpoint + ":5050/auth/realms/che/protocol/openid-connect/logout";
-    String redirectURL = logoutApiEndpoint + ":8080/dashboard/#/workspaces";
+    if (!isMultiuser) {
+      return;
+    }
 
-    seleniumWebDriver.navigate().to(logoutURL + "?redirect_uri=" + redirectURL);
+    String logoutUrl =
+        format(
+            "%s?redirect_uri=%s#/workspaces",
+            testKeycloakSettingsServiceClient.read().getKeycloakLogoutEndpoint(),
+            testDashboardUrlProvider.get());
+
+    seleniumWebDriver.navigate().to(logoutUrl);
   }
 
   /**
@@ -268,6 +282,40 @@ public class Dashboard {
     List<WebElement> workspaces =
         seleniumWebDriver.findElements(By.xpath(Locators.RESENT_WS_NAVBAR));
     return !(workspaces.size() == 0);
+  }
+
+  public boolean isWorkspacePresentedInRecentList(String workspaceName) {
+    try {
+      return new WebDriverWait(seleniumWebDriver, LOAD_PAGE_TIMEOUT_SEC)
+          .until(
+              visibilityOfElementLocated(
+                  By.xpath(format(Locators.WORKSPACE_NAME_IN_RECENT_LIST, workspaceName))))
+          .isDisplayed();
+    } catch (TimeoutException ex) {
+      return false;
+    }
+  }
+
+  public void clickOnUsernameButton() {
+    new WebDriverWait(seleniumWebDriver, LOAD_PAGE_TIMEOUT_SEC)
+        .until(visibilityOfElementLocated(By.id(Locators.USER_NAME)))
+        .click();
+  }
+
+  public void clickOnAccountItem() {
+    testWebElementRenderChecker.waitElementIsRendered(By.id("menu_container_1"));
+
+    new WebDriverWait(seleniumWebDriver, LOAD_PAGE_TIMEOUT_SEC)
+        .until(visibilityOfElementLocated(By.xpath("//span[text()=' Account']")))
+        .click();
+  }
+
+  public void clickOnLogoutItem() {
+    testWebElementRenderChecker.waitElementIsRendered(By.id("menu_container_1"));
+
+    new WebDriverWait(seleniumWebDriver, LOAD_PAGE_TIMEOUT_SEC)
+        .until(visibilityOfElementLocated(By.xpath("//span[text()=' Logout']")))
+        .click();
   }
 
   @PreDestroy

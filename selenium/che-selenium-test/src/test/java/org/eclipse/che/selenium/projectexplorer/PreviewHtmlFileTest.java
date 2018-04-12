@@ -10,6 +10,7 @@
  */
 package org.eclipse.che.selenium.projectexplorer;
 
+import static org.eclipse.che.selenium.core.constant.TestProjectExplorerContextMenuConstants.ContextMenuFirstLevelItems.PREVIEW;
 import static org.eclipse.che.selenium.core.constant.TestTimeoutsConstants.LOADER_TIMEOUT_SEC;
 
 import com.google.inject.Inject;
@@ -18,8 +19,8 @@ import java.nio.file.Paths;
 import java.util.Random;
 import org.eclipse.che.selenium.core.SeleniumWebDriver;
 import org.eclipse.che.selenium.core.client.TestProjectServiceClient;
-import org.eclipse.che.selenium.core.constant.TestProjectExplorerContextMenuConstants;
 import org.eclipse.che.selenium.core.project.ProjectTemplates;
+import org.eclipse.che.selenium.core.webdriver.SeleniumWebDriverHelper;
 import org.eclipse.che.selenium.core.workspace.TestWorkspace;
 import org.eclipse.che.selenium.pageobject.CodenvyEditor;
 import org.eclipse.che.selenium.pageobject.Ide;
@@ -45,6 +46,7 @@ public class PreviewHtmlFileTest {
   @Inject private CodenvyEditor editor;
   @Inject private Loader loader;
   @Inject private SeleniumWebDriver seleniumWebDriver;
+  @Inject private SeleniumWebDriverHelper seleniumWebDriverHelper;
   @Inject private TestProjectServiceClient testProjectServiceClient;
 
   @BeforeClass
@@ -65,8 +67,8 @@ public class PreviewHtmlFileTest {
     currentWindow = seleniumWebDriver.getWindowHandle();
     projectExplorer.quickExpandWithJavaScript();
     projectExplorer.openContextMenuByPathSelectedItem(PROJECT_NAME + "/file.html");
-    projectExplorer.clickOnItemInContextMenu(TestProjectExplorerContextMenuConstants.PREVIEW);
-    seleniumWebDriver.switchToNoneCurrentWindow(currentWindow);
+    projectExplorer.clickOnItemInContextMenu(PREVIEW);
+    seleniumWebDriverHelper.switchToNextWindow(currentWindow);
     checkWebElementsHtmlFile("//h1[text()='Hello, this is check!']");
     seleniumWebDriver.close();
     seleniumWebDriver.switchTo().window(currentWindow);
@@ -82,8 +84,8 @@ public class PreviewHtmlFileTest {
     editor.typeTextIntoEditor(H2_CONTENT);
     editor.waitTextIntoEditor(H2_CONTENT);
     projectExplorer.openContextMenuByPathSelectedItem(PROJECT_NAME + "/file.html");
-    projectExplorer.clickOnItemInContextMenu(TestProjectExplorerContextMenuConstants.PREVIEW);
-    seleniumWebDriver.switchToNoneCurrentWindow(currentWindow);
+    projectExplorer.clickOnItemInContextMenu(PREVIEW);
+    seleniumWebDriverHelper.switchToNextWindow(currentWindow);
     checkWebElementsHtmlFile("//h2[@style='color:red' and text()='Test content']");
     seleniumWebDriver.switchTo().window(currentWindow);
     editor.setCursorToLine(19);
@@ -91,7 +93,7 @@ public class PreviewHtmlFileTest {
     editor.typeTextIntoEditor(Keys.ARROW_UP.toString());
     editor.typeTextIntoEditor(BODY_CONTENT);
     editor.waitTextIntoEditor(BODY_CONTENT);
-    seleniumWebDriver.switchToNoneCurrentWindow(currentWindow);
+    seleniumWebDriverHelper.switchToNextWindow(currentWindow);
     loader.waitOnClosed();
     checkWebElementsHtmlFile("//h2[@style='color:red' and text()='Test content']");
     loader.waitOnClosed();

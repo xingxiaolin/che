@@ -16,11 +16,11 @@
     <parent>
         <artifactId>maven-depmgt-pom</artifactId>
         <groupId>org.eclipse.che.depmgt</groupId>
-        <version>6.0.0-M5-SNAPSHOT</version>
+        <version>6.4.0-SNAPSHOT</version>
     </parent>
     <groupId>org.eclipse.che</groupId>
     <artifactId>che-parent</artifactId>
-    <version>6.0.0-M5-SNAPSHOT</version>
+    <version>6.4.0-SNAPSHOT</version>
     <packaging>pom</packaging>
     <name>Che Parent</name>
     <modules>
@@ -36,6 +36,7 @@
         <module>ide/che-ide-full</module>
         <module>ide/che-ide-gwt-app</module>
         <module>dashboard</module>
+        <module>workspace-loader</module>
         <module>assembly</module>
         <module>selenium</module>
     </modules>
@@ -46,9 +47,9 @@
         <url>https://github.com/eclipse/che</url>
     </scm>
     <properties>
-        <che.docs.version>6.0.0-M5-SNAPSHOT</che.docs.version>
-        <che.lib.version>6.0.0-M5-SNAPSHOT</che.lib.version>
-        <che.version>6.0.0-M5-SNAPSHOT</che.version>
+        <che.docs.version>6.4.0-SNAPSHOT</che.docs.version>
+        <che.lib.version>6.4.0-SNAPSHOT</che.lib.version>
+        <che.version>6.4.0-SNAPSHOT</che.version>
         <specification.version>1.0-beta2</specification.version>
     </properties>
     <dependencyManagement>
@@ -88,6 +89,12 @@
                 <groupId>org.eclipse.che</groupId>
                 <artifactId>assembly-main</artifactId>
                 <version>${che.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>org.eclipse.che</groupId>
+                <artifactId>assembly-workspace-loader-war</artifactId>
+                <version>${che.version}</version>
+                <type>war</type>
             </dependency>
             <dependency>
                 <groupId>org.eclipse.che</groupId>
@@ -180,6 +187,16 @@
             <dependency>
                 <groupId>org.eclipse.che</groupId>
                 <artifactId>git-credentials-agent</artifactId>
+                <version>${che.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>org.eclipse.che</groupId>
+                <artifactId>ls-camel-agent</artifactId>
+                <version>${che.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>org.eclipse.che</groupId>
+                <artifactId>ls-clang-agent</artifactId>
                 <version>${che.version}</version>
             </dependency>
             <dependency>
@@ -397,6 +414,16 @@
             </dependency>
             <dependency>
                 <groupId>org.eclipse.che.core</groupId>
+                <artifactId>che-core-api-logger</artifactId>
+                <version>${che.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>org.eclipse.che.core</groupId>
+                <artifactId>che-core-api-logger-shared</artifactId>
+                <version>${che.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>org.eclipse.che.core</groupId>
                 <artifactId>che-core-api-model</artifactId>
                 <version>${che.version}</version>
             </dependency>
@@ -523,6 +550,17 @@
                 <groupId>org.eclipse.che.core</groupId>
                 <artifactId>che-core-api-workspace</artifactId>
                 <version>${che.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>org.eclipse.che.core</groupId>
+                <artifactId>che-core-api-workspace-activity</artifactId>
+                <version>${che.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>org.eclipse.che.core</groupId>
+                <artifactId>che-core-api-workspace-activity</artifactId>
+                <version>${che.version}</version>
+                <classifier>tests</classifier>
             </dependency>
             <dependency>
                 <groupId>org.eclipse.che.core</groupId>
@@ -698,6 +736,11 @@
             </dependency>
             <dependency>
                 <groupId>org.eclipse.che.core</groupId>
+                <artifactId>che-core-workspace-activity-server</artifactId>
+                <version>${che.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>org.eclipse.che.core</groupId>
                 <artifactId>che-ide-core</artifactId>
                 <version>${che.version}</version>
             </dependency>
@@ -750,6 +793,11 @@
                 <artifactId>che-docs</artifactId>
                 <version>${che.docs.version}</version>
                 <type>war</type>
+            </dependency>
+            <dependency>
+                <groupId>org.eclipse.che.infrastructure</groupId>
+                <artifactId>infrastructure-kubernetes</artifactId>
+                <version>${che.version}</version>
             </dependency>
             <dependency>
                 <groupId>org.eclipse.che.infrastructure</groupId>
@@ -858,6 +906,11 @@
             </dependency>
             <dependency>
                 <groupId>org.eclipse.che.multiuser</groupId>
+                <artifactId>che-multiuser-api-remote-subscription</artifactId>
+                <version>${che.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>org.eclipse.che.multiuser</groupId>
                 <artifactId>che-multiuser-api-resource</artifactId>
                 <version>${che.version}</version>
             </dependency>
@@ -916,6 +969,12 @@
             </dependency>
             <dependency>
                 <groupId>org.eclipse.che.multiuser</groupId>
+                <artifactId>che-multiuser-machine-authentication</artifactId>
+                <version>${che.version}</version>
+                <classifier>tests</classifier>
+            </dependency>
+            <dependency>
+                <groupId>org.eclipse.che.multiuser</groupId>
                 <artifactId>che-multiuser-machine-authentication-agent</artifactId>
                 <version>${che.version}</version>
             </dependency>
@@ -948,6 +1007,16 @@
             </dependency>
             <dependency>
                 <groupId>org.eclipse.che.multiuser</groupId>
+                <artifactId>che-multiuser-permission-installer</artifactId>
+                <version>${che.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>org.eclipse.che.multiuser</groupId>
+                <artifactId>che-multiuser-permission-logger</artifactId>
+                <version>${che.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>org.eclipse.che.multiuser</groupId>
                 <artifactId>che-multiuser-permission-resource</artifactId>
                 <version>${che.version}</version>
             </dependency>
@@ -974,6 +1043,11 @@
             </dependency>
             <dependency>
                 <groupId>org.eclipse.che.multiuser</groupId>
+                <artifactId>che-multiuser-permission-workspace-activity</artifactId>
+                <version>${che.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>org.eclipse.che.multiuser</groupId>
                 <artifactId>che-multiuser-personal-account</artifactId>
                 <version>${che.version}</version>
             </dependency>
@@ -989,23 +1063,12 @@
             </dependency>
             <dependency>
                 <groupId>org.eclipse.che.plugin</groupId>
-                <artifactId>che-plugin-activity-ide</artifactId>
-                <version>${che.version}</version>
-                <type>gwt-lib</type>
-            </dependency>
-            <dependency>
-                <groupId>org.eclipse.che.plugin</groupId>
-                <artifactId>che-plugin-activity-server</artifactId>
+                <artifactId>che-plugin-camel-server</artifactId>
                 <version>${che.version}</version>
             </dependency>
             <dependency>
                 <groupId>org.eclipse.che.plugin</groupId>
-                <artifactId>che-plugin-activity-shared</artifactId>
-                <version>${che.version}</version>
-            </dependency>
-            <dependency>
-                <groupId>org.eclipse.che.plugin</groupId>
-                <artifactId>che-plugin-activity-wsmaster</artifactId>
+                <artifactId>che-plugin-clangd-lang-server</artifactId>
                 <version>${che.version}</version>
             </dependency>
             <dependency>
@@ -1845,6 +1908,12 @@
                 <groupId>org.eclipse.che.selenium</groupId>
                 <artifactId>che-selenium-test</artifactId>
                 <version>${che.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>org.eclipse.che.workspace.loader</groupId>
+                <artifactId>che-workspace-loader</artifactId>
+                <version>${che.version}</version>
+                <type>zip</type>
             </dependency>
             <dependency>
                 <groupId>org.eclipse.che.core</groupId>
